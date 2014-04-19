@@ -1,4 +1,4 @@
-package edu.duke.cacheplanner.planner
+package edu.duke.cacheplanner.algorithm
 
 /**
  * Interface for CachePlanner

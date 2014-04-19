@@ -1,10 +1,11 @@
-package edu.duke.cacheplanner.planner;
+package edu.duke.cacheplanner.queue;
 
 import java.util.LinkedList;
 import java.util.Queue;
 
 import edu.duke.cacheplanner.listener.ListenerManager;
 import edu.duke.cacheplanner.listener.QueryFetchedByCachePlanner;
+import edu.duke.cacheplanner.query.GroupingQuery;
 
 /**
  * External Queue class
@@ -16,7 +17,7 @@ public class ExternalQueue {
   private int minShare;
   private int batchSize; // do we need here? or planner requests the batch size whatever he wants?
   private ListenerManager listenerManager;
-  private Queue<Query> queue;
+  private Queue<GroupingQuery> queue;
 
   public ExternalQueue(int id, int w, int min, int size, ListenerManager manager) {
     queueID = id;
@@ -24,16 +25,16 @@ public class ExternalQueue {
     minShare = min;
     listenerManager = manager;
     batchSize = size;
-    queue = new LinkedList<Query>();
+    queue = new LinkedList<GroupingQuery>();
   }
   
   /**
    * request a queue to fetch a batch
    */
-  public Query[] fetchABatch() { 
-    Query[] queries = new Query[batchSize];
+  public GroupingQuery[] fetchABatch() { 
+    GroupingQuery[] queries = new GroupingQuery[batchSize];
     for(int i = 0; i < batchSize; i++) {
-      queries[i] = (Query) queue.poll();  
+      queries[i] = (GroupingQuery) queue.poll();  
     }
     //notify an event to the listeners
     listenerManager.postEvent(new QueryFetchedByCachePlanner(queueID));
@@ -43,7 +44,7 @@ public class ExternalQueue {
   /**
    * add query to the queue
    */
-  public void addQuery(Query query) {
+  public void addQuery(GroupingQuery query) {
     queue.add(query);
   }
   

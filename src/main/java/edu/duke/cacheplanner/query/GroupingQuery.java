@@ -1,4 +1,4 @@
-package edu.duke.cacheplanner.planner;
+package edu.duke.cacheplanner.query;
 
 import java.io.Serializable;
 import java.util.List;
@@ -7,7 +7,7 @@ import java.util.List;
  * Query Object representation
  * This codes are ported from previous query object implemented by mayuresh
  */
-public class Query implements Serializable {
+public class GroupingQuery implements Serializable {
 
   protected Dataset dataset1;                 // necessary
   protected Dataset dataset2;                 // optional
@@ -16,7 +16,7 @@ public class Query implements Serializable {
   protected List<String> grouping;            // optional
   protected int parallelism;                  // degree of parallelsim
 
-  public Query(Dataset d1, Dataset d2, List<Aggregation> projection, List<Selection> selection, List<String> group, int parallel) {
+  public GroupingQuery(Dataset d1, Dataset d2, List<Aggregation> projection, List<Selection> selection, List<String> group, int parallel) {
     dataset1 = d1;
     dataset2 = d2;
     projections = projection;
@@ -25,12 +25,6 @@ public class Query implements Serializable {
     parallelism = parallel;
   }
   
-  /**
-   * can we put translator inside of Query object? or separate class?
-   */
-  public String translateToHiveQL() {
-    return "";
-  }
 }
 
 
