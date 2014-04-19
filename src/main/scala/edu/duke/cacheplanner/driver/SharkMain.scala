@@ -1,12 +1,15 @@
-package edu.duke.CachePlanner
+package edu.duke.cacheplanner.driver
 
-// Spark
+
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.scheduler.StatsReportListener
 import org.apache.spark.scheduler.JobLogger
 import SparkContext._
 import shark.{SharkContext, SharkEnv}
+
+
+//initiates shark context. This code just copied from shark context testing 
 
 object SharkMain {
 
@@ -23,7 +26,7 @@ object SharkMain {
     // SharkEnv.sc = sc
     System.setProperty("spark.executor.memory", "6g")
     System.setProperty("spark.scheduler.mode", "FAIR")
-    System.setProperty("spark.scheduler.allocation.file", "conf/alloc.xml")        
+    System.setProperty("spark.scheduler.allocation.file", "conf/internal.xml")        
 
     SharkEnv.initWithSharkContext("Cache_Experiment")
     val sc = SharkEnv.sc.asInstanceOf[SharkContext]

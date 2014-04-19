@@ -1,10 +1,10 @@
-package edu.duke.CachePlanner
+package edu.duke.cacheplanner.driver
 
-// Spark
 import org.apache.spark.SparkContext
 import SparkContext._
 import shark.{SharkContext, SharkEnv}
 
+//This code just copied from shark context testing 
 object SharkQuery {
   
   def clearTables(sc: SharkContext) {

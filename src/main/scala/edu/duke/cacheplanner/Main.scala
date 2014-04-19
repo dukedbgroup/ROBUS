@@ -1,8 +1,7 @@
-package edu.duke.CachePlanner
+package edu.duke.cacheplanner
 
 object Main {
   def main(args: Array[String]) {
-
 
   }
 }
