@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+java -Xmx1g -XX:MaxPermSize=300m -jar "$(dirname $0)/sbt-launch.jar" "$@"
