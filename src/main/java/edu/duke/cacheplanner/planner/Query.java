@@ -63,11 +63,11 @@ class Aggregation implements Serializable {
   }
   
   public String getColName() {
-      return colName;
+    return colName;
   }
   
   public QueryOperationType getOperationType() {
-      return operationType;
+    return operationType;
   }
 }
 

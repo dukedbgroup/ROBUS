@@ -7,8 +7,8 @@ public class Column {
   String parentDataset;
 
   public Column(double size, String name, String parent) {
-  	estimatedSize = size;
-  	colName = name;
-  	parentDataset = parent;
+    estimatedSize = size;
+    colName = name;
+    parentDataset = parent;
   }
 }

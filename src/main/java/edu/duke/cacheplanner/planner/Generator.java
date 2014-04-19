@@ -19,22 +19,21 @@ public class Generator implements Runnable {
   public Generator(double lamb) {
     lambda = lamb;
   }
-  
    
   /**
    * generate the query and put it into the one of the ExternalQueue,
    * return the id of the chosen queue
    */
   public int generateQuery() {
-  return 0;
+    return 0;
   }
   
   /**
    * calculate the delayed time using poisson arrival
    */
   public double getPoissonDelay() {
-  double mean = 1.0 / (lambda*1000); // convert the number in sec
-  return Math.log(Math.random())/-mean;
+    double mean = 1.0 / (lambda*1000); // convert the number in sec
+    return Math.log(Math.random())/-mean;
   }
 
   /**
@@ -43,21 +42,21 @@ public class Generator implements Runnable {
   @Override
   public void run() {
     while(true) {
-    if(stop = true) {
-    return;
-    }
+      if(stop = true) {
+        return;
+      }
     
-    int id = generateQuery();
-    listenerManager.postEvent((new QueryGenerated(id)));
+      int id = generateQuery();
+      listenerManager.postEvent((new QueryGenerated(id)));
     
-    //get delay
-    long delay = (long)getPoissonDelay();
-    try {
-      Thread.sleep(delay);
-    } catch (InterruptedException e) {
-    e.printStackTrace();
+      //get delay
+      long delay = (long)getPoissonDelay();
+      try {
+        Thread.sleep(delay);
+      } catch (InterruptedException e) {
+      e.printStackTrace();
+      }
     }
-  }
   }
   
   //test use
