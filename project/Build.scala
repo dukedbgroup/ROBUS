@@ -26,8 +26,8 @@ object DemoBuild extends Build {
 
   def coreSettings = Defaults.defaultSettings ++ Seq(
 
-    name := "SharkExample",
-    organization := "com.databricks",
+    name := "CachePlanner",
+    organization := "edu.duke",
     version := "0.1",
     scalaVersion := SCALA_VERSION,
     scalacOptions := Seq("-deprecation", "-unchecked", "-optimize"),
