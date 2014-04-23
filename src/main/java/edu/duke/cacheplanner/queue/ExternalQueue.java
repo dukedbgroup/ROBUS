@@ -20,12 +20,16 @@ public class ExternalQueue {
   private Queue<GroupingQuery> queue;
 
   public ExternalQueue(int id, int w, int min, int size, ListenerManager manager) {
-    queueID = id;
-    weight = w;
-    minShare = min;
-    listenerManager = manager;
-    batchSize = size;
-    queue = new LinkedList<GroupingQuery>();
+	this(id, w, min, size);
+	listenerManager = manager;
+  }
+  
+  public ExternalQueue(int id, int w, int min, int size) {
+	    queueID = id;
+	    weight = w;
+	    minShare = min;
+	    batchSize = size;
+	    queue = new LinkedList<GroupingQuery>();
   }
   
   /**
@@ -46,6 +50,10 @@ public class ExternalQueue {
    */
   public void addQuery(GroupingQuery query) {
     queue.add(query);
+  }
+  
+  public void setListenerManager(ListenerManager manager) {
+	  listenerManager = manager;
   }
   
 }

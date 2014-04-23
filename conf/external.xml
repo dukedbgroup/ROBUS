@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
-<allocations>
-  <pool name="pool1">
-    <schedulingMode>FAIR</schedulingMode>
+<Configurations>
+  <queue id="1">
     <weight>1</weight>
     <minShare>2</minShare>
-  </pool>
-  <pool name="pool2">
-    <schedulingMode>FAIR</schedulingMode>
+    <batchSize>5</batchSize>
+  </queue>
+  <queue id="2">
     <weight>2</weight>
     <minShare>3</minShare>
-  </pool>
-</allocations>
+    <batchSize>5</batchSize>
+  </queue>
+</Configurations>
