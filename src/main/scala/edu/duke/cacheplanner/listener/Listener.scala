@@ -5,11 +5,11 @@ package edu.duke.cacheplanner.listener
  */
 trait ListenerEvent
 
-case class QueryGenerated(queryID: Int) extends ListenerEvent
+case class QueryGenerated(queryID: Int, queueID: Int) extends ListenerEvent
   
-case class QueryFetchedByCachePlanner(queryID: Int) extends ListenerEvent
+case class QueryFetchedByCachePlanner(queryID: Int, queueID: Int) extends ListenerEvent
 
-case class QueryPushedToSharkScheduler(queryID: Int) extends ListenerEvent
+case class QueryPushedToSharkScheduler(queryID: Int, queueID: Int) extends ListenerEvent
 
 /** An event to shutdown the listener thread. */
 case object ListenerShutdown extends ListenerEvent

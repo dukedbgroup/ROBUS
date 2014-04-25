@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.duke.cacheplanner.listener.ListenerManager;
 import edu.duke.cacheplanner.listener.QueryGenerated;
+import edu.duke.cacheplanner.query.AbstractQuery;
 import edu.duke.cacheplanner.queue.ExternalQueue;
 
 public abstract class AbstractQueryGenerator {
@@ -14,7 +15,6 @@ public abstract class AbstractQueryGenerator {
   protected int p; //not yet decided => for n/p distinct grouping columns
   protected int zeta; //average number of aggregations per query
   protected List<ExternalQueue> queueList;
-  
   protected boolean started = false;
   protected ListenerManager listenerManager;
   protected Thread generatorThread;
@@ -37,9 +37,10 @@ public abstract class AbstractQueryGenerator {
           e.printStackTrace();
           }
           //generate the query & post the event to the listener
-          int id = generateQuery();
-          //listenerManager.postEvent((new QueryGenerated(0)));
-        
+          AbstractQuery query = generateQuery();
+          listenerManager.postEvent(new QueryGenerated
+        		  (Integer.parseInt(query.getQueryID()),Integer.parseInt(query.getQueueID())));
+
         }
       }    	
     };
@@ -49,7 +50,7 @@ public abstract class AbstractQueryGenerator {
    * generate the query and put it into the one of the ExternalQueue,
    * return the id of the chosen queue
    */
-  public abstract int generateQuery();
+  public abstract AbstractQuery generateQuery();
   
   /**
    * calculate the delayed time using poisson arrival

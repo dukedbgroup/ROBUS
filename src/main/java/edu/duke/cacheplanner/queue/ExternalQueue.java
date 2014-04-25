@@ -38,10 +38,13 @@ public class ExternalQueue {
   public synchronized AbstractQuery[] fetchABatch() { 
 	  AbstractQuery[] queries = new AbstractQuery[batchSize];
     for(int i = 0; i < batchSize; i++) {
-      queries[i] = queue.poll();  
-    }
-    //notify an event to the listeners
-    listenerManager.postEvent(new QueryFetchedByCachePlanner(queueID));
+      if(queue.peek() != null) {
+        queries[i] = queue.poll();  
+        //notify an event to the listeners
+      listenerManager.postEvent(new QueryFetchedByCachePlanner
+    		  (Integer.parseInt(queries[i].getQueryID()), queueID));
+      }
+    } 
     return queries;
   }
   

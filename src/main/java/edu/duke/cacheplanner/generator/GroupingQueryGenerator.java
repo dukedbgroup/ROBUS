@@ -1,5 +1,7 @@
 package edu.duke.cacheplanner.generator;
 
+import edu.duke.cacheplanner.query.AbstractQuery;
+
 public class GroupingQueryGenerator extends AbstractQueryGenerator {
 
 	public GroupingQueryGenerator(double lamb) {
@@ -7,11 +9,11 @@ public class GroupingQueryGenerator extends AbstractQueryGenerator {
 	}
 	
 	/**
-	 * implement query generation for grouping query & return the id of the queue
+	 * implement query generation for grouping query 
 	 */
 	@Override
-	public int generateQuery() {
+	public AbstractQuery generateQuery() {
 		System.out.println("Query Generated");
-		return 0;
+		return null;
 	}
 }

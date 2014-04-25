@@ -5,8 +5,8 @@ import edu.duke.cacheplanner.listener.ListenerManager
 /**
  * Abstract class for CachePlanner
  */
-trait AbstractCachePlanner {
-  //val listenerManager: ListenerManager
+abstract class AbstractCachePlanner(manager: ListenerManager) {
+  val listenerManager: ListenerManager = manager
   var started = false
   
   private val plannerThread = new Thread("ListenerManager") {

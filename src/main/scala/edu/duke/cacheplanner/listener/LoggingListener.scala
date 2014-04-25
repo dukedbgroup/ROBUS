@@ -6,11 +6,15 @@ package edu.duke.cacheplanner.listener
 class LoggingListener extends Listener {
   
   //implement the event handler
-  override def onQueryGenerated(event: QueryGenerated) { }
+  override def onQueryGenerated(event: QueryGenerated) { 
+    System.out.println("query generated(queryID, queueID) : " + event.queryID + ", " + event.queueID)
+  }
   
-  override def onQueryFetchedByCachePlanner(event: QueryFetchedByCachePlanner) { }
+  override def onQueryFetchedByCachePlanner(event: QueryFetchedByCachePlanner) { 
+    System.out.println("query fetched by CachePlanner(queryID, queueID) : " + event.queryID + ", " + event.queueID)
+  }
   
-  override def onQueryPushedToSharkScheduler(event: QueryPushedToSharkScheduler) { }
-
-  
+  override def onQueryPushedToSharkScheduler(event: QueryPushedToSharkScheduler) { 
+    System.out.println("query pushed to SharkScheduler(queryID, queueID) : " + event.queryID + ", " + event.queueID)
+  }  
 }
