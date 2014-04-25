@@ -2,7 +2,6 @@ package edu.duke.cacheplanner.listener
 
 /**
  * Defining Listener Events
- * Codes are taken from "SparkListener.scala"
  */
 trait ListenerEvent
 

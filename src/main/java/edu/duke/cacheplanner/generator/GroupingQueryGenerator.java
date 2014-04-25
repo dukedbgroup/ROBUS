@@ -4,13 +4,14 @@ public class GroupingQueryGenerator extends AbstractQueryGenerator {
 
 	public GroupingQueryGenerator(double lamb) {
 		super(lamb);
-		// TODO Auto-generated constructor stub
 	}
-
+	
+	/**
+	 * implement query generation for grouping query & return the id of the queue
+	 */
 	@Override
 	public int generateQuery() {
-		// TODO Auto-generated method stub
+		System.out.println("Query Generated");
 		return 0;
 	}
-
 }

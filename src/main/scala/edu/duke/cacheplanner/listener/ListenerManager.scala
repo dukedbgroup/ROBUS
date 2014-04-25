@@ -6,12 +6,11 @@ import java.util.concurrent.LinkedBlockingQueue
 
 /**
  * Listener Manager notifies all the listeners attached when
- * an event is issued. Most codes are from "LiveListenerBus.scala" from spark project
+ * an event is issued. 
  */
 class ListenerManager {
   
   private val listenerList = new ArrayBuffer[Listener]
-    with mutable.SynchronizedBuffer[Listener] // I am not sure why this is needed got from SparkListenerBus.scala
   
   private val QUEUE_CAPACITY = 1000
   private val eventQueue = new LinkedBlockingQueue[ListenerEvent](QUEUE_CAPACITY)

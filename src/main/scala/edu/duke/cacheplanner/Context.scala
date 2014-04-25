@@ -7,14 +7,17 @@ import org.apache.spark.scheduler.JobLogger
 import SparkContext._
 import shark.{SharkContext, SharkEnv}
 import shark.api.ResultSet
-
 import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.listener.Listener
+import edu.duke.cacheplanner.generator.AbstractQueryGenerator
+import edu.duke.cacheplanner.algorithm.AbstractCachePlanner
 
-class Context(manager: ListenerManager) {
+class Context(manager: ListenerManager, generator: AbstractQueryGenerator, planner: AbstractCachePlanner) {
   
   private val listenerManager = manager
   private val sc = initSharkContext
+  private val queryGenerator = generator
+  private val cachePlanner = planner
   
   def initSharkContext() : SharkContext = {
     SharkEnv.initWithSharkContext("Cache_Experiment")
@@ -36,11 +39,15 @@ class Context(manager: ListenerManager) {
     listenerManager.addListener(listener)
   }
   
-  def start {
+  def start() {
     listenerManager.start()
+    queryGenerator.start()
+    planner.start()
   }
   
-  def stop {
+  def stop() {
     listenerManager.stop()
+    queryGenerator.stop()
+    planner.stop()
   }
 }
