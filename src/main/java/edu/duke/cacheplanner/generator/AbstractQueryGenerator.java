@@ -8,13 +8,18 @@ import edu.duke.cacheplanner.query.AbstractQuery;
 import edu.duke.cacheplanner.queue.ExternalQueue;
 
 public abstract class AbstractQueryGenerator {
+  //Distribution over query arrival rate (per second)
+  protected double lambda;
   
-  protected double lambda; // the rate of generation, poisson distribution parameter per """second"""
-  protected double[] gamma; // probability distribution of queries to queue
-  protected double[] delta; //probability distribution over the clusters of columns
-  protected int p; //not yet decided => for n/p distinct grouping columns
-  protected int zeta; //average number of aggregations per query
-  protected List<ExternalQueue> queueList;
+  //Distribution over input
+  protected double x;
+  protected double u;
+
+  //distribution over local window size(optional)
+  protected double mu;
+  protected double sigma;
+
+  protected ExternalQueue myExternalQueue;
   protected boolean started = false;
   protected ListenerManager listenerManager;
   protected Thread generatorThread;
@@ -39,10 +44,10 @@ public abstract class AbstractQueryGenerator {
           //generate the query & post the event to the listener
           AbstractQuery query = generateQuery();
           listenerManager.postEvent(new QueryGenerated
-        		  (Integer.parseInt(query.getQueryID()),Integer.parseInt(query.getQueueID())));
+              (Integer.parseInt(query.getQueryID()),Integer.parseInt(query.getQueueID())));
 
         }
-      }    	
+      }     
     };
   }
    
@@ -61,16 +66,16 @@ public abstract class AbstractQueryGenerator {
   }
   
   public void start() {
-	started = true;
-	generatorThread.start();
+    started = true;
+    generatorThread.start();
   }
   
   public void stop() throws InterruptedException {
-	if (!started) {
-	  throw new IllegalStateException("cannot be done because a listener has not yet started!");
-	}
-	started = false;
-	generatorThread.join();
+    if (!started) {
+      throw new IllegalStateException("cannot be done because a listener has not yet started!");
+    }
+    started = false;
+    generatorThread.join();
   }
  
 }

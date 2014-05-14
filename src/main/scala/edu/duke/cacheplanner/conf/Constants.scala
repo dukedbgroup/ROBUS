@@ -13,9 +13,4 @@ trait Constants {
   final val NAME = "name"
   final val VALUE = "value"
   
-  
-  
-  
-    
-    
 }

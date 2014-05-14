@@ -1,26 +1,20 @@
 package edu.duke.cacheplanner.algorithm
 
+import shark.{SharkContext, SharkEnv}
+
 import edu.duke.cacheplanner.listener.ListenerManager
 
 /**
  * Abstract class for CachePlanner
  */
-abstract class AbstractCachePlanner(manager: ListenerManager) {
+abstract class AbstractCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: SharkContext) {
   val listenerManager: ListenerManager = manager
+  val sc = sharkContext
+  val isMultipleSetup = mode // true = multi app setup, false = single app setup
   var started = false
+
+  private val plannerThread = initPlannerThread()
   
-  private val plannerThread = new Thread("ListenerManager") {
-    setDaemon(true)
-    override def run() {
-      while(true) {
-        if(!started){
-          return
-        }
-        Thread.sleep(2000) //modify this, wait for the event?
-        analyzeBatch
-      }
-    }
-  }
   
   def start() {
     started = true    
@@ -29,15 +23,16 @@ abstract class AbstractCachePlanner(manager: ListenerManager) {
   
   def stop() {
     if (!started) {
-	  throw new IllegalStateException("cannot be done because a listener has not yet started!");
-	}
+	    throw new IllegalStateException("cannot be done because a listener has not yet started!");
+	  }
     started = false
     plannerThread.join()
   }
   
   /**
-   * analyze batch from ExternalQueues. 
+   * initialize Planner Thread.
    */
-  def analyzeBatch()
+  def initPlannerThread(): Thread
 
+  
 }
