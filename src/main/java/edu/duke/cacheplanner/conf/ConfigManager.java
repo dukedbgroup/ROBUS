@@ -5,11 +5,11 @@ import java.util.Map;
 public class ConfigManager {
   private Map<String, String> config;
   public ConfigManager(Map<String, String> map) {
-	config = map;
+	  config = map;
   }
   
   public String getGeneratorMode() {
-	return config.get("cacheplanner.generator.mode");
+	  return config.get("cacheplanner.generator.mode");
   }
   
   public String getAlgorithmSetup() {

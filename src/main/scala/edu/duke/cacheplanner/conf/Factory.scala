@@ -8,6 +8,7 @@ import edu.duke.cacheplanner.generator.AbstractQueryGenerator
 import edu.duke.cacheplanner.generator.GroupingQueryGenerator
 import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.Context
+import edu.duke.cacheplanner.generator.SingleTableQueryGenerator
 
 object Factory {
   val configManager = initConfigManager
@@ -68,6 +69,7 @@ object Factory {
     val mode = configManager.getGeneratorMode()  
     mode match {
         case "grouping" => return new GroupingQueryGenerator(lambda, queueId, meanColNum)
+        case "singleTable" => return new SingleTableQueryGenerator(lambda, queueId, meanColNum)
     }
 
   }

@@ -16,9 +16,9 @@
 	</property>
 	<property>
 		<name>cacheplanner.generator.mode</name>
-		<value>grouping</value>
+		<value>singleTable</value>
 		<description>
-			Currently, supported modes are: grouping
+			Currently, supported modes are: grouping, singleTable
 		</description>
 	</property>
 </configuration>

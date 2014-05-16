@@ -22,8 +22,12 @@ public class Projection implements Serializable {
 		col = column;
 	}
 
-	public Column getColName() {
+	public Column getColumn() {
 		return col;
+	}
+	
+	public String getColName() {
+		return col.getColName();
 	}
 
 	public AggregationFunction getAggregationFunction() {

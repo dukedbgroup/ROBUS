@@ -72,7 +72,7 @@ public class SingleTableQuery extends AbstractQuery {
 
 	@Override
 	public String toHiveQL(Boolean cached) {
-		// TODO Auto-generated method stub
-		return null;
+		// for test...
+		return "SELECT " + projections.get(0).getColName() + " FROM " + dataset.getName();
 	}
 }

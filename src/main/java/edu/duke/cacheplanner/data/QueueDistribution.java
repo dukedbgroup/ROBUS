@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * This class contains the information on the dataset distribution for an ExternalQueue
  * 
- * @author shlee0605
+ * @author Seunghyun
  *
  */
 public class QueueDistribution {
@@ -15,11 +15,11 @@ public class QueueDistribution {
 	  queueDistribution = map;
   }
   
-  public void setQueueDistribution(Map<String, DatasetDistribution> map) {
+  public void setQueueDistributionMap(Map<String, DatasetDistribution> map) {
 	  queueDistribution = map;
   }
   
-  public Map<String, DatasetDistribution> getQueueDistribution() {
+  public Map<String, DatasetDistribution> getQueueDistributionMap() {
 	  return queueDistribution;
   }
   
@@ -30,4 +30,6 @@ public class QueueDistribution {
   public Double getColumnProb(String name, String col) {
 	  return queueDistribution.get(name).getColumnDistribution().get(col);
   }
+  
+  
 }

@@ -16,31 +16,6 @@ import edu.duke.cacheplanner.generator.AbstractQueryGenerator
 
 
 object Parser {  
-  
-  def main(args: Array[String]) {
-    //check external queue
-    parseExternalQueue("conf/external.xml")
-    
-    //check config
-    val config = parseConfig("conf/config.xml")
-    println(config.toString())
-    
-    //check dataset
-    val datasets:java.util.List[Dataset] = parseDataSets("conf/dataset.xml")
-    for(i <- 0 to datasets.size()-1) {
-      println(datasets.get(i).getName() + ", " + datasets.get(i).getPath())
-      for(n <- datasets.get(i).getColumns().toArray()) {
-        println(n.asInstanceOf[Column].getColName() + ", " + n.asInstanceOf[Column].getEstimatedSize() + "mb")
-      }
-    }
-    
-    //check distribution
-    val distribution = parseQueryDistribution("conf/distribution.xml")
-    println(distribution.getDataDistribution(1, "store_sales"))
-    println(distribution.getColDistribution(1, "store_sales", "ss_sold_date_sk"))
-  }
-
-  
   /**
    * parse the external.xml file for external queue
    */

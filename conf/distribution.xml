@@ -17,15 +17,15 @@
 	    </columns>
 	  </datasetDistribution>
 	  <datasetDistribution>
-	    <name>web_sales</name>
+	    <name>catalog_sales</name>
 	    <prob>0.5</prob>
 	    <columns>
 	      <col>
-	        <name>ws_sold_date_sk</name>
+	        <name>cs_sold_date_sk</name>
 	        <prob>0.3</prob>
 	      </col>
 	      <col>
-	        <name>ws_sold_time_sk</name>
+	        <name>cs_sold_time_sk</name>
 	        <prob>0.7</prob>
 	      </col>
 	    </columns>
@@ -48,15 +48,15 @@
 	    </columns>
 	  </datasetDistribution>
 	  <datasetDistribution>
-	    <name>web_sales</name>
+	    <name>catalog_sales</name>
 	    <prob>0.7</prob>
 	    <columns>
 	      <col>
-	        <name>ws_sold_date_sk</name>
+	        <name>cs_sold_date_sk</name>
 	        <prob>0.3</prob>
 	      </col>
 	      <col>
-	        <name>ws_sold_time_sk</name>
+	        <name>cs_sold_time_sk</name>
 	        <prob>0.7</prob>
 	      </col>
 	    </columns>

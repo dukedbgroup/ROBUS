@@ -14,16 +14,20 @@ public class QueryDistribution {
 	  queryDistribution = new HashMap<Integer, QueueDistribution> ();
   }
   
-  public double getDataDistribution(int queueId, String dataName) {
+  public double getDataProb(int queueId, String dataName) {
 	  return queryDistribution.get(queueId).getDataProb(dataName);
   }
   
-  public double getColDistribution(int queueId, String dataName, String colName) {
+  public double getColProb(int queueId, String dataName, String colName) {
     return queryDistribution.get(queueId).getColumnProb(dataName, colName);
   }
   
-  public Map<String, DatasetDistribution>  getQueueDistributionMap(int queueId) {
-	  return queryDistribution.get(queueId).getQueueDistribution();
+  public Map<String, Double> getColDistributionMap(int queueId, String dataName) {
+	  return queryDistribution.get(queueId).getQueueDistributionMap().get(dataName).getColumnDistribution();
+  }
+  
+  public Map<String, DatasetDistribution> getQueueDistributionMap(int queueId) {
+	  return queryDistribution.get(queueId).getQueueDistributionMap();
   }
   
   public void setQueueDistribution(int id, QueueDistribution queue) {
