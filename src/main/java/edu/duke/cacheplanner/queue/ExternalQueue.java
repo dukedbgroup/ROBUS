@@ -18,18 +18,18 @@ public class ExternalQueue {
   private int batchSize; 
   private ListenerManager listenerManager;
   private Queue<AbstractQuery> queue;
-
-  public ExternalQueue(int id, int w, int min, int size, ListenerManager manager) {
-	this(id, w, min, size);
-	listenerManager = manager;
-  }
-  
+ 
   public ExternalQueue(int id, int w, int min, int size) {
 	    queueID = id;
 	    weight = w;
 	    minShare = min;
 	    batchSize = size;
 	    queue = new LinkedList<AbstractQuery>();
+  }
+  
+  public ExternalQueue(int id, int w, int min, int size, ListenerManager manager) {
+	this(id, w, min, size);
+	listenerManager = manager;
   }
   
   /**
@@ -58,4 +58,8 @@ public class ExternalQueue {
   public void setListenerManager(ListenerManager manager) {
 	  listenerManager = manager;
   }  
+  
+  public int getId() {
+	  return queueID;
+  }
 }

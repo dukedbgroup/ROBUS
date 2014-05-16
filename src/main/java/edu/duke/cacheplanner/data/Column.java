@@ -3,6 +3,7 @@ package edu.duke.cacheplanner.data;
 public class Column {
 
 	String colName;
+	
 	/**
 	 * Store statistics on the column here.
 	 */

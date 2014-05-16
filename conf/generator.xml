@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<generators>
+  <generator>
+    <queueId>1</queueId>
+    <lambda>2</lambda>
+    <meanColNum>2</meanColNum>
+  </generator>
+  <generator>
+    <queueId>2</queueId>
+    <lambda>2.5</lambda>
+    <meanColNum>2</meanColNum>
+  </generator>
+</generators>

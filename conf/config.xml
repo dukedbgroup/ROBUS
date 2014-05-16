@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<configuration>
+	<property>
+		<name>cacheplanner.algorithm.mode</name>
+		<value>offline</value>
+		<description>
+			Currently, supported modes are: online, offline
+		</description>
+	</property>
+	<property>
+		<name>cacheplanner.algorithm.setup</name>
+		<value>single</value>
+		<description>
+			Currently, supported modes are: multi, single
+		</description>
+	</property>
+	<property>
+		<name>cacheplanner.generator.mode</name>
+		<value>grouping</value>
+		<description>
+			Currently, supported modes are: grouping
+		</description>
+	</property>
+</configuration>

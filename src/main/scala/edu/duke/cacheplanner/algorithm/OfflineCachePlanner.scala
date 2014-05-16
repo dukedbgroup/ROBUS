@@ -9,6 +9,10 @@ import edu.duke.cacheplanner.query.AbstractQuery
 class OfflineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: SharkContext) 
     extends AbstractCachePlanner(mode, manager, sharkContext) {
   
+  //change this to config
+  val threshold:Double = 1
+  val tenent: Int = 1
+  
   override def initPlannerThread(): Thread = {
 	  new Thread("ListenerManager") {
 	    setDaemon(true)

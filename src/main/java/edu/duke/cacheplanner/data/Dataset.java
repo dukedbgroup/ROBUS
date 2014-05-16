@@ -3,6 +3,7 @@
  */
 package edu.duke.cacheplanner.data;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -17,6 +18,8 @@ public class Dataset {
 	String cachedName;
 	String path;
 	Set<Column> columns;
+	
+	//may be changed?
 	/**
 	 * Define a zipfian distribution over the columns of table
 	 * 1. Ranks of columns are provided here. Could be Map<Column, Double>
@@ -79,7 +82,7 @@ public class Dataset {
 	public void setColumnRanks(Set<Double> columnRanks) {
 		this.columnRanks = columnRanks;
 	}
-
+	
 	/**
 	 * @return the zipfExponent
 	 */

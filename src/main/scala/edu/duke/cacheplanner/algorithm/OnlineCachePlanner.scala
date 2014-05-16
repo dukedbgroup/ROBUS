@@ -17,7 +17,7 @@ class OnlineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: 
 	        if(!started){
 	          return
 	        }
-	        if(setUpMode) {
+	        if(isMultipleSetup) {
 	          //multi mode
 	        }
 	        else {
