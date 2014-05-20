@@ -2,6 +2,11 @@ package edu.duke.cacheplanner.generator;
 
 import java.util.List;
 import java.util.Random;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.ArrayList;
+
+import edu.umbc.cs.maple.utils.MathUtils;
 
 import edu.duke.cacheplanner.listener.ListenerManager;
 import edu.duke.cacheplanner.listener.QueryGenerated;
@@ -13,13 +18,14 @@ import edu.duke.cacheplanner.queue.ExternalQueue;
 import edu.duke.cacheplanner.data.Column;
 import edu.duke.cacheplanner.data.Dataset;
 import edu.duke.cacheplanner.data.QueryDistribution;
+import edu.duke.cacheplanner.util.TruncatedNormal;
 
 public abstract class AbstractQueryGenerator {
   //Distribution over query arrival rate (per second)
   protected double lambda;
   protected int queueId;
-  protected int meanColNum;
-  
+  protected static double meanColNum;
+  protected static double stdColNum;
   
   protected List<Dataset> datasets;
   protected QueryDistribution queryDistribution;
@@ -29,21 +35,13 @@ public abstract class AbstractQueryGenerator {
   protected Thread generatorThread;
   protected boolean started = false;
   
-  public AbstractQueryGenerator(double lamb, int id, int colNum) {
+  public AbstractQueryGenerator(double lamb, int id, double mean, double std) {
 	  lambda = lamb;
 	  queueId = id;
-	  meanColNum = colNum;
+	  meanColNum = mean;
+    stdColNum = std;
+
 	  generatorThread = createThread();
-  }
-  
-  public AbstractQueryGenerator(double lamb, ExternalQueue queue, 
-		  ListenerManager manager, List<Dataset> data) {
-    lambda = lamb;
-    externalQueue = queue;
-	listenerManager = manager;
-    datasets = data;
-    externalQueue.setListenerManager(listenerManager);
-    generatorThread = createThread();
   }
   
   public Thread createThread() {
@@ -122,64 +120,14 @@ public abstract class AbstractQueryGenerator {
 	  }
 	  return null;
   }
-  
-  public Dataset getRandomDataset() {
-    //first look at the dataset distribution
-    Random rand = new Random();
-    double p = rand.nextDouble();
-    double cumulativeProb = 0;
-    for(String d : queryDistribution.getQueueDistributionMap(queueId).keySet()) {
-      cumulativeProb = cumulativeProb + queryDistribution.getDataProb(queueId, d);
-      if(p <= cumulativeProb) {
-        System.out.println("dataset: " + d + " is picked");
-        return getDataset(d);
+
+  public Column getColumn(Dataset data, String colName) {
+    for(Column c : data.getColumns()) {
+      if (colName.equals(c.getColName())) {
+        return c;
       }
     }
-    
-    //error
     return null;
-  }
-  
-  public int getRandomColNumber() {
-    double mean = (double)meanColNum;
-    double std = 1.0;
-    Random rand = new Random();
-    return 1;
-  }
-  
-  public Projection getRandomProjection(Dataset data) {
-	return new Projection(AggregationFunction.SUM, getRandomColumn(data));
-  }
-  
-  public Column getRandomColumn(Dataset data) {
-	    Random rand = new Random();
-	    double p = rand.nextDouble();
-	    double cumulativeProb = 0;
-	    String name = data.getName();
-	    System.out.println(name);
-	    for(String col : queryDistribution.getColDistributionMap(queueId, name).keySet()) {
-	      cumulativeProb = cumulativeProb + queryDistribution.getColProb(queueId, name, col);
-	      if(p <= cumulativeProb) {
-	        System.out.println("column: " + col + " is picked");
-	        return getColumn(data, col);
-	      }
-	    }
-    	System.out.println("column null!! ERROR");
-
-		return null;
-  }
-  
-  public Column getColumn(Dataset data, String colName) {
-	  for(Column c : data.getColumns()) {
-		  if (colName.equals(c.getColName())) {
-			  return c;
-		  }
-	  }
-	  return null;
-  }
-  
-  public Selection getRandomSelection(Dataset data) {
-	  return null;
   }
 
   /**

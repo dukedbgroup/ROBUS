@@ -7,10 +7,13 @@
       <col>
         <name>ss_sold_date_sk</name>
         <size>100</size>
+        <type>int</type> 
+        <!-- type : int, string, double, float, timestamp, boolean -->
       </col>
       <col>
         <name>ss_sold_time_sk</name>
         <size>200</size>
+        <type>int</type> 
       </col>
     </columns>
   </dataset>
@@ -21,10 +24,12 @@
       <col>
         <name>cs_sold_date_sk</name>
         <size>100</size>
+        <type>int</type> 
       </col>
       <col>
         <name>cs_sold_time_sk</name>
         <size>200</size>
+        <type>int</type>
       </col>
     </columns>
   </dataset>  

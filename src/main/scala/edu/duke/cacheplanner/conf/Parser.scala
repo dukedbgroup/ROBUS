@@ -5,6 +5,7 @@ import java.util.HashMap
 import java.util.Map
 import edu.duke.cacheplanner.data.Dataset
 import edu.duke.cacheplanner.data.Column
+import edu.duke.cacheplanner.data.ColumnType
 import java.util.HashSet
 import java.util.ArrayList
 import java.util.List
@@ -61,13 +62,24 @@ object Parser {
       for(c <- columns \ Constants.COLUMN) {
         val col_name = (c \ Constants.NAME).text
         val col_size = (c \ Constants.SIZE).text.toDouble
-        col_list.add(new Column(col_size, col_name))
+        val col_type = (c \ Constants.TYPE).text
+
+        col_list.add(new Column(col_size, col_name, getColumnType(col_type)))
       }
       dataset.setColumns(col_list)
       dataset_list.add(dataset)
     }
     return dataset_list
   }
+
+  def getColumnType(colType: String): ColumnType = colType match {
+      case "string" => return ColumnType.STRING
+      case "int" => return ColumnType.INT
+      case "float" => return ColumnType.FLOAT
+      case "double" => return ColumnType.DOUBLE
+      case "boolean" => return ColumnType.BOOLEAN
+      case "timestamp" => return ColumnType.TIMESTAMP
+    }
   
   def parseQueryDistribution(path: String) : QueryDistribution = {
     val queryDistribution = new QueryDistribution

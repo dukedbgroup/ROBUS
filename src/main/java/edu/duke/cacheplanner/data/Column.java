@@ -8,10 +8,12 @@ public class Column {
 	 * Store statistics on the column here.
 	 */
 	double estimatedSize;
+	ColumnType columnType;
 
-	public Column(double size, String name) {
+	public Column(double size, String name, ColumnType type) {
 		estimatedSize = size;
 		colName = name;
+		columnType = type;
 	}
 
 	public double getEstimatedSize() {
@@ -28,5 +30,9 @@ public class Column {
 
 	public void setColName(String colName) {
 		this.colName = colName;
+	}
+
+	public ColumnType getColumnType() {
+		return columnType;
 	}
 }

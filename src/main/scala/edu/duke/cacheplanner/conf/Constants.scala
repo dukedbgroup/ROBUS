@@ -36,5 +36,8 @@ object Constants {
   final val GENERATORS = "generators"
   final val GENERATOR = "generator"
   final val MEAN_COLUMN = "meanColNum"
+  final val STD_COLUMN = "stdColNum"
+
+  final val TYPE = "type"
 }
 
