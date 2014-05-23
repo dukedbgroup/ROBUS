@@ -14,9 +14,9 @@ import edu.duke.cacheplanner.data.Dataset;
 @SuppressWarnings("serial")
 public class SingleTableQuery extends AbstractQuery {
 
-	private Dataset dataset;
-	private List<Projection> projections;
-	private List<Selection> selections;
+	protected Dataset dataset;
+	protected List<Projection> projections;
+	protected List<Selection> selections;
 
 	public SingleTableQuery(String queryID, String queueID, Dataset dataset,
 			List<Projection> projections, List<Selection> selections) {
@@ -82,8 +82,13 @@ public class SingleTableQuery extends AbstractQuery {
       }
       count ++;
     }
-    result = result + " FROM " + dataset.getName();
-
+    result = result + " FROM ";
+    if(cached) {
+      result = result + dataset.getName() + "_cached";
+    }
+    else {
+      result = result + dataset.getName();
+    }
     count = 1;
     if(selections.size() > 0) {
       result = result + " WHERE ";

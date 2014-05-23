@@ -39,5 +39,6 @@ object Constants {
   final val STD_COLUMN = "stdColNum"
 
   final val TYPE = "type"
+  final val GROUPING_PROBABILITY = "groupingQueryProb"
 }
 

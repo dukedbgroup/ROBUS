@@ -5,11 +5,13 @@
     <lambda>2</lambda>
     <meanColNum>2.0</meanColNum>
     <stdColNum>1.0</stdColNum>
+    <groupingQueryProb>0.7</groupingQueryProb>
   </generator>
   <generator>
     <queueId>2</queueId>
     <lambda>2.5</lambda>
     <meanColNum>2.0</meanColNum>
     <stdColNum>1.0</stdColNum>
+    <groupingQueryProb>0.7</groupingQueryProb>
   </generator>
 </generators>

@@ -22,8 +22,8 @@ import edu.duke.cacheplanner.util.TruncatedNormal;
 public class SingleTableQueryGenerator extends AbstractQueryGenerator {
   private int count = 0;
   
-  public SingleTableQueryGenerator(double lamb, int id, double mean, double std) {
-    super(lamb, id, mean, std);
+  public SingleTableQueryGenerator(double lamb, int id, double mean, double std, double grouping) {
+    super(lamb, id, mean, std, grouping);
   }
   
   
@@ -50,7 +50,7 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
     TruncatedNormal normal = new TruncatedNormal(meanColNum, stdColNum, min, max);
     double[] distribution = new double[max];
 
-    //compute dicretized truncate normal distribution for column number
+    //compute discretized truncate normal distribution for column number
     for(int i = min; i < max + 1; i++) {
       double a = (double)i;
       double b = (double)i;
@@ -157,14 +157,19 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
   }
 
   public AggregationFunction getRandomAggregationFunction(Column col, boolean useAggregation) {
-    if(isNumber(col) && useAggregation) {
-      Random rand = new Random();
-      int func = rand.nextInt(4);
-      switch(func) {
-        case 0: return AggregationFunction.COUNT;
-        case 1: return AggregationFunction.MAX;
-        case 2: return AggregationFunction.MIN;
-        case 3: return AggregationFunction.SUM;
+    if(useAggregation) {
+      if(isNumber(col)) {
+        Random rand = new Random();
+        int func = rand.nextInt(4);
+        switch(func) {
+          case 0: return AggregationFunction.COUNT;
+          case 1: return AggregationFunction.MAX;
+          case 2: return AggregationFunction.MIN;
+          case 3: return AggregationFunction.SUM;
+        }
+      }
+      else {
+        return AggregationFunction.COUNT;
       }
     }
     return AggregationFunction.NONE;
@@ -192,23 +197,23 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
     return result;
   }
 
-  public boolean isAggregationUsed(List<Column> candidate) {
-    Random rand = new Random();
-    boolean useAggr = true;
-    for(Column col : candidate) {
-      if(!isNumber(col)) {
-        useAggr = false;
-      }
-    }
-
-    //if aggregation can be used, randomly pick whether to use all aggregation or None.
-    if(useAggr) {
-      if(rand.nextInt(2) == 0) {
-        useAggr = false;
-      }
-    }
-    return useAggr;
-  }
+//  public boolean isAggregationUsed(List<Column> candidate) {
+//    Random rand = new Random();
+//    boolean useAggr = true;
+//    for(Column col : candidate) {
+//      if(!isNumber(col)) {
+//        useAggr = false;
+//      }
+//    }
+//
+//    //if aggregation can be used, randomly pick whether to use all aggregation or None.
+//    if(useAggr) {
+//      if(rand.nextInt(2) == 0) {
+//        useAggr = false;
+//      }
+//    }
+//    return useAggr;
+//  }
 
   public Selection getRandomSelection(Column column) {
     return new Selection(column, getRandomValue(column), getRandomSelectionOperator());
@@ -245,69 +250,48 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
     List<Column> columns = getRandomColumns(dataset, colNum);
 
     // 1. decide grouping / single
-    AbstractQuery result;
     Random rand = new Random();
     //int randPick = rand.nextInt(2);
-    int randPick = 0;
     List<Projection> projections = new ArrayList<Projection>();
     List<Selection> selections = new ArrayList<Selection>();
 
     //single table query is picked
-    if(randPick == 0) {
+    if(groupingQueryProb < rand.nextDouble()) {
       int selectionNum = rand.nextInt(columns.size()+1);
-      int projectionNum = rand.nextInt(columns.size())+1;
-
-      List<Column> projectionCandidate = uniformSampleColumns(columns, projectionNum);
-      System.out.println("projections" + Arrays.toString(projectionCandidate.toArray()));
 
       List<Column> selectionCandidate = uniformSampleColumns(columns, selectionNum);
 
-      //to make sure all the columns picked are used.
-      for(Column col : projectionCandidate) {
-        columns.remove(col);
-      }
-      for(Column col : selectionCandidate) {
-        columns.remove(col);
-      }
-
-      while(columns.size() > 0) {
-        if(rand.nextInt(2) == 0) {
-          projectionCandidate.add(columns.get(0));
-          columns.remove(0);
-        }
-        else {
-          selectionCandidate.add(columns.get(0));
-          columns.remove(0);
-        }
-      }
-
-      //check if aggregation can be used in this query
-      boolean aggregation = isAggregationUsed(projectionCandidate);
-
-      for(Column col: projectionCandidate) {
-        projections.add(getRandomProjection(col, aggregation));
+      for(Column col: columns) {
+        projections.add(getRandomProjection(col, false));
       }
 
       for(Column col: selectionCandidate) {
         selections.add(getRandomSelection(col));
       }
+      count++;
 
       return new SingleTableQuery(queryID, queueID, dataset, projections, selections);
     }
-    //grouping query is picked
+    //grouping column
+    else {
+      int selectionNum = rand.nextInt(columns.size()+1);
+      List<Column> selectionCandidate = uniformSampleColumns(columns, selectionNum);
 
-//    else {
-//
-//
-//
-//    }
+      Column groupingCol = uniformSampleColumns(columns, 1).get(0);
+      columns.remove(groupingCol);
+      projections.add(new Projection(AggregationFunction.NONE, groupingCol));
+      for(Column col: columns) {
+        projections.add(getRandomProjection(col, true));
+      }
 
-    // 2. if grouping, pick grouping column, pick projection(only aggregation allowed), pick selections
-    // 2. if single, pick selection(randomly pick aggregation if number), projection(if number, if string put '')
-    count++;
-    return null;
+      for(Column col : selectionCandidate) {
+        selections.add(getRandomSelection(col));
+      }
+      count++;
+
+      return new GroupingQuery(queryID, queueID, dataset, projections, selections, groupingCol);
+
+    }
   }
-
-
   
 }

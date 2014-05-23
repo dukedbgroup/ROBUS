@@ -15,13 +15,11 @@ public class GroupingQuery extends SingleTableQuery {
 	Column groupingColumn;
 	List<Projection> aggregations;
 
-	public GroupingQuery(String queryID, String queueID, Dataset dataset,
-			Column groupingColumn, List<Projection> aggregations,
-			List<Selection> selections) {
-		super(queryID, queueID, dataset, aggregations, selections);
-		aggregations.add(0, new Projection(
-				AggregationFunction.NONE, groupingColumn));
-		setProjections(aggregations);
+  public GroupingQuery(String queryID, String queueID, Dataset dataset,
+                          List<Projection> projections, List<Selection> selections,
+                          Column grouping) {
+    super(queryID, queueID, dataset, projections, selections);
+    groupingColumn = grouping;
 	}
 
 	/**
@@ -40,9 +38,10 @@ public class GroupingQuery extends SingleTableQuery {
 
 	@Override
 	public String toHiveQL(Boolean cached) {
-		String groupByClause = "";
-		return super.toHiveQL(cached) + groupByClause;
-	}
+    String result = super.toHiveQL(cached);
+    result = result + " GROUP BY " + groupingColumn.getColName();
+    return result;
+  }
 
 }
 

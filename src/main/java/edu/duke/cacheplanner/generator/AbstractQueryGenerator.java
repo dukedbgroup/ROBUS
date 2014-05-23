@@ -15,6 +15,7 @@ public abstract class AbstractQueryGenerator {
   protected double lambda;
   protected int queueId;
   protected double waitingTime;
+  protected double groupingQueryProb;
 
   protected static double meanColNum;
   protected static double stdColNum;
@@ -26,11 +27,12 @@ public abstract class AbstractQueryGenerator {
   protected Thread generatorThread;
   protected boolean started = false;
 
-  public AbstractQueryGenerator(double lamb, int id, double mean, double std) {
+  public AbstractQueryGenerator(double lamb, int id, double mean, double std, double grouping) {
     lambda = lamb;
     queueId = id;
     meanColNum = mean;
     stdColNum = std;
+    groupingQueryProb = grouping;
     waitingTime = 0.0;
     generatorThread = createThread();
   }

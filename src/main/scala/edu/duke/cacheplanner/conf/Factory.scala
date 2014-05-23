@@ -50,8 +50,9 @@ object Factory {
       val lambda = (n \ Constants.LAMBDA).text.toDouble
       val meanColNum = (n \ Constants.MEAN_COLUMN).text.toDouble
       val stdColNum = (n \ Constants.STD_COLUMN).text.toDouble
+      val grouping = (n \ Constants.GROUPING_PROBABILITY).text.toDouble
       println(queueId + ", " + lambda + ", " + meanColNum)
-      val generator = createGenerator(queueId, lambda, meanColNum, stdColNum)
+      val generator = createGenerator(queueId, lambda, meanColNum, stdColNum, grouping)
       generators.add(generator)
       generator.setDatasets(datasets)
       generator.setListenerManager(listenerManager)
@@ -66,10 +67,10 @@ object Factory {
     return generators
   }
   
-  def createGenerator(queueId: Int, lambda: Double, meanColNum: Double, stdColNum: Double): AbstractQueryGenerator = {
+  def createGenerator(queueId: Int, lambda: Double, meanColNum: Double, stdColNum: Double, grouping: Double): AbstractQueryGenerator = {
     val mode = configManager.getGeneratorMode()  
     mode match {
-        case "singleTable" => return new SingleTableQueryGenerator(lambda, queueId, meanColNum, stdColNum)
+        case "singleTable" => return new SingleTableQueryGenerator(lambda, queueId, meanColNum, stdColNum, grouping)
     }
 
   }
