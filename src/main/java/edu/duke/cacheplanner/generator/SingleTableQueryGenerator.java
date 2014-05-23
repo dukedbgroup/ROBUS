@@ -35,7 +35,6 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
     for(String d : queryDistribution.getQueueDistributionMap(queueId).keySet()) {
       cumulativeProb = cumulativeProb + queryDistribution.getDataProb(queueId, d);
       if(p <= cumulativeProb) {
-        System.out.println("dataset: " + d + " is picked");
         return getDataset(d);
       }
     }
@@ -59,8 +58,6 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
       distribution[i-1] = normal.cumulativeProbability(b) - normal.cumulativeProbability(a);
     }
 
-    System.out.println(Arrays.toString(distribution));
-
     //pick column number used in the query with the distribution got from the above.
     Random rand = new Random();
     double p = rand.nextDouble();
@@ -68,7 +65,6 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
     for(int i = 0; i < distribution.length; i ++) {
       cumulativeProb = cumulativeProb + distribution[i];
       if(p <= cumulativeProb) {
-        System.out.println("randomColNum : " + (i+1));
         return i + 1;
       }
     }
@@ -85,9 +81,6 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
       colDistribution[pos] = queryDistribution.getColProb(queueId, data.getName(), c.getColName());
       pos++;
     }
-    System.out.println(Arrays.toString(columns));
-    System.out.println(Arrays.toString((colDistribution)));
-
     Collection<Column> result = MathUtils.sampleWithoutReplacement(columns, colDistribution, numSamples);
     return new ArrayList<Column>(result);
   }
@@ -197,24 +190,6 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
     return result;
   }
 
-//  public boolean isAggregationUsed(List<Column> candidate) {
-//    Random rand = new Random();
-//    boolean useAggr = true;
-//    for(Column col : candidate) {
-//      if(!isNumber(col)) {
-//        useAggr = false;
-//      }
-//    }
-//
-//    //if aggregation can be used, randomly pick whether to use all aggregation or None.
-//    if(useAggr) {
-//      if(rand.nextInt(2) == 0) {
-//        useAggr = false;
-//      }
-//    }
-//    return useAggr;
-//  }
-
   public Selection getRandomSelection(Column column) {
     return new Selection(column, getRandomValue(column), getRandomSelectionOperator());
   }
@@ -223,23 +198,13 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
     return new Projection(getRandomAggregationFunction(column, useAggregation), column);
   }
 
-
-//
-//  public AbstractQuery getGroupingQuery(List<Column> columns) {
-//
-//  }
-//
-//  public AbstractQuery getSingleTableQuery(List<Column> columns) {
-//
-//  }
-
   @Override
   public AbstractQuery generateQuery() {
     //select 'projections' from 'dataset' where 'selections'
 
     String queryID = count + "";
     String queueID = queueId + "";
-    System.out.println("hi");
+
     //pick dataset
     Dataset dataset = getRandomDataset();
 
@@ -290,7 +255,6 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
       count++;
 
       return new GroupingQuery(queryID, queueID, dataset, projections, selections, groupingCol);
-
     }
   }
   

@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.duke.cacheplanner.listener.ListenerManager;
 import edu.duke.cacheplanner.listener.QueryGenerated;
+import edu.duke.cacheplanner.listener.QuerySerialize;
 import edu.duke.cacheplanner.query.AbstractQuery;
 import edu.duke.cacheplanner.queue.ExternalQueue;
 import edu.duke.cacheplanner.data.Column;
@@ -48,7 +49,7 @@ public abstract class AbstractQueryGenerator {
           //get delay
           long delay = (long) getPoissonDelay();
           waitingTime = delay;
-          System.out.println(delay);
+
           try {
             Thread.sleep(delay);
           } catch (InterruptedException e) {
@@ -56,9 +57,9 @@ public abstract class AbstractQueryGenerator {
           }
           //generate the query & post the event to the listener
           AbstractQuery query = generateQuery();
-          System.out.println(query.toHiveQL(false));
           query.setTimeDelay(waitingTime);
           externalQueue.addQuery(query);
+          listenerManager.postEvent(new QuerySerialize(query));
           listenerManager.postEvent(new QueryGenerated
                   (Integer.parseInt(query.getQueryID()), Integer.parseInt(query.getQueueID())));
         }

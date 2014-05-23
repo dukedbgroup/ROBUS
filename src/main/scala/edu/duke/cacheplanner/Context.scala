@@ -17,7 +17,7 @@ class Context(manager: ListenerManager, generators: java.util.List[AbstractQuery
   private val listenerManager = manager
   //private val sc = initSharkContext
   private val queryGenerators = generators
-  private val cachePlanner = planner
+  //private val cachePlanner = planner
   
   def initSharkContext() : SharkContext = {
     SharkEnv.initWithSharkContext("Cache_Experiment")
@@ -52,6 +52,6 @@ class Context(manager: ListenerManager, generators: java.util.List[AbstractQuery
     for(gen <- queryGenerators.toArray()) {
       gen.asInstanceOf[AbstractQueryGenerator].stop()
     }
-    planner.stop()
+    //planner.stop()
   }
 }

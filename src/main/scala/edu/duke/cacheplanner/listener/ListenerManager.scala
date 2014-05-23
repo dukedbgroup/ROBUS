@@ -37,6 +37,8 @@ class ListenerManager {
    */
   private def notifyListeners(event: ListenerEvent) {
     event match {
+      case querySerialize: QuerySerialize =>
+        listenerList.foreach(_.onQuerySerialize(querySerialize))
       case queryGenerated: QueryGenerated =>
         listenerList.foreach(_.onQueryGenerated(queryGenerated))
       case queryFetchedByCachePlanner: QueryFetchedByCachePlanner =>

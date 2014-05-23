@@ -3,6 +3,7 @@
  */
 package edu.duke.cacheplanner.query;
 
+import java.io.Serializable;
 import java.util.List;
 
 import edu.duke.cacheplanner.data.Dataset;
@@ -12,7 +13,7 @@ import edu.duke.cacheplanner.data.Dataset;
  * @author mayuresh
  */
 @SuppressWarnings("serial")
-public class SingleTableQuery extends AbstractQuery {
+public class SingleTableQuery extends AbstractQuery implements Serializable {
 
 	protected Dataset dataset;
 	protected List<Projection> projections;

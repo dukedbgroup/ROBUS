@@ -1,5 +1,6 @@
 package edu.duke.cacheplanner.query;
 
+import java.io.Serializable;
 import java.util.List;
 
 import edu.duke.cacheplanner.data.Column;
@@ -10,7 +11,7 @@ import edu.duke.cacheplanner.data.Dataset;
  * @author mayuresh
  */
 @SuppressWarnings("serial")
-public class GroupingQuery extends SingleTableQuery {
+public class GroupingQuery extends SingleTableQuery implements Serializable {
 
 	Column groupingColumn;
 	List<Projection> aggregations;

@@ -1,6 +1,8 @@
 package edu.duke.cacheplanner.data;
 
-public class Column {
+import java.io.Serializable;
+
+public class Column implements Serializable {
 
   String colName;
 

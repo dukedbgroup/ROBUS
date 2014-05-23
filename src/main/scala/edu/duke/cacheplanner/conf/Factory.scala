@@ -25,7 +25,6 @@ object Factory {
   
   def initListener: ListenerManager = {
     val manager = new ListenerManager
-    manager.addListener(new LoggingListener)
     return manager
   }
   
@@ -51,7 +50,6 @@ object Factory {
       val meanColNum = (n \ Constants.MEAN_COLUMN).text.toDouble
       val stdColNum = (n \ Constants.STD_COLUMN).text.toDouble
       val grouping = (n \ Constants.GROUPING_PROBABILITY).text.toDouble
-      println(queueId + ", " + lambda + ", " + meanColNum)
       val generator = createGenerator(queueId, lambda, meanColNum, stdColNum, grouping)
       generators.add(generator)
       generator.setDatasets(datasets)
@@ -72,12 +70,9 @@ object Factory {
     mode match {
         case "singleTable" => return new SingleTableQueryGenerator(lambda, queueId, meanColNum, stdColNum, grouping)
     }
-
   }
   
-  
   def createContext : Context = {
-    println(datasets)
     new Context(listenerManager, generators, null)
   }
   

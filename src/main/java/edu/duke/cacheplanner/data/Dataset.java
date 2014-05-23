@@ -3,6 +3,7 @@
  */
 package edu.duke.cacheplanner.data;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,7 +11,7 @@ import java.util.Set;
  * @author mayuresh
  *
  */
-public class Dataset {
+public class Dataset implements Serializable {
 
 	final static String CACHED_TABLE_SUFFIX = "_cached"; 
 

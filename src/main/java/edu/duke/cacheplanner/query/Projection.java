@@ -11,7 +11,6 @@ import edu.duke.cacheplanner.data.Column;
  * @author mayuresh
  *
  */
-@SuppressWarnings("serial")
 public class Projection implements Serializable {
 
 	protected AggregationFunction aggregationFunction;
