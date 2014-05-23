@@ -15,8 +15,8 @@ public class GroupingQuery extends SingleTableQuery {
 	Column groupingColumn;
 	List<Projection> aggregations;
 
-	public GroupingQuery(String queryID, String queueID, Dataset dataset, 
-			Column groupingColumn, List<Projection> aggregations, 
+	public GroupingQuery(String queryID, String queueID, Dataset dataset,
+			Column groupingColumn, List<Projection> aggregations,
 			List<Selection> selections) {
 		super(queryID, queueID, dataset, aggregations, selections);
 		aggregations.add(0, new Projection(

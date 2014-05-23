@@ -25,6 +25,13 @@ public abstract class AbstractQuery implements Serializable {
 		timeDelay = delay;
 	}
 
+  public void setQueryID(String id) {
+    QueryID = id;
+  }
+
+  public void setQueueID(String id) {
+    QueueID = id;
+  }
 	/**
 	 * @param cached true if the query is on cached table in Shark, false otherwise
 	 * @return HiveQL translation of the query

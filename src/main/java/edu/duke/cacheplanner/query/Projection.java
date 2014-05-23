@@ -33,6 +33,15 @@ public class Projection implements Serializable {
 	public AggregationFunction getAggregationFunction() {
 		return aggregationFunction;
 	}
+
+  public String toString() {
+    if(aggregationFunction == AggregationFunction.NONE) {
+      return col.getColName();
+    }
+    else {
+      return aggregationFunction.toString() + "(" + col.getColName() + ")";
+    }
+  }
 }
 
 

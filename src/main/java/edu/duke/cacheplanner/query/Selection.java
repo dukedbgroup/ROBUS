@@ -6,6 +6,7 @@ package edu.duke.cacheplanner.query;
 import java.io.Serializable;
 
 import edu.duke.cacheplanner.data.Column;
+import edu.duke.cacheplanner.data.ColumnType;
 
 /**
  * @author mayuresh
@@ -46,5 +47,14 @@ public class Selection implements Serializable {
 		return operator;
 	}
 
+  public String toString() {
+    ColumnType type = col.getColumnType();
+    if(type == ColumnType.DOUBLE || type == ColumnType.FLOAT || type == ColumnType.INT) {
+      return col.getColName() + " " + operator.toString() + " " + value;
+    }
+    else {
+      return col.getColName() + " " + operator.toString() + " \'" + value + "\'";
+    }
+  }
 }
 

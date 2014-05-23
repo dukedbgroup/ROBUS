@@ -18,7 +18,7 @@ public class SingleTableQuery extends AbstractQuery {
 	private List<Projection> projections;
 	private List<Selection> selections;
 
-	public SingleTableQuery(String queryID, String queueID, Dataset dataset, 
+	public SingleTableQuery(String queryID, String queueID, Dataset dataset,
 			List<Projection> projections, List<Selection> selections) {
 		this.QueryID = queryID;
 		this.QueueID = queueID;
@@ -27,7 +27,8 @@ public class SingleTableQuery extends AbstractQuery {
 		setSelections(selections);
 	}
 
-	/**
+
+  /**
 	 * @return the dataset
 	 */
 	public Dataset getDataset() {
@@ -72,7 +73,28 @@ public class SingleTableQuery extends AbstractQuery {
 
 	@Override
 	public String toHiveQL(Boolean cached) {
-		// for test...
-		return "SELECT " + projections.get(0).getColName() + " FROM " + dataset.getName();
+    String result = "SELECT ";
+    int count = 1;
+    for(Projection projection: projections) {
+      result = result + projection.toString();
+      if(projections.size() != count) {
+        result = result + ", ";
+      }
+      count ++;
+    }
+    result = result + " FROM " + dataset.getName();
+
+    count = 1;
+    if(selections.size() > 0) {
+      result = result + " WHERE ";
+      for(Selection selection: selections) {
+        result = result + selection.toString();
+        if(selections.size() != count) {
+          result = result + ", ";
+        }
+        count++;
+      }
+    }
+		return result;
 	}
 }

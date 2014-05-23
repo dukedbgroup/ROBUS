@@ -13,19 +13,19 @@ import edu.duke.cacheplanner.data.QueryDistribution;
 public abstract class AbstractQueryGenerator {
   //Distribution over query arrival rate (per second)
   protected double lambda;
-  protected int queueId;  
+  protected int queueId;
   protected double waitingTime;
 
   protected static double meanColNum;
   protected static double stdColNum;
-  
+
   protected List<Dataset> datasets;
   protected QueryDistribution queryDistribution;
   protected ExternalQueue externalQueue;
   protected ListenerManager listenerManager;
   protected Thread generatorThread;
   protected boolean started = false;
-  
+
   public AbstractQueryGenerator(double lamb, int id, double mean, double std) {
     lambda = lamb;
     queueId = id;
@@ -34,48 +34,49 @@ public abstract class AbstractQueryGenerator {
     waitingTime = 0.0;
     generatorThread = createThread();
   }
-  
+
   public Thread createThread() {
     return new Thread("QueryGenerator") {
       @Override
       public void run() {
-        while(true) {
-          if(!started) {
+        while (true) {
+          if (!started) {
             return;
           }
           //get delay
-          long delay = (long)getPoissonDelay();
+          long delay = (long) getPoissonDelay();
           waitingTime = delay;
           System.out.println(delay);
           try {
             Thread.sleep(delay);
           } catch (InterruptedException e) {
-          e.printStackTrace();
+            e.printStackTrace();
           }
           //generate the query & post the event to the listener
           AbstractQuery query = generateQuery();
+          System.out.println(query.toHiveQL(false));
           query.setTimeDelay(waitingTime);
           externalQueue.addQuery(query);
           listenerManager.postEvent(new QueryGenerated
-              (Integer.parseInt(query.getQueryID()),Integer.parseInt(query.getQueueID())));
+                  (Integer.parseInt(query.getQueryID()), Integer.parseInt(query.getQueueID())));
         }
-      }     
+      }
     };
   }
-    
+
   /**
    * calculate the delayed time using poisson arrival
    */
   public double getPoissonDelay() {
-    double mean = 1.0 / (lambda*1000); // convert the number in sec
-    return Math.log(Math.random())/-mean;
+    double mean = 1.0 / (lambda * 1000); // convert the number in sec
+    return Math.log(Math.random()) / -mean;
   }
-  
+
   public void start() {
     started = true;
     generatorThread.start();
   }
-  
+
   public void stop() throws InterruptedException {
     if (!started) {
       throw new IllegalStateException("cannot be done because a listener has not yet started!");
@@ -83,20 +84,20 @@ public abstract class AbstractQueryGenerator {
     started = false;
     generatorThread.join();
   }
-  
+
   public void setListenerManager(ListenerManager manager) {
     listenerManager = manager;
   }
-  
+
   public void setDatasets(List<Dataset> data) {
     datasets = data;
   }
-  
+
   public void setExternalQueue(ExternalQueue queue) {
     externalQueue = queue;
-    externalQueue.setListenerManager(listenerManager);    
+    externalQueue.setListenerManager(listenerManager);
   }
-  
+
   public void setQueryDistribution(QueryDistribution distribution) {
     queryDistribution = distribution;
   }
@@ -104,10 +105,10 @@ public abstract class AbstractQueryGenerator {
   public int getQueueId() {
     return queueId;
   }
-  
+
   public Dataset getDataset(String name) {
-    for(Dataset d: datasets) {
-      if(d.getName().equals(name)) {
+    for (Dataset d : datasets) {
+      if (d.getName().equals(name)) {
         return d;
       }
     }
@@ -115,7 +116,7 @@ public abstract class AbstractQueryGenerator {
   }
 
   public Column getColumn(Dataset data, String colName) {
-    for(Column c : data.getColumns()) {
+    for (Column c : data.getColumns()) {
       if (colName.equals(c.getColName())) {
         return c;
       }
@@ -128,5 +129,5 @@ public abstract class AbstractQueryGenerator {
    * return the id of the chosen queue
    */
   public abstract AbstractQuery generateQuery();
- 
+
 }
