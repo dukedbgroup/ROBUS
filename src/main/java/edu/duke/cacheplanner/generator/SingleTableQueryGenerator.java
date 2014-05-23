@@ -1,24 +1,30 @@
 package edu.duke.cacheplanner.generator;
 
+import edu.umbc.cs.maple.utils.MathUtils;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.Arrays;
+import java.util.Collection;
 
 import edu.duke.cacheplanner.data.Dataset;
 import edu.duke.cacheplanner.data.Column;
-import edu.duke.cacheplanner.listener.ListenerManager;
 import edu.duke.cacheplanner.query.AbstractQuery;
 import edu.duke.cacheplanner.query.Projection;
 import edu.duke.cacheplanner.query.Selection;
 import edu.duke.cacheplanner.query.SingleTableQuery;
-import edu.duke.cacheplanner.queue.ExternalQueue;
-
+import edu.duke.cacheplanner.query.AggregationFunction;
 import edu.duke.cacheplanner.util.TruncatedNormal;
 
+/**
+ * Single Table Query Generator
+ */
 public class SingleTableQueryGenerator extends AbstractQueryGenerator {
   private int count = 0;
   
-    public SingleTableQueryGenerator(double lamb, int id, double mean, double std) {
-      super(lamb, id, mean, std);
+  public SingleTableQueryGenerator(double lamb, int id, double mean, double std) {
+    super(lamb, id, mean, std);
   }
   
   
@@ -113,9 +119,9 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
     //sample columns that will used in query
     List<Column> columns = getRandomColumns(dataset, colNum);
 
-    for(Column c : columns) {
-      System.out.println(c.getColName() + " (" + c.getColumnType().toString() + ") picked!");
-    }
+    // for(Column c : columns) {
+    //   System.out.println(c.getColName() + " (" + c.getColumnType().toString() + ") picked!");
+    // }
 
     // 1. decide grouping / single
     // 2. if grouping, pick grouping column, pick projection(only aggregation allowed), pick selections

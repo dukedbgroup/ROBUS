@@ -28,7 +28,7 @@ abstract class AbstractCachePlanner(mode: Boolean, manager: ListenerManager, sha
     started = false
     plannerThread.join()
   }
-  
+
   /**
    * initialize Planner Thread.
    */

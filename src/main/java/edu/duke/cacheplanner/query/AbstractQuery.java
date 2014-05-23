@@ -7,6 +7,7 @@ public abstract class AbstractQuery implements Serializable {
 
 	protected String QueryID;
 	protected String QueueID;
+	protected double timeDelay;
 
 	public String getQueryID() {
 		return QueryID;
@@ -14,6 +15,14 @@ public abstract class AbstractQuery implements Serializable {
 
 	public String getQueueID() {
 		return QueueID;
+	}
+
+	public double getTimeDelay() {
+		return timeDelay;
+	}
+
+	public void setTimeDelay(double delay) {
+		timeDelay = delay;
 	}
 
 	/**

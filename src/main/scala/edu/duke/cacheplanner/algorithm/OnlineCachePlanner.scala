@@ -6,7 +6,7 @@ import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.listener.QueryPushedToSharkScheduler
 import edu.duke.cacheplanner.query.AbstractQuery
 
-class OnlineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: SharkContext) 
+class aOnlineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: SharkContext)
     extends AbstractCachePlanner(mode, manager, sharkContext) {
   
    override def initPlannerThread(): Thread = {

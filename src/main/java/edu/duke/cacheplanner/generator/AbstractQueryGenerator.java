@@ -1,29 +1,21 @@
 package edu.duke.cacheplanner.generator;
 
 import java.util.List;
-import java.util.Random;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.ArrayList;
-
-import edu.umbc.cs.maple.utils.MathUtils;
 
 import edu.duke.cacheplanner.listener.ListenerManager;
 import edu.duke.cacheplanner.listener.QueryGenerated;
 import edu.duke.cacheplanner.query.AbstractQuery;
-import edu.duke.cacheplanner.query.AggregationFunction;
-import edu.duke.cacheplanner.query.Projection;
-import edu.duke.cacheplanner.query.Selection;
 import edu.duke.cacheplanner.queue.ExternalQueue;
 import edu.duke.cacheplanner.data.Column;
 import edu.duke.cacheplanner.data.Dataset;
 import edu.duke.cacheplanner.data.QueryDistribution;
-import edu.duke.cacheplanner.util.TruncatedNormal;
 
 public abstract class AbstractQueryGenerator {
   //Distribution over query arrival rate (per second)
   protected double lambda;
-  protected int queueId;
+  protected int queueId;  
+  protected double waitingTime;
+
   protected static double meanColNum;
   protected static double stdColNum;
   
@@ -31,43 +23,44 @@ public abstract class AbstractQueryGenerator {
   protected QueryDistribution queryDistribution;
   protected ExternalQueue externalQueue;
   protected ListenerManager listenerManager;
-
   protected Thread generatorThread;
   protected boolean started = false;
   
   public AbstractQueryGenerator(double lamb, int id, double mean, double std) {
-	  lambda = lamb;
-	  queueId = id;
-	  meanColNum = mean;
+    lambda = lamb;
+    queueId = id;
+    meanColNum = mean;
     stdColNum = std;
-
-	  generatorThread = createThread();
+    waitingTime = 0.0;
+    generatorThread = createThread();
   }
   
   public Thread createThread() {
-	  return new Thread("QueryGenerator") {
-	      @Override
-	      public void run() {
-	        while(true) {
-	          if(!started) {
-	            return;
-	          }
-	          //get delay
-	          long delay = (long)getPoissonDelay();
-	          System.out.println(delay);
-	          try {
-	            Thread.sleep(delay);
-	          } catch (InterruptedException e) {
-	          e.printStackTrace();
-	          }
-	          //generate the query & post the event to the listener
-	          AbstractQuery query = generateQuery();
-	          externalQueue.addQuery(query);
-	          listenerManager.postEvent(new QueryGenerated
-	              (Integer.parseInt(query.getQueryID()),Integer.parseInt(query.getQueueID())));
-	        }
-	      }     
-	    };
+    return new Thread("QueryGenerator") {
+      @Override
+      public void run() {
+        while(true) {
+          if(!started) {
+            return;
+          }
+          //get delay
+          long delay = (long)getPoissonDelay();
+          waitingTime = delay;
+          System.out.println(delay);
+          try {
+            Thread.sleep(delay);
+          } catch (InterruptedException e) {
+          e.printStackTrace();
+          }
+          //generate the query & post the event to the listener
+          AbstractQuery query = generateQuery();
+          query.setTimeDelay(waitingTime);
+          externalQueue.addQuery(query);
+          listenerManager.postEvent(new QueryGenerated
+              (Integer.parseInt(query.getQueryID()),Integer.parseInt(query.getQueueID())));
+        }
+      }     
+    };
   }
     
   /**
@@ -92,16 +85,16 @@ public abstract class AbstractQueryGenerator {
   }
   
   public void setListenerManager(ListenerManager manager) {
-	  listenerManager = manager;
+    listenerManager = manager;
   }
   
   public void setDatasets(List<Dataset> data) {
-	  datasets = data;
+    datasets = data;
   }
   
   public void setExternalQueue(ExternalQueue queue) {
-	  externalQueue = queue;
-	  externalQueue.setListenerManager(listenerManager);	  
+    externalQueue = queue;
+    externalQueue.setListenerManager(listenerManager);    
   }
   
   public void setQueryDistribution(QueryDistribution distribution) {
@@ -109,16 +102,16 @@ public abstract class AbstractQueryGenerator {
   }
 
   public int getQueueId() {
-	  return queueId;
+    return queueId;
   }
   
   public Dataset getDataset(String name) {
-	  for(Dataset d: datasets) {
-		  if(d.getName().equals(name)) {
-			  return d;
-		  }
-	  }
-	  return null;
+    for(Dataset d: datasets) {
+      if(d.getName().equals(name)) {
+        return d;
+      }
+    }
+    return null;
   }
 
   public Column getColumn(Dataset data, String colName) {
