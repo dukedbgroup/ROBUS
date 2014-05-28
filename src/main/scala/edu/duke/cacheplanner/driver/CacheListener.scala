@@ -12,4 +12,9 @@ class CacheListener(manager: ListenerManager) extends SparkListener{
   override def onJobStart(jobStart: SparkListenerJobStart): Unit = {
     listenerManager.postEvent(new QueryFinished(1,1))
   }
+
+  def onTaskStart(taskStart : org.apache.spark.scheduler.SparkListenerTaskStart) : Unit = {
+    listenerManager.postEvent(new QueryFinished(2,1))
+  }
+
 }
