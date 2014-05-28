@@ -11,4 +11,5 @@ class SerializeListener(oos: ObjectOutputStream) extends Listener {
     oos.writeObject(event.query)
     println(event.query.toHiveQL(false) + " is written")
   }
+
 }

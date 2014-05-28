@@ -15,6 +15,8 @@ case class QueryFetchedByCachePlanner(queryID: Int, queueID: Int) extends Listen
 
 case class QueryPushedToSharkScheduler(queryID: Int, queueID: Int) extends ListenerEvent
 
+case class QueryFinished(queryID: Int, queueID: Int) extends ListenerEvent
+
 /** An event to shutdown the listener thread. */
 case object ListenerShutdown extends ListenerEvent
 
@@ -39,4 +41,5 @@ trait Listener {
    */
   def onQueryPushedToSharkScheduler(event: QueryPushedToSharkScheduler) { }
 
+  def onQueryFinished(event: QueryFinished) { }
 }

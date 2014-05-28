@@ -45,6 +45,8 @@ class ListenerManager {
         listenerList.foreach(_.onQueryFetchedByCachePlanner(queryFetchedByCachePlanner))
       case queryPushedToSharkScheduler: QueryPushedToSharkScheduler =>
         listenerList.foreach(_.onQueryPushedToSharkScheduler(queryPushedToSharkScheduler))
+      case queryFinished: QueryFinished =>
+        listenerList.foreach(_.onQueryFinished(queryFinished))
       case ListenerShutdown => 
     }
   }

@@ -16,5 +16,10 @@ class LoggingListener extends Listener {
   
   override def onQueryPushedToSharkScheduler(event: QueryPushedToSharkScheduler) { 
     System.out.println("query pushed to SharkScheduler(queryID, queueID) : " + event.queryID + ", " + event.queueID)
-  }  
+  }
+
+  override def onQueryFinished(event: QueryFinished) {
+    println("finish event fetched from the spark listener!!!!!")
+  }
+
 }

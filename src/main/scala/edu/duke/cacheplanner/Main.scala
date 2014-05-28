@@ -10,7 +10,6 @@ object Main {
     //serialize
     val fos = new FileOutputStream("test.ser", false)
     val oos = new ObjectOutputStream(fos)
-
     val context = Factory.createContext
     context.addListener(new LoggingListener)
     context.addListener(new SerializeListener(oos))
