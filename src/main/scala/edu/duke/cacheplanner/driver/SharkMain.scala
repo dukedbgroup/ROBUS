@@ -49,7 +49,7 @@ object SharkMain {
 
     val thread1 = new Thread(new SharkRunnable(sc))
     val thread2 = new Thread(new SharkRunnableTwo(sc))    
-    listenerManager.start
+    listenerManager.start()
     thread1.start()
     thread2.start()
   }
