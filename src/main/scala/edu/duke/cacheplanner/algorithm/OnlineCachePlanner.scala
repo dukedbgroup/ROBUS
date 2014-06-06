@@ -9,6 +9,9 @@ import edu.duke.cacheplanner.query.AbstractQuery
 class OnlineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: SharkContext)
   extends AbstractCachePlanner(mode, manager, sharkContext) {
 
+  //TODO: set it from a configuration
+  val batchTime = 1000; //in milliseconds
+  
   override def initPlannerThread(): Thread = {
     new Thread("ListenerManager") {
       setDaemon(true)
@@ -18,6 +21,15 @@ class OnlineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: 
           if (!started) {
             return
           }
+
+          try { 
+        	  Thread.sleep(batchTime);
+          } catch {
+          case e:InterruptedException => e.printStackTrace
+          }
+
+          
+          
           if (isMultipleSetup) {
             //multi mode
           }
