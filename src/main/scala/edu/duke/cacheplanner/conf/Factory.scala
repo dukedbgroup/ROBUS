@@ -5,7 +5,6 @@ import edu.duke.cacheplanner.listener.LoggingListener
 import edu.duke.cacheplanner.data.Dataset
 import edu.duke.cacheplanner.data.QueryDistribution
 import edu.duke.cacheplanner.generator.AbstractQueryGenerator
-import edu.duke.cacheplanner.generator.GroupingQueryGenerator
 import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.Context
 import edu.duke.cacheplanner.generator.SingleTableQueryGenerator

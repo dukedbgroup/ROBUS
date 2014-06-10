@@ -1,10 +1,13 @@
 package edu.duke.cacheplanner.algorithm
 
 import shark.{SharkContext, SharkEnv}
-
 import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.listener.QueryPushedToSharkScheduler
 import edu.duke.cacheplanner.query.AbstractQuery
+import edu.duke.cacheplanner.conf.Factory
+import edu.duke.cacheplanner.generator.AbstractQueryGenerator
+import edu.duke.cacheplanner.queue.ExternalQueue
+import java.util.ArrayList
 
 class OnlineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: SharkContext)
   extends AbstractCachePlanner(mode, manager, sharkContext) {
@@ -28,10 +31,22 @@ class OnlineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: 
           case e:InterruptedException => e.printStackTrace
           }
 
-          
+          val queues = Factory.externalQueues         
           
           if (isMultipleSetup) {
-            //multi mode
+            // create a batch of queries
+            var batch:java.util.List[AbstractQuery] = new ArrayList()
+            for (queue <- queues.asInstanceOf[List[ExternalQueue]]) {
+              batch.addAll(queue.fetchABatch().
+                  asInstanceOf[java.util.List[AbstractQuery]])
+            }
+            // analyze the batch to find columns to cache
+            // TODO: use previously cached columns to influence the choice
+            
+            // fire queries to cache columns
+            
+            // fire other queries
+            	
           }
           else {
             //single app mode
