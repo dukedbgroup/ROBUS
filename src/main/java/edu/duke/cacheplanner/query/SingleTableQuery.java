@@ -4,8 +4,11 @@
 package edu.duke.cacheplanner.query;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import edu.duke.cacheplanner.data.Column;
 import edu.duke.cacheplanner.data.Dataset;
 
 /**
@@ -48,6 +51,21 @@ public class SingleTableQuery extends AbstractQuery implements Serializable {
 	 */
 	public List<Selection> getSelections() {
 		return selections;
+	}
+	
+	/**
+	 * return all the relevant columns in the query -- 
+	 * combining selections and projections 
+	 */
+	public Set<Column> getRelevantColumns() {
+		Set<Column> cols = new HashSet<Column>();
+		for (Projection proj: projections) {
+			cols.add(proj.getColumn());
+		}
+		for(Selection sel: selections) {
+			cols.add(sel.getCol());
+		}
+		return cols;
 	}
 
 	/**
