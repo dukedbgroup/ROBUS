@@ -8,6 +8,7 @@ import edu.duke.cacheplanner.conf.Factory
 import edu.duke.cacheplanner.generator.AbstractQueryGenerator
 import edu.duke.cacheplanner.queue.ExternalQueue
 import java.util.ArrayList
+import edu.duke.cacheplanner.query.SingleTableQuery
 
 class OnlineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: SharkContext)
   extends AbstractCachePlanner(mode, manager, sharkContext) {
@@ -35,13 +36,15 @@ class OnlineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: 
           
           if (isMultipleSetup) {
             // create a batch of queries
-            var batch:java.util.List[AbstractQuery] = new ArrayList()
+            var batch:java.util.List[SingleTableQuery] = new ArrayList()
             for (queue <- queues.asInstanceOf[List[ExternalQueue]]) {
               batch.addAll(queue.fetchABatch().
-                  asInstanceOf[java.util.List[AbstractQuery]])
+                  asInstanceOf[java.util.List[SingleTableQuery]])
             }
             // analyze the batch to find columns to cache
             // TODO: use previously cached columns to influence the choice
+            val colsToCache = SingleColumnBatchAnalyzer.analyzeGreedily(
+                batch, 1000) //get the right memory size
             
             // fire queries to cache columns
             
@@ -54,12 +57,6 @@ class OnlineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: 
         }
       }
     }
-  }
-
-  def analyzeBatch() {
-    //call this when the planner send a query to spark context
-    //    listenerManager.postEvent(QueryPushedToSharkScheduler
-    //        (Integer.parseInt(query.getQueryID()),Integer.parseInt(query.getQueueID())));
   }
 
 }
