@@ -7,10 +7,7 @@ object DemoBuild extends Build {
     System.exit(1)
   }
 
-  // Shark version
-  val SHARK_VERSION = "0.9.1"
-
-  val SPARK_VERSION = "0.9.1"
+  val SPARK_VERSION = "1.0.0"
 
   val SCALA_VERSION = "2.10.3"
 
@@ -57,11 +54,12 @@ object DemoBuild extends Build {
 
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core" % SPARK_VERSION,
-      "edu.berkeley.cs.shark" % "shark_2.10" % SHARK_VERSION,
       "com.typesafe.akka" %% "akka-actor" % "2.2.3",
       "org.apache.hadoop" % "hadoop-client" % HADOOP_VERSION,
-      "org.apache.commons" % "commons-math3" % "3.2"
-    ),
+      "org.apache.commons" % "commons-math3" % "3.2",
+      "org.apache.spark" %% "spark-hive" % SPARK_VERSION
+
+  ),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-compiler" % _)
   )
 }
