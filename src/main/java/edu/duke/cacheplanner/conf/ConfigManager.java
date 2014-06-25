@@ -13,8 +13,17 @@ public class ConfigManager {
     return config.get("cacheplanner.generator.mode");
   }
 
-  public String getAlgorithmSetup() {
-    return config.get("cacheplanner.algorithm.setup");
+  public boolean getAlgorithmSetup() {
+    //true = multi app setup, false = single app setup
+    if(config.get("cacheplanner.algorithm.setup").equals("online")) {
+      return true;
+    }
+    else {
+      return false;
+    }
   }
 
+  public String getAlgorithmMode() {
+    return config.get("cacheplanner.algorithm.mode");
+  }
 }

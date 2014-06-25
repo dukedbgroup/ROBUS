@@ -1,5 +1,8 @@
 package edu.duke.cacheplanner.query;
 
+import edu.duke.cacheplanner.data.Column;
+import edu.duke.cacheplanner.data.Dataset;
+
 public class QueryUtil {
 
 	
@@ -7,4 +10,15 @@ public class QueryUtil {
     return "";
   }
 
+  public static String getTableCreateSQL(Dataset data) {
+    String result = "CREATE EXTERNAL TABLE IF NOT EXISTS " + data.getName() + "(";
+    for(Column col : data.getColumns()) {
+      result = result + col.getColName() + " " + col.getColumnType().toString() + ", ";
+    }
+    result = result.substring(0, result.length()-2)
+        + ") ROW FORMAT delimited fields terminated by ','"
+        + " STORED AS TEXTFILE LOCATION "
+        + "'" + data.getPath() + "'";
+    return result;
+  }
 }

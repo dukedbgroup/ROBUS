@@ -17,23 +17,21 @@ class Context(manager: ListenerManager, generators: java.util.List[AbstractQuery
   private val listenerManager = manager
   //private val sc = initSharkContext
   private val queryGenerators = generators
-  //private val cachePlanner = planner
+  private val cachePlanner = planner
   
-  def initSharkContext() : SharkContext = {
-    SharkEnv.initWithSharkContext("Cache_Experiment")
-    val sc = SharkEnv.sc.asInstanceOf[SharkContext]
-    // attach JobLogger & StatsReportListener
-    val joblogger = new JobLogger("cachePlanner", "cache_planner_job_logger")
-    val listener = new StatsReportListener()
-    sc.addSparkListener(joblogger)
-    sc.addSparkListener(listener)
-    sc
-  }
+//  def initSharkContext() : SharkContext = {
+//    SharkEnv.initWithSharkContext("Cache_Experiment")
+//    val sc = SharkEnv.sc.asInstanceOf[SharkContext]
+//    // attach JobLogger & StatsReportListener
+//    sc.addSparkListener(joblogger)
+//    sc.addSparkListener(listener)
+//    sc
+//  }
   
   
-  def setConf(attribute: String, value: String) {
-    System.setProperty(attribute, value)
-  }
+//  def setConf(attribute: String, value: String) {
+//    System.setProperty(attribute, value)
+//  }
   
   def addListener(listener : Listener) {
     listenerManager.addListener(listener)

@@ -9,9 +9,11 @@ import edu.duke.cacheplanner.generator.AbstractQueryGenerator
 import edu.duke.cacheplanner.queue.ExternalQueue
 import java.util.ArrayList
 import edu.duke.cacheplanner.query.SingleTableQuery
+import java.util
+import edu.duke.cacheplanner.data.Dataset
 
-class OnlineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: SharkContext)
-  extends AbstractCachePlanner(mode, manager, sharkContext) {
+class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: util.List[ExternalQueue], data: java.util.List[Dataset])
+  extends AbstractCachePlanner(setup, manager, queues, data) {
 
   //TODO: set it from a configuration
   val batchTime = 1000; //in milliseconds
@@ -29,15 +31,13 @@ class OnlineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: 
           try { 
         	  Thread.sleep(batchTime);
           } catch {
-          case e:InterruptedException => e.printStackTrace
+            case e:InterruptedException => e.printStackTrace
           }
 
-          val queues = Factory.externalQueues         
-          
           if (isMultipleSetup) {
             // create a batch of queries
             var batch:java.util.List[SingleTableQuery] = new ArrayList()
-            for (queue <- queues.asInstanceOf[List[ExternalQueue]]) {
+            for (queue <- externalQueues.asInstanceOf[List[ExternalQueue]]) {
               batch.addAll(queue.fetchABatch().
                   asInstanceOf[java.util.List[SingleTableQuery]])
             }

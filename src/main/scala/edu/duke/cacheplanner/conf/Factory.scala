@@ -8,6 +8,10 @@ import edu.duke.cacheplanner.generator.AbstractQueryGenerator
 import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.Context
 import edu.duke.cacheplanner.generator.SingleTableQueryGenerator
+import edu.duke.cacheplanner.algorithm.{OnlineCachePlanner, OfflineCachePlanner, AbstractCachePlanner}
+import scala.reflect.internal.util
+import scala.reflect.internal.util
+import scala.reflect.internal.util
 
 object Factory {
   val configManager = initConfigManager
@@ -38,8 +42,7 @@ object Factory {
   def initDistribution: QueryDistribution = {
     Parser.parseQueryDistribution("conf/distribution.xml")
   }
-  
-  
+
   def initGenerators: java.util.List[AbstractQueryGenerator] = {
     val generator = scala.xml.XML.loadFile("conf/generator.xml")
     val generators = new java.util.ArrayList[AbstractQueryGenerator]
@@ -75,6 +78,17 @@ object Factory {
     new Context(listenerManager, generators, null)
   }
   
-  
+  def createCachePlanner : AbstractCachePlanner = {
+    val mode = configManager.getAlgorithmMode()
+    val setup = configManager.getAlgorithmSetup
+    mode match {
+      case "online" => return new OfflineCachePlanner(setup, listenerManager, externalQueues, datasets)
+      case "offline" => return new OnlineCachePlanner(setup, listenerManager, externalQueues, datasets)
+    }
+  }
+
+  def getDatasets() : java.util.List[Dataset] = {
+    return datasets
+  }
   
 }

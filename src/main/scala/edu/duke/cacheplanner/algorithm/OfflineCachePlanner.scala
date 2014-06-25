@@ -5,9 +5,12 @@ import shark.{SharkContext, SharkEnv}
 import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.listener.QueryPushedToSharkScheduler
 import edu.duke.cacheplanner.query.AbstractQuery
+import java.util
+import edu.duke.cacheplanner.queue.ExternalQueue
+import edu.duke.cacheplanner.data.Dataset
 
-class OfflineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext: SharkContext) 
-    extends AbstractCachePlanner(mode, manager, sharkContext) {
+class OfflineCachePlanner(setup: Boolean, manager: ListenerManager, queues: util.List[ExternalQueue], data: java.util.List[Dataset])
+    extends AbstractCachePlanner(setup, manager, queues, data) {
   
   //change this to config
   val threshold:Double = 1
@@ -18,7 +21,7 @@ class OfflineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext:
 	    setDaemon(true)
 	    override def run() {
 	      //calculate cache candidates
-	      var cacheQueries:List[AbstractQuery] = null;
+	      var cacheQueries:util.List[AbstractQuery] = null;
 	      
 	      if(isMultipleSetup) {
 	        cacheQueries = candidateGeneratorMultiple(threshold, tenent)
@@ -28,7 +31,7 @@ class OfflineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext:
 	      }
 	      
 	      //cache the dataset
-	      cacheQueries.foreach((q:AbstractQuery) => sc.runSql(q.toHiveQL(true)))
+	      //cacheQueries.foreach((q:AbstractQuery) => sc.runSql(q.toHiveQL(true)))
 	      
 	      //run requested queries
 	      while(true) {
@@ -51,11 +54,11 @@ class OfflineCachePlanner(mode: Boolean, manager: ListenerManager, sharkContext:
    * used in Offline algorithm. Using a dynamic programming, 
    * find the best candidate for projection
    */
-  def candidateGeneratorSingle(threshold: Double) : List[AbstractQuery] = {
+  def candidateGeneratorSingle(threshold: Double) : util.List[AbstractQuery] = {
     return null
   }
   
-  def candidateGeneratorMultiple(threshold: Double, tenent: Integer) : List[AbstractQuery] = {
+  def candidateGeneratorMultiple(threshold: Double, tenent: Integer) : util.List[AbstractQuery] = {
     return null
   }
 
