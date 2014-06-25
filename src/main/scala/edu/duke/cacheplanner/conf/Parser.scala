@@ -25,11 +25,12 @@ object Parser {
     val externalQueue = scala.xml.XML.loadFile(path)
     for(n <- externalQueue \ Constants.QUEUE) {
       val id = n.attribute(Constants.ID).get.toString.toInt
+      val name = n.attribute(Constants.NAME).get.toString
       val weight = (n \ Constants.WEIGHT).text.toInt
       val minShare = (n \ Constants.MIN_SHARE).text.toInt
       val batchSize = (n \ Constants.BATCH_SIZE).text.toInt
       println(id, weight, minShare, batchSize)
-      queueList.add(new ExternalQueue(id, weight, minShare, batchSize))
+      queueList.add(new ExternalQueue(id, weight, minShare, batchSize, name))
     }
     return queueList
   }
@@ -63,8 +64,7 @@ object Parser {
         val col_name = (c \ Constants.NAME).text
         val col_size = (c \ Constants.SIZE).text.toDouble
         val col_type = (c \ Constants.TYPE).text
-
-        col_list.add(new Column(col_size, col_name, getColumnType(col_type)))
+        col_list.add(new Column(col_size, col_name, getColumnType(col_type), name))
       }
       dataset.setColumns(col_list)
       dataset_list.add(dataset)
@@ -85,18 +85,18 @@ object Parser {
     val queryDistribution = new QueryDistribution
     val query = scala.xml.XML.loadFile(path)
     for(n <- query \ Constants.QUEUE_DISTRIBUTION) {
-      val queueId = (n \ Constants.QUEUEID).text.toInt
+      val queueId = (n \ Constants.QUEUE_ID).text.toInt
       val dataDistribution = new HashMap[String, DatasetDistribution]
       for(d <- n \ Constants.DATA_DISTRIBUTION) {
         val colDistribution = new HashMap[String, java.lang.Double]
-    	val data_name = (d \ Constants.NAME).text
-    	val data_prob = (d \ Constants.PROBABILITY).text.toDouble
-    	val columns = d \ Constants.COlUMNS
-    	for(c <- columns \ Constants.COLUMN) {
-    	  val col_name = (c \ Constants.NAME).text
-    	  val col_prob = (c \ Constants.PROBABILITY).text.toDouble
-    	  colDistribution.put(col_name, col_prob)
-    	}
+        val data_name = (d \ Constants.NAME).text
+        val data_prob = (d \ Constants.PROBABILITY).text.toDouble
+        val columns = d \ Constants.COlUMNS
+        for(c <- columns \ Constants.COLUMN) {
+          val col_name = (c \ Constants.NAME).text
+          val col_prob = (c \ Constants.PROBABILITY).text.toDouble
+          colDistribution.put(col_name, col_prob)
+        }
         dataDistribution.put(data_name, new DatasetDistribution(data_prob, colDistribution))
       }
       queryDistribution.setQueueDistribution(queueId, new QueueDistribution(dataDistribution))

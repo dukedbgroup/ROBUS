@@ -23,6 +23,10 @@ public class ConfigManager {
     }
   }
 
+  public Long getPlannerBatchTime() {
+    return Long.parseLong(config.get("cacheplanner.algorithm.batchtime"));
+  }
+
   public String getAlgorithmMode() {
     return config.get("cacheplanner.algorithm.mode");
   }

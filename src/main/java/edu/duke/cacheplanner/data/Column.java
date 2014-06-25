@@ -5,17 +5,18 @@ import java.io.Serializable;
 public class Column implements Serializable {
 
   String colName;
-
+  String datasetName;
   /**
    * Store statistics on the column here.
    */
   double estimatedSize;
   ColumnType columnType;
 
-  public Column(double size, String name, ColumnType type) {
+  public Column(double size, String name, ColumnType type, String data) {
     estimatedSize = size;
     colName = name;
     columnType = type;
+    datasetName = data;
   }
 
   public double getEstimatedSize() {
@@ -36,6 +37,10 @@ public class Column implements Serializable {
 
   public ColumnType getColumnType() {
     return columnType;
+  }
+
+  public String getDatasetName() {
+    return datasetName;
   }
 
   @Override

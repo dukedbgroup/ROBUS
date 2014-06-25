@@ -1,12 +1,5 @@
 package edu.duke.cacheplanner
 
-import org.apache.spark.SparkConf
-import org.apache.spark.SparkContext
-import org.apache.spark.scheduler.StatsReportListener
-import org.apache.spark.scheduler.JobLogger
-import SparkContext._
-import shark.{SharkContext, SharkEnv}
-import shark.api.ResultSet
 import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.listener.Listener
 import edu.duke.cacheplanner.generator.AbstractQueryGenerator

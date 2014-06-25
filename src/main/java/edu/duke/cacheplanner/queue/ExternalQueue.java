@@ -13,22 +13,24 @@ import edu.duke.cacheplanner.query.AbstractQuery;
  */
 public class ExternalQueue {
 	private int queueID;
+  private String queueName;
 	private int weight;
 	private int minShare;
 	private int batchSize; 
 	private ListenerManager listenerManager;
 	private Queue<AbstractQuery> queue;
 
-	public ExternalQueue(int id, int w, int min, int size) {
+	public ExternalQueue(int id, int w, int min, int size, String name) {
 		queueID = id;
+    queueName = name;
 		setWeight(w);
 		setMinShare(min);
 		batchSize = size;
 		queue = new LinkedList<AbstractQuery>();
 	}
 
-	public ExternalQueue(int id, int w, int min, int size, ListenerManager manager) {
-		this(id, w, min, size);
+	public ExternalQueue(int id, int w, int min, int size, String name, ListenerManager manager) {
+		this(id, w, min, size, name);
 		listenerManager = manager;
 	}
 
@@ -84,6 +86,12 @@ public class ExternalQueue {
 		return minShare;
 	}
 
+  /**
+   * @return queueName
+   */
+  public String getQueueName() {
+    return queueName;
+  }
 	/**
 	 * @param minShare the minShare to set
 	 */

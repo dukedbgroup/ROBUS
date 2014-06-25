@@ -31,7 +31,7 @@ object Constants {
   final val EXTERNAL_QUEUE = "externalQueue"
     
   //generator xml
-  final val QUEUEID = "queueId"
+  final val QUEUE_ID = "queueId"
   final val LAMBDA = "lambda"
   final val GENERATORS = "generators"
   final val GENERATOR = "generator"

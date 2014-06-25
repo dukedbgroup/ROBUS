@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 <externalQueue>
-  <queue id="1">
+  <queue id="1" name="pool2">
+    <name>pool1</name>
     <weight>1</weight>
     <minShare>2</minShare>
     <batchSize>5</batchSize>
   </queue>
-  <queue id="2">
+  <queue id="2" name="pool2">
     <weight>2</weight>
     <minShare>3</minShare>
     <batchSize>5</batchSize>

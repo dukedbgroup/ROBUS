@@ -1,23 +1,26 @@
 package edu.duke.cacheplanner.algorithm
 
-import shark.{SharkContext, SharkEnv}
 import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.listener.QueryPushedToSharkScheduler
 import edu.duke.cacheplanner.query.AbstractQuery
 import edu.duke.cacheplanner.conf.Factory
 import edu.duke.cacheplanner.generator.AbstractQueryGenerator
 import edu.duke.cacheplanner.queue.ExternalQueue
-import java.util.ArrayList
 import edu.duke.cacheplanner.query.SingleTableQuery
-import java.util
-import edu.duke.cacheplanner.data.Dataset
+import edu.duke.cacheplanner.data.{Column, Dataset}
 
-class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: util.List[ExternalQueue], data: java.util.List[Dataset])
+import java.util.ArrayList
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.Map
+import org.apache.http.util.ByteArrayBuffer
+
+class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.util.List[ExternalQueue], data: java.util.List[Dataset], time: Long)
   extends AbstractCachePlanner(setup, manager, queues, data) {
 
-  //TODO: set it from a configuration
-  val batchTime = 1000; //in milliseconds
-  
+  val batchTime = time;
+  var cachedData : scala.collection.mutable.Map[String, ArrayBuffer[Column]] = new HashMap[String, ArrayBuffer[Column]]()
+
   override def initPlannerThread(): Thread = {
     new Thread("ListenerManager") {
       setDaemon(true)
@@ -29,7 +32,7 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: util.
           }
 
           try { 
-        	  Thread.sleep(batchTime);
+        	  Thread.sleep(batchTime)
           } catch {
             case e:InterruptedException => e.printStackTrace
           }
@@ -43,13 +46,54 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: util.
             }
             // analyze the batch to find columns to cache
             // TODO: use previously cached columns to influence the choice
-            val colsToCache = SingleColumnBatchAnalyzer.analyzeGreedily(
+            val colsToCache : List[Column] = SingleColumnBatchAnalyzer.analyzeGreedily(
                 batch, 1000) //get the right memory size
-            
+
+            //merging candidate columns if they are in the same table
+            var cacheCandidate : Map[String, ArrayBuffer[Column]] = new HashMap[String, ArrayBuffer[Column]]()
+            var cacheDropCandidate : ArrayBuffer[String] = new ArrayBuffer[String]()
+            for (col: Column <- colsToCache) {
+              if(cacheCandidate(col.getDatasetName) == null) {
+                val buffer = new ArrayBuffer[Column]()
+                buffer.append(col)
+                cacheCandidate(col.getDatasetName) = buffer
+              }
+              else {
+                cacheCandidate(col.getDatasetName).append(col)
+              }
+            }
+
+            //check whether they are already cached in the same format
+//            for(datasetName <- cacheCandidate.keySet) {
+//              if(cachedData(datasetName) != null) {
+//                if(cachedData(datasetName).size == cacheCandidate(datasetName).size) {
+//                  var equal = true
+//                  for(i <- 0 to cachedData.size-1) {
+//                    if(cachedData(datasetName).get(i) != cacheCandidate(datasetNAme).get(i)) {
+//                      cacheDropCandidate.append(datasetName)
+//                      cachedData.remove(datasetName)
+//                      equal = false
+//                    }
+//                  }
+//                  if(equal) {
+//                    cacheCandidate.remove(datasetName)
+//                  }
+//                }
+//              }
+//            }
+
+
+
+            // fire queries to drop the cache
+
+
             // fire queries to cache columns
-            
+
+
+            cachedData = cacheCandidate
             // fire other queries
-            	
+
+
           }
           else {
             //single app mode

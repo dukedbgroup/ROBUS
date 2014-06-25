@@ -1,7 +1,5 @@
 package edu.duke.cacheplanner.algorithm
 
-import shark.{SharkContext, SharkEnv}
-
 import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.listener.QueryPushedToSharkScheduler
 import edu.duke.cacheplanner.query.AbstractQuery

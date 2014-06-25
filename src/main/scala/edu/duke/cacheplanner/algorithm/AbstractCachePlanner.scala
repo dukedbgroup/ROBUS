@@ -61,6 +61,15 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager, qu
     plannerThread.join()
   }
 
+  def getDataset(name: String): Dataset = {
+    for (d <- datasets.asInstanceOf[List[Dataset]]) {
+      if (d.getName == name) {
+        return d
+      }
+    }
+    return null
+  }
+
   /**
    * initialize Planner Thread.
    */

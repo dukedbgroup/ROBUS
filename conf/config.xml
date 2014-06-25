@@ -2,19 +2,26 @@
 <configuration>
 	<property>
 		<name>cacheplanner.algorithm.mode</name>
-		<value>offline</value>
+		<value>online</value>
 		<description>
 			Currently, supported modes are: online, offline
 		</description>
 	</property>
-	<property>
+    <property>
 		<name>cacheplanner.algorithm.setup</name>
 		<value>single</value>
 		<description>
 			Currently, supported modes are: multi, single
 		</description>
 	</property>
-	<property>
+    <property>
+        <name>cacheplanner.algorithm.batchtime</name>
+        <value>1000</value>
+        <description>
+            Only applicable in online mode. batch time in millisecond
+        </description>
+    </property>
+    <property>
 		<name>cacheplanner.generator.mode</name>
 		<value>singleTable</value>
 		<description>
