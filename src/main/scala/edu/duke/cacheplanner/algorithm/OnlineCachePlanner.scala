@@ -63,25 +63,25 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
               }
             }
 
+            val next_cached = cacheCandidate.clone
+
             //check whether they are already cached in the same format
-//            for(datasetName <- cacheCandidate.keySet) {
-//              if(cachedData(datasetName) != null) {
-//                if(cachedData(datasetName).size == cacheCandidate(datasetName).size) {
-//                  var equal = true
-//                  for(i <- 0 to cachedData.size-1) {
-//                    if(cachedData(datasetName).get(i) != cacheCandidate(datasetNAme).get(i)) {
-//                      cacheDropCandidate.append(datasetName)
-//                      cachedData.remove(datasetName)
-//                      equal = false
-//                    }
-//                  }
-//                  if(equal) {
-//                    cacheCandidate.remove(datasetName)
-//                  }
-//                }
-//              }
-//            }
-//
+            for(datasetName <- cacheCandidate.keySet) {
+              //check if the table is already cached
+              if(cachedData(datasetName) != null) {
+                //check the # of columns
+                val cached_set = cachedData(datasetName).toSet
+                val candidate_set = cacheCandidate(datasetName).toSet
+                if(cached_set.equals(candidate_set)) {
+                  cacheCandidate.remove(datasetName)
+                }
+                else {
+                  cacheDropCandidate.append(datasetNAme)
+                }
+              }
+            }
+
+            cachedData = next_cached
 
 
             // fire queries to drop the cache
