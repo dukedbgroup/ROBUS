@@ -114,7 +114,7 @@ public class SingleTableQuery extends AbstractQuery implements Serializable {
       for(Selection selection: selections) {
         result = result + selection.toString();
         if(selections.size() != count) {
-          result = result + ", ";
+          result = result + " AND ";
         }
         count++;
       }

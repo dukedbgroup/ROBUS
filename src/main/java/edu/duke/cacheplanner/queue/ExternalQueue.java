@@ -15,7 +15,7 @@ import edu.duke.cacheplanner.query.AbstractQuery;
  */
 public class ExternalQueue {
 	private int queueID;
-  private String queueName;
+    private String queueName;
 	private int weight;
 	private int minShare;
 	private int batchSize; 

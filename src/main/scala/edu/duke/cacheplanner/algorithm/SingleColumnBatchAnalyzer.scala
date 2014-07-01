@@ -50,20 +50,24 @@ object SingleColumnBatchAnalyzer {
 			for (query <- queries.toList) {
 				val columns = query.getRelevantColumns() 
 				// assuming there is only one relevant column
-				if(columns == null || columns.size() != 1) {
+				if(columns == null || columns.size() == 1) {
 					//ignore the query
 				} else {
 					val column = columns.iterator().next()
+					println("name: " + column.getColName())
 					val colID = query.getDataset().getName() + colIDSeparator + column.getColName()
 					val size = column.getEstimatedSize()
 					val weight = query.getWeight()
 					val benefit = weight * scala.math.log(size)
-
+					println(size, weight, benefit)
 					val oldValue = knapMap.getOrElse(colID, null)
+					println(oldValue)
 					knapMap(colID) = oldValue match {
-					case null => (size, benefit)
-					case _ => (size, oldValue._2 + benefit)
+						case null => (size, benefit)
+						case _ => (size, oldValue._2 + benefit)
 					}
+					println("map: " +knapMap(colID))
+					
 				}      
 			}
 			knapMap.toMap
@@ -73,6 +77,7 @@ object SingleColumnBatchAnalyzer {
 			queries:java.util.List[SingleTableQuery], memorySize:Double) : List[Column] = {
 			// create a map of [columnID -> (size, benefit)]
 			val knapMap = buildMapForKnapsack(queries)
+			println(knapMap)
 			// sort columns in decreasing order of benefit/size
 			val sortedMap = knapMap.toSeq.sortBy(t => (t._2._2/t._2._1)).reverse
 			// start picking columns until size filled

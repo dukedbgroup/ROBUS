@@ -18,13 +18,12 @@ public class QueryUtil {
       result = result + col.getColName() + " " + col.getColumnType().toString() + ", ";
     }
     result = result.substring(0, result.length()-2)
-        + ") ROW FORMAT delimited fields terminated by ','"
+        + ") ROW FORMAT delimited fields terminated by '|'"
         + " STORED AS TEXTFILE LOCATION "
         + "'" + data.getPath() + "'";
     return result;
   }
 
-  //TODO: change this to create the table to be cached
   public static String getCacheTableCreateSQL(String data, List<Column> columns) {
     String result = "CREATE TABLE " + data + "_cached (";
     for(Column col : columns) {
@@ -42,6 +41,10 @@ public class QueryUtil {
     result = result.substring(0, result.length()-2);
     result = result + " FROM " + data;
     return result;
+  }
+  
+  public static String getDropTableSQL(String data) {
+	  return "DROP TABLE IF EXISTS " + data;
   }
   
 }

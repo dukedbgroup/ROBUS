@@ -234,8 +234,9 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
         selections.add(getRandomSelection(col));
       }
       count++;
-
-      return new SingleTableQuery(queryID, queueID, dataset, projections, selections);
+      AbstractQuery query = new SingleTableQuery(queryID, queueID, dataset, projections, selections);
+      query.setWeight(externalQueue.getWeight());
+      return query;
     }
     //grouping column
     else {

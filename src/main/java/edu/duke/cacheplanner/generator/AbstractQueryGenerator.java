@@ -117,7 +117,7 @@ public abstract class AbstractQueryGenerator {
     }
     return null;
   }
-
+  
   public Column getColumn(Dataset data, String colName) {
     for (Column c : data.getColumns()) {
       if (colName.equals(c.getColName())) {

@@ -5,7 +5,7 @@ export
 # Figure out where the framework is installed
 PROJECTDIR="$(cd `dirname $0`; pwd)"
 
-. "$PROJECTDIR"/conf/shark-env.sh
+. "$PROJECTDIR"/conf/cache-env.sh
 
 
 if [ "x$SCALA_HOME" == "x" ] ; then
@@ -26,13 +26,6 @@ if [ "x$HIVE_HOME" == "x" ] ; then
     exit 1
 fi
 
-if [ ! -f $HIVE_HOME/lib/hive-exec-0*.jar ] ; then
-  echo "Cannot find $HIVE_HOME/lib/hive-exec-0.9.0.jar."
-  echo "Are you sure your HIVE_HOME is set correctly?"
-  echo "HIVE_HOME = $HIVE_HOME"
-  exit 1
-fi
-
 CLASSPATH="$PROJECTDIR/conf"
 
 if [ -n "$MASTER" ] ; then
@@ -47,46 +40,7 @@ if [ -n "$MASTER" ] ; then
   CLASSPATH+=:"$HADOOP_HOME/conf"
 fi
 
-# Add Shark jars.
-for jar in `find $SHARK_HOME/lib -name '*jar'`; do
-  CLASSPATH+=:$jar
-done
-for jar in `find $SHARK_HOME/lib_managed/jars -name '*jar'`; do
-  CLASSPATH+=:$jar
-done
-for jar in `find $SHARK_HOME/lib_managed/bundles -name '*jar'`; do
-  CLASSPATH+=:$jar
-done
-
 CLASSPATH+=:$HIVE_CONF_DIR
-
-# Build up Shark's jar or classes.
-SHARK_CLASSES="$SHARK_HOME/target/scala-$SCALA_VERSION/classes"
-SHARK_JAR="$SHARK_HOME/target/scala-$SCALA_VERSION/shark_$SCALA_VERSION-$SHARK_VERSION.jar"
-if [ -d "$SHARK_CLASSES/shark" ] ; then
-  CLASSPATH+=":$SHARK_CLASSES"
-else
-  if [ -f "$SHARK_JAR" ] ; then
-    CLASSPATH+=":$SHARK_JAR"
-  else
-    echo "Cannot find either compiled classes or compiled jar package for Shark."
-    echo "Have you compiled Shark yet?"
-    exit 1
-  fi
-fi
-
-CLASSPATH+=":$SHARK_HOME/target/scala-$SCALA_VERSION/test-classes"
-
-
-SHARK_JAR="$SHARK_HOME/target/scala-$SCALA_VERSION/shark_$SCALA_VERSION-$SHARK_VERSION.jar"
-if [ -f "$SHARK_JAR" ] ; then
-  CLASSPATH+=":$SHARK_JAR"
-else
-  CLASSPATH+=":$SHARK_HOME/target/scala-$SCALA_VERSION/classes"
-fi
-
-CLASSPATH+=":$SHARK_HOME/target/scala-$SCALA_VERSION/test-classes"
-
 
 
 for jar in `find $SCALA_HOME/lib -name 'scala-library.jar'`; do
@@ -114,20 +68,11 @@ else
 fi
 
 CLASSPATH+=":$PROJECTDIR/target/scala-$SCALA_VERSION/test-classes"
-for jar in find$PROJECTDIR/target/scala-$SCALA_VERSION -name '*jar'; do
+for jar in `find $PROJECTDIR/target/scala-$SCALA_VERSION -name '*jar'`; do
   CLASSPATH+=:$jar
 done
 
-
-# Add Hive jars.
-for jar in `find $HIVE_HOME/lib -name '*jar'`; do
-  # Ignore the logging library since it has already been included with the Spark jar.
-  if [[ "$jar" != *slf4j* ]]; then
-    CLASSPATH+=:$jar
-  fi
-done
-
-export CLASSPATH
+export CLASS_PATH
 export SPARK_CLASSPATH="$CLASSPATH"
 
 
@@ -138,4 +83,4 @@ JAVA_OPTS+=" -Xms2g -Xmx2g -XX:MaxPermSize=256m "
 export JAVA_OPTS
 
 SCALA=${SCALA_HOME}/bin/scala
-java -cp $CLASSPATH $@
+java -cp $CLASSPATH edu.duke.cacheplanner.Main

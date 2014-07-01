@@ -25,8 +25,8 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
   var cachedData : scala.collection.mutable.Map[String, ArrayBuffer[Column]] = new HashMap[String, ArrayBuffer[Column]]()
 
   override def initPlannerThread(): Thread = {
-    new Thread(new Runnable {
-      def run() {
+    new Thread("OnlineCachePlanner") {
+      override def run() {
         while (true) {
           println("cacheplanner workinggggggggggg")
           if (!started) {
@@ -55,7 +55,10 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
             var cacheCandidate : Map[String, ArrayBuffer[Column]] = new HashMap[String, ArrayBuffer[Column]]()
             var cacheDropCandidate : ArrayBuffer[String] = new ArrayBuffer[String]()
             for (col: Column <- colsToCache) {
-              if(cacheCandidate(col.getDatasetName) == null) {
+              //change
+              
+              val candidate = cacheCandidate.getOrElse(col.getDatasetName, null)
+              if(candidate == null) {
                 val buffer = new ArrayBuffer[Column]()
                 buffer.append(col)
                 cacheCandidate(col.getDatasetName) = buffer
@@ -66,11 +69,13 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
             }
 
             val next_cached = cacheCandidate.clone
-
+            
             //check whether they are already cached in the same format
             for(datasetName <- cacheCandidate.keySet) {
               //check if the table is already cached
-              if(cachedData(datasetName) != null) {
+              val cached = cachedData.getOrElse(datasetName, null)
+
+              if(cached != null) {
                 //check the columns in dataset
                 val cached_set = cachedData(datasetName).toSet
                 val candidate_set = cacheCandidate(datasetName).toSet
@@ -95,8 +100,10 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
 
             // fire queries to cache columns
             for(data <- cacheCandidate.keySet) {
+              var drop_cache_table = QueryUtil.getDropTableSQL(data +"_cached")
               var query_create = QueryUtil.getCacheTableCreateSQL(data, cacheCandidate(data).asJava)
               var query_insert = QueryUtil.getCacheTableInsertSQL(data, cacheCandidate(data).asJava)
+              hiveContext.hql(drop_cache_table)
               hiveContext.hql(query_create)
               hiveContext.hql(query_insert)
               hiveContext.cacheTable(data)
@@ -112,10 +119,11 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
                 queryString = query.toHiveQL(false)
               }
               sc.setJobDescription(queryString)
-              val result = hiveContext.hql(queryString)
+              sc.setLocalProperty("spark.scheduler.pool", query.getQueueID())
+              val result = hiveContext.hql(query.toHiveQL(false))
               result.collect().foreach(println)
             }
-
+            //wait for all the threads are done
 
           }
           else {
@@ -123,7 +131,7 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
           }
         }
       }
-    }).setName("OnlineCachePlanner")
+    }
   }
 
 }

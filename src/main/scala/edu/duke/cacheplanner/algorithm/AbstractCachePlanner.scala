@@ -28,7 +28,7 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager, qu
 
 
   def initSparkContext: SparkContext = {
-    val conf = new SparkConf().setAppName("test").setMaster("local")
+    val conf = new SparkConf().setAppName("test").setMaster("spark://mint:7077")
     conf.set("spark.eventLog.enabled", "true")
     //conf.set("spark.eventLog.dir", "file:///home/shlee0605/shlee_test/spark-sql/event_log")
     conf.setJars(Seq("target/scala-2.10/CachePlanner-assembly-0.1.jar"))
@@ -48,6 +48,7 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager, qu
   def initTables() {
     for(data <- datasets.toList) {
       println(QueryUtil.getTableCreateSQL(data))
+      hiveContext.hql(QueryUtil.getDropTableSQL(data.getName()))
       hiveContext.hql(QueryUtil.getTableCreateSQL(data))
     }
   }
