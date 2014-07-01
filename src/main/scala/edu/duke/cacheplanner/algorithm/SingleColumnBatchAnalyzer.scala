@@ -26,6 +26,9 @@ object SingleColumnBatchAnalyzer {
 	val colIDSeparator = ":"
 	val columnMap: Map[String, Column] = createColumnMap()
 
+	// factor to boost benefit of a column that is already present in cache
+	val boostFactor = 1.5
+
 	/**
 	 * Create a map of ColumnID to column object
 	 */
@@ -72,12 +75,25 @@ object SingleColumnBatchAnalyzer {
 			}
 			knapMap.toMap
 	}
+	
+	def boostBenefitsForCachedColumns(knapMap: Map[String, (Double, Double)], 
+	    cachedCols: List[Column]): Map[String, (Double, Double)] = {
+	  println("original choice of map " + knapMap); //TODO: Remove after debugging
+	  val boostedMap = knapMap map {t => 
+	    if(cachedCols.contains(columnMap(t._1))) {t._1 -> (t._2._1, t._2._2 * boostFactor)} 
+	    else {t} }
+	  println("after accounting for already cached columns " + boostedMap); //TODO: Remove after debugging
+	  return boostedMap
+	}
 
 	def analyzeGreedily(
-			queries:java.util.List[SingleTableQuery], memorySize:Double) : List[Column] = {
+			queries:java.util.List[SingleTableQuery], 
+			cachedColumns: List[Column], 
+			memorySize:Double) : List[Column] = {
 			// create a map of [columnID -> (size, benefit)]
-			val knapMap = buildMapForKnapsack(queries)
-			println(knapMap)
+			// boost benefits for already cached columns
+			val knapMap = boostBenefitsForCachedColumns(
+			    buildMapForKnapsack(queries), cachedColumns)
 			// sort columns in decreasing order of benefit/size
 			val sortedMap = knapMap.toSeq.sortBy(t => (t._2._2/t._2._1)).reverse
 			// start picking columns until size filled

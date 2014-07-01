@@ -18,8 +18,9 @@ import scala.collection.JavaConverters._
 import org.apache.http.util.ByteArrayBuffer
 import edu.duke.cacheplanner.listener.QueryFetchedByCachePlanner
 
-class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.util.List[ExternalQueue], data: java.util.List[Dataset], time: Long)
-  extends AbstractCachePlanner(setup, manager, queues, data) {
+class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, 
+    queues: java.util.List[ExternalQueue], data: java.util.List[Dataset], 
+    time: Long) extends AbstractCachePlanner(setup, manager, queues, data) {
 
   val batchTime = time;
   var cachedData : scala.collection.mutable.Map[String, ArrayBuffer[Column]] = new HashMap[String, ArrayBuffer[Column]]()
@@ -47,9 +48,9 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
             }
             
             // analyze the batch to find columns to cache
-            // TODO: use previously cached columns to influence the choice
+            val cachedCols = cachedData.flatMap(t => t._2).asInstanceOf[List[Column]]
             val colsToCache : List[Column] = SingleColumnBatchAnalyzer.analyzeGreedily(
-                batch, 1000) //TODO: get the right memory size
+                batch, cachedCols, 1000) //TODO: get the right memory size
 
             //merging candidate columns if they are in the same table
             var cacheCandidate : Map[String, ArrayBuffer[Column]] = new HashMap[String, ArrayBuffer[Column]]()
