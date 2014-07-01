@@ -30,7 +30,7 @@ public class QueryUtil {
     for(Column col : columns) {
       result = result + col.getColName() + " " + col.getColumnType().toString() + ", ";
     }
-    result = result.substring(0, result.length()-2);
+    result = result.substring(0, result.length()-2) + ")";
     return result;
   }
 
@@ -43,4 +43,5 @@ public class QueryUtil {
     result = result + " FROM " + data;
     return result;
   }
+  
 }

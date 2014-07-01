@@ -15,7 +15,7 @@ public class ConfigManager {
 
   public boolean getAlgorithmSetup() {
     //true = multi app setup, false = single app setup
-    if(config.get("cacheplanner.algorithm.setup").equals("online")) {
+    if(config.get("cacheplanner.algorithm.setup").equals("multi")) {
       return true;
     }
     else {

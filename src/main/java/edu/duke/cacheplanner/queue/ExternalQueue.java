@@ -1,6 +1,8 @@
 package edu.duke.cacheplanner.queue;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import edu.duke.cacheplanner.listener.ListenerManager;
@@ -37,14 +39,14 @@ public class ExternalQueue {
 	/**
 	 * request a queue to fetch a batch
 	 */
-	public synchronized AbstractQuery[] fetchABatch() { 
-		AbstractQuery[] queries = new AbstractQuery[batchSize];
+	public synchronized List<AbstractQuery> fetchABatch() { 
+		List<AbstractQuery> queries = new ArrayList<AbstractQuery>();
 		for(int i = 0; i < batchSize; i++) {
 			if(queue.peek() != null) {
-				queries[i] = queue.poll();  
+				queries.add(queue.poll());  
 				//notify an event to the listeners
 				listenerManager.postEvent(new QueryFetchedByCachePlanner
-						(Integer.parseInt(queries[i].getQueryID()), queueID));
+						(Integer.parseInt(queries.get(i).getQueryID()), queueID));
 			}
 		} 
 		return queries;

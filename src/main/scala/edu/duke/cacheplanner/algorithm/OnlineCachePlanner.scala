@@ -9,13 +9,14 @@ import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.query.SingleTableQuery
 import edu.duke.cacheplanner.data.{Column, Dataset}
 import edu.duke.cacheplanner.query.QueryUtil
-
 import java.util.ArrayList
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
+import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import org.apache.http.util.ByteArrayBuffer
+import edu.duke.cacheplanner.listener.QueryFetchedByCachePlanner
 
 class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.util.List[ExternalQueue], data: java.util.List[Dataset], time: Long)
   extends AbstractCachePlanner(setup, manager, queues, data) {
@@ -24,11 +25,10 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
   var cachedData : scala.collection.mutable.Map[String, ArrayBuffer[Column]] = new HashMap[String, ArrayBuffer[Column]]()
 
   override def initPlannerThread(): Thread = {
-    new Thread("ListenerManager") {
-      setDaemon(true)
-
-      override def run() {
+    new Thread(new Runnable {
+      def run() {
         while (true) {
+          println("cacheplanner workinggggggggggg")
           if (!started) {
             return
           }
@@ -42,10 +42,10 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
           if (isMultipleSetup) {
             // create a batch of queries
             var batch:java.util.List[SingleTableQuery] = new ArrayList()
-            for (queue <- externalQueues.asInstanceOf[List[ExternalQueue]]) {
-              batch.addAll(queue.fetchABatch().
-                  asInstanceOf[java.util.List[SingleTableQuery]])
+            for (queue <- externalQueues.toList) {
+              queue.fetchABatch().toList.foreach(q => batch.add(q.asInstanceOf[SingleTableQuery]))
             }
+            
             // analyze the batch to find columns to cache
             // TODO: use previously cached columns to influence the choice
             val colsToCache : List[Column] = SingleColumnBatchAnalyzer.analyzeGreedily(
@@ -103,9 +103,18 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
             }
 
             // fire other queries
-            // for(query <- batch) {
-
-            // }
+            for(query <- batch.toList) {
+              var queryString = ""
+              if(cachedData.contains(query.asInstanceOf[SingleTableQuery].getDataset().getName())) {
+                queryString = query.toHiveQL(true)
+              }
+              else {
+                queryString = query.toHiveQL(false)
+              }
+              sc.setJobDescription(queryString)
+              val result = hiveContext.hql(queryString)
+              result.collect().foreach(println)
+            }
 
 
           }
@@ -114,7 +123,7 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
           }
         }
       }
-    }
+    }).setName("OnlineCachePlanner")
   }
 
 }

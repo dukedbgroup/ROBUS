@@ -2,7 +2,7 @@
 <datasets>
   <dataset>
     <name>store_sales</name>
-    <path>hdfs://yahoo047:8080/test/store_sales</path>
+    <path>hdfs://localhost:9000/test/store_sales</path>
     <columns>
       <col>
         <name>ss_sold_date_sk</name>
@@ -19,7 +19,7 @@
   </dataset>
   <dataset>
     <name>catalog_sales</name>
-    <path>hdfs://yahoo047:8080/test/catalog_sales</path>
+    <path>hdfs://localhost:9000/test/catalog_sales</path>
     <columns>
       <col>
         <name>cs_sold_date_sk</name>
