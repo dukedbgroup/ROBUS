@@ -49,7 +49,7 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, queues: java.
             // analyze the batch to find columns to cache
             // TODO: use previously cached columns to influence the choice
             val colsToCache : List[Column] = SingleColumnBatchAnalyzer.analyzeGreedily(
-                batch, 1000) //get the right memory size
+                batch, 1000) //TODO: get the right memory size
 
             //merging candidate columns if they are in the same table
             var cacheCandidate : Map[String, ArrayBuffer[Column]] = new HashMap[String, ArrayBuffer[Column]]()

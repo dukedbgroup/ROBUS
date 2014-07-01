@@ -56,7 +56,7 @@ object SingleColumnBatchAnalyzer {
 					val weight = query.getWeight()
 					val benefit = weight * scala.math.log(size)
 
-					val oldValue = knapMap(colID)
+					val oldValue = knapMap.getOrElse(colID, null)
 					knapMap(colID) = oldValue match {
 					case null => (size, benefit)
 					case _ => (size, oldValue._2 + benefit)
