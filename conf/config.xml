@@ -9,14 +9,14 @@
 	</property>
     <property>
 		<name>cacheplanner.algorithm.setup</name>
-		<value>single</value>
+		<value>multi</value>
 		<description>
 			Currently, supported modes are: multi, single
 		</description>
 	</property>
     <property>
         <name>cacheplanner.algorithm.batchtime</name>
-        <value>1000</value>
+        <value>10000</value>
         <description>
             Only applicable in online mode. batch time in millisecond
         </description>

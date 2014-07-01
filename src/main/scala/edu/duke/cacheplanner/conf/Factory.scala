@@ -18,7 +18,7 @@ object Factory {
   val distribution = initDistribution
   val externalQueues = initExternalQueue
   val generators = initGenerators
-  
+  val cachePlanner = initCachePlanner
   
   def initConfigManager : ConfigManager = {
     new ConfigManager(Parser.parseConfig("conf/config.xml"))
@@ -40,7 +40,7 @@ object Factory {
   def initDistribution: QueryDistribution = {
     Parser.parseQueryDistribution("conf/distribution.xml")
   }
-
+ 
   def initGenerators: java.util.List[AbstractQueryGenerator] = {
     val generator = scala.xml.XML.loadFile("conf/generator.xml")
     val generators = new java.util.ArrayList[AbstractQueryGenerator]
@@ -73,15 +73,15 @@ object Factory {
   }
   
   def createContext : Context = {
-    new Context(listenerManager, generators, null)
+    new Context(listenerManager, generators, cachePlanner)
   }
   
-  def createCachePlanner : AbstractCachePlanner = {
+  def initCachePlanner : AbstractCachePlanner = {
     val mode = configManager.getAlgorithmMode()
-    val setup = configManager.getAlgorithmSetup
+    val setup = configManager.getAlgorithmSetup()
     mode match {
-      case "online" => return new OfflineCachePlanner(setup, listenerManager, externalQueues, datasets)
-      case "offline" => return new OnlineCachePlanner(setup, listenerManager, externalQueues, datasets, configManager.getPlannerBatchTime)
+      case "offline" => return new OfflineCachePlanner(setup, listenerManager, externalQueues, datasets)
+      case "online" => return new OnlineCachePlanner(setup, listenerManager, externalQueues, datasets, configManager.getPlannerBatchTime)
     }
   }
 

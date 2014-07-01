@@ -35,7 +35,7 @@ class Context(manager: ListenerManager, generators: java.util.List[AbstractQuery
     for(gen <- queryGenerators.toArray()) {
       gen.asInstanceOf[AbstractQueryGenerator].start()
     }
-    //planner.start()
+    cachePlanner.start
   }
   
   def stop() {
@@ -43,6 +43,6 @@ class Context(manager: ListenerManager, generators: java.util.List[AbstractQuery
     for(gen <- queryGenerators.toArray()) {
       gen.asInstanceOf[AbstractQueryGenerator].stop()
     }
-    //planner.stop()
+    cachePlanner.stop()
   }
 }

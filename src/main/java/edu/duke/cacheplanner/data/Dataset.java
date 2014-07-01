@@ -4,6 +4,8 @@
 package edu.duke.cacheplanner.data;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -62,7 +64,15 @@ public class Dataset implements Serializable {
 	public Set<Column> getColumns() {
 		return columns;
 	}
-
+	
+	public List<Column> getColumnList() {
+		List<Column> list = new ArrayList<Column>();
+		for(Column c: columns) {
+			list.add(c);
+		}
+		return list;
+		
+	}
 	/**
 	 * @param columns the columns to set
 	 */

@@ -1,15 +1,13 @@
 import sbt._
 import Keys._
+import sbtassembly.Plugin._
+import AssemblyKeys._
 
-object DemoBuild extends Build {
-  if (System.getenv("HIVE_HOME") == null) {
-    System.err.println("You must set HIVE_HOME to compile this project")
-    System.exit(1)
-  }
+object CachePlannerBuild extends Build {
 
   val SPARK_VERSION = "1.0.0"
 
-  val SCALA_VERSION = "2.10.3"
+  val SCALA_VERSION = "2.10.4"
 
   val HADOOP_VERSION = "1.2.1"
 
@@ -22,7 +20,6 @@ object DemoBuild extends Build {
   val excludeAsm = ExclusionRule(organization = "asm")
 
   def coreSettings = Defaults.defaultSettings ++ Seq(
-
     name := "CachePlanner",
     organization := "edu.duke",
     version := "0.1",
@@ -36,7 +33,6 @@ object DemoBuild extends Build {
       "JBoss Repository" at "http://repository.jboss.org/nexus/content/repositories/releases/",
       "Spray Repository" at "http://repo.spray.io/",
       "Cloudera Repository" at "http://repository.cloudera.com/artifactory/cloudera-repos/",
-      "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository",
       "Akka Repository" at "http://repo.akka.io/releases/"
     ),
 
@@ -44,22 +40,24 @@ object DemoBuild extends Build {
     javaOptions += "-XX:MaxPermSize=512m",
     javaOptions += "-Xmx3g",
 
-    unmanagedJars in Compile <++= baseDirectory map { base =>
-      val hiveFile = file(System.getenv("HIVE_HOME")) / "lib"
-      val baseDirectories = (base / "lib") +++ (hiveFile)
-      val customJars = (baseDirectories ** "*.jar")
-      // Hive uses an old version of guava that doesn't have what we want.
-      customJars.classpath.filter(!_.toString.contains("guava"))
-    },
-
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core" % SPARK_VERSION,
       "com.typesafe.akka" %% "akka-actor" % "2.2.3",
       "org.apache.hadoop" % "hadoop-client" % HADOOP_VERSION,
       "org.apache.commons" % "commons-math3" % "3.2",
       "org.apache.spark" %% "spark-hive" % SPARK_VERSION
-
   ),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-compiler" % _)
-  )
+  ) ++ assemblySettings ++ extraAssemblySettings
+  
+  	def extraAssemblySettings() = Seq(test in assembly := {}) ++ Seq(
+		mergeStrategy in assembly := {
+     		case m if m startsWith "org/apache/commons/logging" => MergeStrategy.last
+      		case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard
+      		case m if m.toLowerCase.matches("meta-inf.*\\.sf$") => MergeStrategy.discard
+      		case "reference.conf" => MergeStrategy.concat
+      		case _ => MergeStrategy.first
+    	}
+	)
+
 }

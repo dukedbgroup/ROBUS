@@ -4,11 +4,14 @@
 package edu.duke.cacheplanner.algorithm
 
 import scala.collection.mutable.MutableList
+import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import edu.duke.cacheplanner.conf.Factory
 import edu.duke.cacheplanner.data.Column
 import edu.duke.cacheplanner.data.Dataset
 import edu.duke.cacheplanner.query.AbstractQuery
+
 import edu.duke.cacheplanner.query.SingleTableQuery
 
 /**
@@ -28,8 +31,8 @@ object SingleColumnBatchAnalyzer {
 	 */
 	def createColumnMap(): Map[String, Column] = {
 			var cMap = scala.collection.mutable.Map[String, Column]()
-			for (ds <- Factory.datasets.asInstanceOf[List[Dataset]]) {
-				for(col <- ds.getColumns().asInstanceOf[List[Column]]) {
+			for (ds <- Factory.datasets.toList) {
+				for(col <- ds.getColumns().toList) {
 					cMap(ds.getName()+colIDSeparator+col.getColName()) = col
 				}
 			}
@@ -44,7 +47,7 @@ object SingleColumnBatchAnalyzer {
 	def buildMapForKnapsack(queries:java.util.List[SingleTableQuery]): 
 		Map[String, (Double, Double)] = {
 			var knapMap = scala.collection.mutable.Map[String, (Double, Double)]()
-			for (query <- queries.asInstanceOf[List[SingleTableQuery]]) {
+			for (query <- queries.toList) {
 				val columns = query.getRelevantColumns() 
 				// assuming there is only one relevant column
 				if(columns == null || columns.size() != 1) {
@@ -82,7 +85,7 @@ object SingleColumnBatchAnalyzer {
 				}
 			}
 			// return
-			selectedCols.asInstanceOf[List[Column]]
+			selectedCols.toList
 	}
 
 }
