@@ -1,14 +1,20 @@
 package edu.duke.cacheplanner.listener
 
-import java.io.ObjectOutputStream
+import com.google.gson.Gson
 import edu.duke.cacheplanner.query.{GroupingQuery, SingleTableQuery}
+import java.io.PrintWriter
+import java.io.File
 
 /**
  * an example of concrete listener that handles events
  */
-class SerializeListener(oos: ObjectOutputStream) extends Listener {
+class SerializeListener(path: String) extends Listener {
+  val writer = new PrintWriter(new File(path))
+  val gson = new Gson()
   override def onQuerySerialize(event: QuerySerialize) {
-    oos.writeObject(event.query)
+    val string = gson.toJson(event.query)
+    writer.println(string)
+    writer.flush()
     println(event.query.toHiveQL(false) + " is written")
   }
 }

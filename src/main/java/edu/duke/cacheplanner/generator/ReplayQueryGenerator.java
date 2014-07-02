@@ -23,16 +23,22 @@ public class ReplayQueryGenerator extends AbstractQueryGenerator {
 	              return;
 	            }
 	            AbstractQuery query = generateQuery();
-	            long delay = (long) query.getTimeDelay();
-	            try {
-	              Thread.sleep(delay);
-	            } catch (InterruptedException e) {
-	              e.printStackTrace();
+	            if(query == null) {
+	            	status = false;
 	            }
-	            externalQueue.addQuery(query);
-	            listenerManager.postEvent(new QuerySerialize(query));
-	            listenerManager.postEvent(new QueryGenerated
-	                    (Integer.parseInt(query.getQueryID()), Integer.parseInt(query.getQueueID())));
+	            else{
+		            long delay = (long) query.getTimeDelay();
+		            System.out.println("wait for " + delay);
+		            try {
+		              Thread.sleep(delay);
+		            } catch (InterruptedException e) {
+		              e.printStackTrace();
+		            }
+		            externalQueue.addQuery(query);
+		            listenerManager.postEvent(new QuerySerialize(query));
+		            listenerManager.postEvent(new QueryGenerated
+		                    (Integer.parseInt(query.getQueryID()), Integer.parseInt(query.getQueueID())));
+	            }
 	          }
 	        }
 	    };

@@ -39,11 +39,11 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager,
 
           if (isMultipleSetup) {
             // create a batch of queries
-            var batch = scala.collection.mutable.LinkedList[SingleTableQuery]()
+            var batch = scala.collection.mutable.ListBuffer[SingleTableQuery]()
             for (queue <- externalQueues.toList) {
-              queue.fetchABatch().toList.foreach(q => batch.add(q.asInstanceOf[SingleTableQuery]))
+              queue.fetchABatch().toList.foreach(q => batch += q.asInstanceOf[SingleTableQuery])
             }
-            
+
             // analyze the batch to find columns to cache
             val cachedCols = cachedData.flatMap(t => t._2).toList
             val colsToCache : List[Column] = SingleColumnGreedyAnalyzer.analyzeBatch(
