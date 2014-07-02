@@ -14,7 +14,6 @@ import edu.duke.cacheplanner.data.Dataset;
 public class GroupingQuery extends SingleTableQuery implements Serializable {
 
 	Column groupingColumn;
-	List<Projection> aggregations;
 
   public GroupingQuery(String queryID, String queueID, Dataset dataset,
                           List<Projection> projections, List<Selection> selections,

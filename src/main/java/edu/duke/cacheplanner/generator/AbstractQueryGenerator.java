@@ -15,11 +15,7 @@ public abstract class AbstractQueryGenerator {
   //Distribution over query arrival rate (per second)
   protected double lambda;
   protected int queueId;
-  protected double waitingTime;
-  protected double groupingQueryProb;
 
-  protected static double meanColNum;
-  protected static double stdColNum;
 
   protected List<Dataset> datasets;
   protected QueryDistribution queryDistribution;
@@ -28,44 +24,13 @@ public abstract class AbstractQueryGenerator {
   protected Thread generatorThread;
   protected boolean started = false;
 
-  public AbstractQueryGenerator(double lamb, int id, double mean, double std, double grouping) {
+  public AbstractQueryGenerator(double lamb, int id) {
     lambda = lamb;
     queueId = id;
-    meanColNum = mean;
-    stdColNum = std;
-    groupingQueryProb = grouping;
-    waitingTime = 0.0;
     generatorThread = createThread();
   }
 
-  public Thread createThread() {
-    return new Thread("QueryGenerator") {
-      @Override
-      public void run() {
-        while (true) {
-          if (!started) {
-            return;
-          }
-          //get delay
-          long delay = (long) getPoissonDelay();
-          waitingTime = delay;
-
-          try {
-            Thread.sleep(delay);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-          //generate the query & post the event to the listener
-          AbstractQuery query = generateQuery();
-          query.setTimeDelay(waitingTime);
-          externalQueue.addQuery(query);
-          listenerManager.postEvent(new QuerySerialize(query));
-          listenerManager.postEvent(new QueryGenerated
-                  (Integer.parseInt(query.getQueryID()), Integer.parseInt(query.getQueueID())));
-        }
-      }
-    };
-  }
+  abstract public Thread createThread();
 
   /**
    * calculate the delayed time using poisson arrival

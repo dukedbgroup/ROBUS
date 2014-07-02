@@ -10,6 +10,10 @@ import edu.duke.cacheplanner.Context
 import edu.duke.cacheplanner.generator.SingleTableQueryGenerator
 import edu.duke.cacheplanner.algorithm.{OnlineCachePlanner, OfflineCachePlanner, AbstractCachePlanner}
 import scala.reflect.internal.util
+import edu.duke.cacheplanner.query.AbstractQuery
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.Map
+import edu.duke.cacheplanner.generator.ReplayQueryGenerator
 
 object Factory {
   val configManager = initConfigManager
@@ -17,6 +21,7 @@ object Factory {
   val datasets = initDatasets
   val distribution = initDistribution
   val externalQueues = initExternalQueue
+  val queries = initQueries
   val generators = initGenerators
   val cachePlanner = initCachePlanner
   
@@ -39,6 +44,14 @@ object Factory {
   
   def initDistribution: QueryDistribution = {
     Parser.parseQueryDistribution("conf/distribution.xml")
+  }
+  
+  def initQueries: Map[String, java.util.Queue[AbstractQuery]] = {
+    val mode = configManager.getGeneratorMode()
+    mode match {
+      case "replay" => Parser.parseQueries(configManager.getReplayFilePath)
+      case _ => return null
+    }
   }
  
   def initGenerators: java.util.List[AbstractQueryGenerator] = {
@@ -66,9 +79,10 @@ object Factory {
   }
   
   def createGenerator(queueId: Int, lambda: Double, meanColNum: Double, stdColNum: Double, grouping: Double): AbstractQueryGenerator = {
-    val mode = configManager.getGeneratorMode()  
+    val mode = configManager.getGeneratorMode()
     mode match {
         case "singleTable" => return new SingleTableQueryGenerator(lambda, queueId, meanColNum, stdColNum, grouping)
+        case "replay" => return new ReplayQueryGenerator(lambda, queueId, queries(queueId.toString))
     }
   }
   

@@ -9,11 +9,18 @@ import edu.duke.cacheplanner.data.ColumnType
 import java.util.HashSet
 import java.util.ArrayList
 import java.util.List
+import java.util.Queue
+import java.util.LinkedList
 import edu.duke.cacheplanner.data.QueryDistribution
 import edu.duke.cacheplanner.data.DatasetDistribution
 import java.lang.Integer
 import edu.duke.cacheplanner.data.QueueDistribution
 import edu.duke.cacheplanner.generator.AbstractQueryGenerator
+import com.google.gson.Gson
+import scala.io.Source
+import edu.duke.cacheplanner.query.AbstractQuery
+import edu.duke.cacheplanner.query.GroupingQuery
+import edu.duke.cacheplanner.query.SingleTableQuery
 
 
 object Parser {  
@@ -102,5 +109,32 @@ object Parser {
       queryDistribution.setQueueDistribution(queueId, new QueueDistribution(dataDistribution))
     }
     return queryDistribution
+  }
+  
+  def parseQueries(path: String) : scala.collection.mutable.Map[String, java.util.Queue[AbstractQuery]] = {
+      val gson = new Gson()
+      var map = new scala.collection.mutable.HashMap[String, java.util.LinkedList[AbstractQuery]]()
+	  for(line <- Source.fromFile(path).getLines()) {
+	      var query: AbstractQuery = null
+	      if (line.contains("groupingColumn")) {
+	        query = gson.fromJson(line, classOf[GroupingQuery])
+	        println(query.toHiveQL(false))
+	      }
+	      else {
+	        query = gson.fromJson(line, classOf[SingleTableQuery])
+	        println(query.toHiveQL(false))
+	      }
+	      val queue = map.getOrElse(query.getQueueID(), null)
+	      if(queue == null) {
+	        val newList = new java.util.LinkedList[AbstractQuery]()
+	        newList.add(query)
+	        map(query.getQueueID()) = newList
+	      }
+	      else {
+	        map(query.getQueueID).add(query)
+	      }
+	  }
+      println(map)
+      map.asInstanceOf[scala.collection.mutable.Map[String, java.util.Queue[AbstractQuery]]]
   }
 }

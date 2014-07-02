@@ -68,6 +68,7 @@ public class SingleTableQuery extends AbstractQuery implements Serializable {
 		return cols;
 	}
 
+	
 	/**
 	 * @param dataset the dataset to set
 	 */

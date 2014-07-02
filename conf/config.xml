@@ -23,9 +23,18 @@
     </property>
     <property>
 		<name>cacheplanner.generator.mode</name>
-		<value>singleTable</value>
+		<value>replay</value>
 		<description>
-			Currently, supported modes are: grouping, singleTable
+			Currently supported modes:
+			singleTable - generate single table queries
+			replay - replay the experiment from the input json file
+		</description>
+	</property>
+	<property>
+		<name>cacheplanner.generator.replayfile</name>
+		<value>test.json</value>
+		<description>
+			If replay mode is on, the input json file should be set.
 		</description>
 	</property>
 </configuration>

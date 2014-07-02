@@ -1,6 +1,8 @@
 package edu.duke.cacheplanner.generator;
 
 import edu.duke.cacheplanner.data.ColumnType;
+import edu.duke.cacheplanner.listener.QueryGenerated;
+import edu.duke.cacheplanner.listener.QuerySerialize;
 import edu.duke.cacheplanner.query.*;
 import edu.umbc.cs.maple.utils.MathUtils;
 
@@ -21,9 +23,17 @@ import edu.duke.cacheplanner.util.TruncatedNormal;
  */
 public class SingleTableQueryGenerator extends AbstractQueryGenerator {
   private int count = 0;
-  
+  protected static double meanColNum;
+  protected static double stdColNum;
+  protected double waitingTime;
+  protected double groupingQueryProb;
+
   public SingleTableQueryGenerator(double lamb, int id, double mean, double std, double grouping) {
-    super(lamb, id, mean, std, grouping);
+	  super(lamb, id);
+	  meanColNum = mean;
+	  stdColNum = std;
+	  waitingTime = 0.0;
+	  groupingQueryProb = grouping;
   }
   
   
@@ -259,4 +269,33 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
     }
   }
   
+  @Override
+  public Thread createThread() {
+    return new Thread("QueryGenerator") {
+        @Override
+        public void run() {
+          while (true) {
+            if (!started) {
+              return;
+            }
+            //get delay
+            long delay = (long) getPoissonDelay();
+            waitingTime = delay;
+
+            try {
+              Thread.sleep(delay);
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            }
+            //generate the query & post the event to the listener
+            AbstractQuery query = generateQuery();
+            query.setTimeDelay(waitingTime);
+            externalQueue.addQuery(query);
+            listenerManager.postEvent(new QuerySerialize(query));
+            listenerManager.postEvent(new QueryGenerated
+                    (Integer.parseInt(query.getQueryID()), Integer.parseInt(query.getQueueID())));
+          }
+        }
+      };
+  }
 }

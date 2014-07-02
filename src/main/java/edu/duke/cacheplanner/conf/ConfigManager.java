@@ -22,7 +22,11 @@ public class ConfigManager {
       return false;
     }
   }
-
+  
+  public String getReplayFilePath() {
+	  return config.get("cacheplanner.generator.replayfile");
+  }
+  
   public Long getPlannerBatchTime() {
     return Long.parseLong(config.get("cacheplanner.algorithm.batchtime"));
   }
