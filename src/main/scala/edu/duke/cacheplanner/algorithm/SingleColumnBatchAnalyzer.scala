@@ -70,7 +70,6 @@ object SingleColumnBatchAnalyzer {
 						case _ => (size, oldValue._2 + benefit)
 					}
 					println("map: " +knapMap(colID))
-					
 				}      
 			}
 			knapMap.toMap

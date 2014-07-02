@@ -48,16 +48,14 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager,
             }
             
             // analyze the batch to find columns to cache
-            val cachedCols = cachedData.flatMap(t => t._2).asInstanceOf[List[Column]]
+            val cachedCols = cachedData.flatMap(t => t._2).toList
             val colsToCache : List[Column] = SingleColumnBatchAnalyzer.analyzeGreedily(
                 batch, cachedCols, 1000) //TODO: get the right memory size
 
             //merging candidate columns if they are in the same table
             var cacheCandidate : Map[String, ArrayBuffer[Column]] = new HashMap[String, ArrayBuffer[Column]]()
             var cacheDropCandidate : ArrayBuffer[String] = new ArrayBuffer[String]()
-            for (col: Column <- colsToCache) {
-              //change
-              
+            for (col: Column <- colsToCache) {            
               val candidate = cacheCandidate.getOrElse(col.getDatasetName, null)
               if(candidate == null) {
                 val buffer = new ArrayBuffer[Column]()

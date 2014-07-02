@@ -45,19 +45,20 @@ object CachePlannerBuild extends Build {
       "com.typesafe.akka" %% "akka-actor" % "2.2.3",
       "org.apache.hadoop" % "hadoop-client" % HADOOP_VERSION,
       "org.apache.commons" % "commons-math3" % "3.2",
-      "org.apache.spark" %% "spark-hive" % SPARK_VERSION
+      "org.apache.spark" %% "spark-hive" % SPARK_VERSION,
+      "com.google.code.gson" % "gson" %"2.2.4"
   ),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-compiler" % _)
   ) ++ assemblySettings ++ extraAssemblySettings
   
-  	def extraAssemblySettings() = Seq(test in assembly := {}) ++ Seq(
-		mergeStrategy in assembly := {
-     		case m if m startsWith "org/apache/commons/logging" => MergeStrategy.last
-      		case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard
-      		case m if m.toLowerCase.matches("meta-inf.*\\.sf$") => MergeStrategy.discard
-      		case "reference.conf" => MergeStrategy.concat
-      		case _ => MergeStrategy.first
-    	}
-	)
+  def extraAssemblySettings() = Seq(test in assembly := {}) ++ Seq(
+	mergeStrategy in assembly := {
+      case m if m startsWith "org/apache/commons/logging" => MergeStrategy.last
+      case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard
+      case m if m.toLowerCase.matches("meta-inf.*\\.sf$") => MergeStrategy.discard
+      case "reference.conf" => MergeStrategy.concat
+      case _ => MergeStrategy.first
+    }
+  )
 
 }
