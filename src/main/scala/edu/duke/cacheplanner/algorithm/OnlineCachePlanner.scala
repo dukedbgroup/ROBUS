@@ -1,22 +1,19 @@
 package edu.duke.cacheplanner.algorithm
 
-import edu.duke.cacheplanner.listener.ListenerManager
-import edu.duke.cacheplanner.listener.QueryPushedToSharkScheduler
-import edu.duke.cacheplanner.query.AbstractQuery
-import edu.duke.cacheplanner.conf.Factory
-import edu.duke.cacheplanner.generator.AbstractQueryGenerator
-import edu.duke.cacheplanner.queue.ExternalQueue
-import edu.duke.cacheplanner.query.SingleTableQuery
-import edu.duke.cacheplanner.data.{Column, Dataset}
-import edu.duke.cacheplanner.query.QueryUtil
-import java.util.ArrayList
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.mutableSeqAsJavaList
+import scala.collection.JavaConverters.bufferAsJavaListConverter
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
-import scala.collection.JavaConversions._
-import scala.collection.JavaConverters._
-import org.apache.http.util.ByteArrayBuffer
-import edu.duke.cacheplanner.listener.QueryFetchedByCachePlanner
+
+import edu.duke.cacheplanner.algorithm.singlecolumn.SingleColumnGreedyAnalyzer
+import edu.duke.cacheplanner.data.Column
+import edu.duke.cacheplanner.data.Dataset
+import edu.duke.cacheplanner.listener.ListenerManager
+import edu.duke.cacheplanner.query.QueryUtil
+import edu.duke.cacheplanner.query.SingleTableQuery
+import edu.duke.cacheplanner.queue.ExternalQueue
 
 class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, 
     queues: java.util.List[ExternalQueue], data: java.util.List[Dataset], 
@@ -42,15 +39,15 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager,
 
           if (isMultipleSetup) {
             // create a batch of queries
-            var batch:java.util.List[SingleTableQuery] = new ArrayList()
+            var batch = scala.collection.mutable.LinkedList[SingleTableQuery]()
             for (queue <- externalQueues.toList) {
               queue.fetchABatch().toList.foreach(q => batch.add(q.asInstanceOf[SingleTableQuery]))
             }
             
             // analyze the batch to find columns to cache
             val cachedCols = cachedData.flatMap(t => t._2).toList
-            val colsToCache : List[Column] = SingleColumnBatchAnalyzer.analyzeGreedily(
-                batch, cachedCols, 1000) //TODO: get the right memory size
+            val colsToCache : List[Column] = SingleColumnGreedyAnalyzer.analyzeBatch(
+                batch.toList, cachedCols, 1000) //TODO: get the right memory size
 
             //merging candidate columns if they are in the same table
             var cacheCandidate : Map[String, ArrayBuffer[Column]] = new HashMap[String, ArrayBuffer[Column]]()
