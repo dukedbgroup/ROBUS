@@ -24,22 +24,16 @@ public class QueryUtil {
     return result;
   }
 
-  public static String getCacheTableCreateSQL(String data, List<Column> columns) {
-    String result = "CREATE TABLE " + data + "_cached (";
-    for(Column col : columns) {
-      result = result + col.getColName() + " " + col.getColumnType().toString() + ", ";
-    }
-    result = result.substring(0, result.length()-2) + ")";
+  public static String getCacheTableCreateSQL(Column column) {
+    String result = "CREATE TABLE " + column.getDatasetName() + "_" + column.getColName() +  " (";
+    result = result + column.getColName() + " " + column.getColumnType().toString() + ")";
     return result;
   }
 
-  public static String getCacheTableInsertSQL(String data, List<Column> columns) {
-    String result = "INSERT INTO TABLE " + data + "_cached SELECT ";
-    for(Column col : columns) {
-      result = result + col.getColName() + ", "; 
-    } 
-    result = result.substring(0, result.length()-2);
-    result = result + " FROM " + data;
+  public static String getCacheTableInsertSQL(Column column) {
+    String result = "INSERT INTO TABLE " + column.getDatasetName() + "_" + column.getColName() + " SELECT ";
+    result = result + column.getColName();
+    result = result + " FROM " + column.getDatasetName();
     return result;
   }
   

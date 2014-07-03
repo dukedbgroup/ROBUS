@@ -122,4 +122,36 @@ public class SingleTableQuery extends AbstractQuery implements Serializable {
     }
 		return result;
 	}
+	
+	public String toHiveQLSingle(Boolean cached, Column col) {
+    String result = "SELECT ";
+    int count = 1;
+    for(Projection projection: projections) {
+      result = result + projection.toString();
+      if(projections.size() != count) {
+        result = result + ", ";
+      }
+      count ++;
+    }
+    result = result + " FROM ";
+    if(cached) {
+      result = result + dataset.getName() + "_" + col.getColName();
+    }
+    else {
+      result = result + dataset.getName();
+    }
+    count = 1;
+    if(selections.size() > 0) {
+      result = result + " WHERE ";
+      for(Selection selection: selections) {
+        result = result + selection.toString();
+        if(selections.size() != count) {
+          result = result + " AND ";
+        }
+        count++;
+      }
+    }
+		return result;
+	}
+
 }
