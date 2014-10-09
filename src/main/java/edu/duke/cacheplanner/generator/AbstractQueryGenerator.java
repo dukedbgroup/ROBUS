@@ -2,19 +2,18 @@ package edu.duke.cacheplanner.generator;
 
 import java.util.List;
 
-import edu.duke.cacheplanner.listener.ListenerManager;
-import edu.duke.cacheplanner.listener.QueryGenerated;
-import edu.duke.cacheplanner.listener.QuerySerialize;
-import edu.duke.cacheplanner.query.AbstractQuery;
-import edu.duke.cacheplanner.queue.ExternalQueue;
 import edu.duke.cacheplanner.data.Column;
 import edu.duke.cacheplanner.data.Dataset;
 import edu.duke.cacheplanner.data.QueryDistribution;
+import edu.duke.cacheplanner.listener.ListenerManager;
+import edu.duke.cacheplanner.query.AbstractQuery;
+import edu.duke.cacheplanner.queue.ExternalQueue;
 
 public abstract class AbstractQueryGenerator {
   //Distribution over query arrival rate (per second)
   protected double lambda;
   protected int queueId;
+  protected String name;
 
 
   protected List<Dataset> datasets;
@@ -24,9 +23,10 @@ public abstract class AbstractQueryGenerator {
   protected Thread generatorThread;
   protected boolean started = false;
 
-  public AbstractQueryGenerator(double lamb, int id) {
+  public AbstractQueryGenerator(double lamb, int id, String name) {
     lambda = lamb;
     queueId = id;
+    this.name = name;
     generatorThread = createThread();
   }
 
@@ -34,9 +34,10 @@ public abstract class AbstractQueryGenerator {
 
   /**
    * calculate the delayed time using poisson arrival
+   * inter query arrival times(in seconds) would be given by mean lambda
    */
   public double getPoissonDelay() {
-    double mean = 1.0 / (lambda * 1000); // convert the number in sec
+    double mean = 1.0 / (lambda); // 
     return Math.log(Math.random()) / -mean;
   }
 
@@ -72,6 +73,10 @@ public abstract class AbstractQueryGenerator {
 
   public int getQueueId() {
     return queueId;
+  }
+  
+  public String getName() {
+	  return name;
   }
 
   public Dataset getDataset(String name) {

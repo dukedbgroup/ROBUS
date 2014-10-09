@@ -8,8 +8,9 @@ import edu.duke.cacheplanner.query.AbstractQuery;
 
 public class ReplayQueryGenerator extends AbstractQueryGenerator {
 	protected Queue<AbstractQuery> myQueries;
-	public ReplayQueryGenerator(double lamb, int id, Queue<AbstractQuery> queries) {
-		super(0, id);
+	public ReplayQueryGenerator(double lamb, int id, String name, 
+			Queue<AbstractQuery> queries) {
+		super(0, id, name);
 		myQueries = queries;
 	}
 	@Override
@@ -37,7 +38,7 @@ public class ReplayQueryGenerator extends AbstractQueryGenerator {
 		            externalQueue.addQuery(query);
 		            listenerManager.postEvent(new QuerySerialize(query));
 		            listenerManager.postEvent(new QueryGenerated
-		                    (Integer.parseInt(query.getQueryID()), Integer.parseInt(query.getQueueID())));
+		                    (query.getQueryID(), query.getQueueID()));
 	            }
 	          }
 	        }

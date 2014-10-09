@@ -16,14 +16,14 @@
 	</property>
     <property>
         <name>cacheplanner.algorithm.batchtime</name>
-        <value>10000</value>
+        <value>50</value>
         <description>
             Only applicable in online mode. batch time in millisecond
         </description>
     </property>
     <property>
 		<name>cacheplanner.generator.mode</name>
-		<value>replay</value>
+		<value>singleTable</value>
 		<description>
 			Currently supported modes:
 			singleTable - generate single table queries

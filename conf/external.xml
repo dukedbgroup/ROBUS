@@ -1,13 +1,23 @@
 <?xml version="1.0"?>
 <externalQueue>
-  <queue id="1" name="1">
+  <queue id="1" name="queue1">
     <weight>1</weight>
-    <minShare>2</minShare>
+    <minShare>1</minShare>
     <batchSize>5</batchSize>
   </queue>
-  <queue id="2" name="2">
-    <weight>2</weight>
-    <minShare>3</minShare>
+  <queue id="2" name="queue2">
+    <weight>1</weight>
+    <minShare>1</minShare>
+    <batchSize>5</batchSize>
+  </queue>
+  <queue id="3" name="queue3">
+    <weight>1</weight>
+    <minShare>1</minShare>
+    <batchSize>5</batchSize>
+  </queue>
+  <queue id="4" name="queue4">
+    <weight>1</weight>
+    <minShare>1</minShare>
     <batchSize>5</batchSize>
   </queue>
 </externalQueue>

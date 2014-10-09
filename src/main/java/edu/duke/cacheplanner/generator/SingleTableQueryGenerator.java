@@ -28,8 +28,9 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
   protected double waitingTime;
   protected double groupingQueryProb;
 
-  public SingleTableQueryGenerator(double lamb, int id, double mean, double std, double grouping) {
-	  super(lamb, id);
+  public SingleTableQueryGenerator(double lamb, int id, String name, 
+		  double mean, double std, double grouping) {
+	  super(lamb, id, name);
 	  meanColNum = mean;
 	  stdColNum = std;
 	  waitingTime = 0.0;
@@ -212,8 +213,7 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
   public AbstractQuery generateQuery() {
     //select 'projections' from 'dataset' where 'selections'
 
-    String queryID = count + "";
-    String queueID = queueId + "";
+    int queryID = count;
 
     //pick dataset
     Dataset dataset = getRandomDataset();
@@ -244,7 +244,7 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
         selections.add(getRandomSelection(col));
       }
       count++;
-      AbstractQuery query = new SingleTableQuery(queryID, queueID, dataset, projections, selections);
+      AbstractQuery query = new SingleDatasetQuery(queryID, queueId, dataset, projections, selections);
       query.setWeight(externalQueue.getWeight());
       return query;
     }
@@ -265,7 +265,7 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
       }
       count++;
 
-      return new GroupingQuery(queryID, queueID, dataset, projections, selections, groupingCol);
+      return new GroupingQuery(queryID, queueId, dataset, projections, selections, groupingCol);
     }
   }
   
@@ -293,7 +293,7 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
             externalQueue.addQuery(query);
             listenerManager.postEvent(new QuerySerialize(query));
             listenerManager.postEvent(new QueryGenerated
-                    (Integer.parseInt(query.getQueryID()), Integer.parseInt(query.getQueueID())));
+                    (query.getQueryID(), query.getQueueID()));
           }
         }
       };

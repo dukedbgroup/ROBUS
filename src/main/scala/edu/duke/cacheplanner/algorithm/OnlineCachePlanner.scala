@@ -12,7 +12,7 @@ import edu.duke.cacheplanner.data.Column
 import edu.duke.cacheplanner.data.Dataset
 import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.query.QueryUtil
-import edu.duke.cacheplanner.query.SingleTableQuery
+import edu.duke.cacheplanner.query.SingleDatasetQuery
 import edu.duke.cacheplanner.queue.ExternalQueue
 import scala.collection.mutable.ListBuffer
 
@@ -40,9 +40,10 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager,
 
           if (isMultipleSetup) {
             // create a batch of queries
-            var batch = scala.collection.mutable.ListBuffer[SingleTableQuery]()
+            var batch = scala.collection.mutable.ListBuffer[SingleDatasetQuery]()
             for (queue <- externalQueues.toList) {
-              queue.fetchABatch().toList.foreach(q => batch += q.asInstanceOf[SingleTableQuery])
+              queue.fetchABatch().toList.foreach(
+                  q => batch += q.asInstanceOf[SingleDatasetQuery])
             }
             
             // analyze the batch to find columns to cache
@@ -145,7 +146,7 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager,
               hiveContext.hql(drop_cache_table)
               hiveContext.hql(query_create)
               hiveContext.hql(query_insert)
-              hiveContext.hql("CACHE TABLE " + table_name)
+              hiveContext.hql("CACHE TABLE " + table_name)	// not cached at this stage since spark evaluates lazily
             }
             
             // fire sql queries
@@ -170,7 +171,8 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager,
               }
               println("query fired: " + queryString)
               sc.setJobDescription(queryString)
-              sc.setLocalProperty("spark.scheduler.pool", query.getQueueID())
+              sc.setLocalProperty("spark.scheduler.pool", 
+                  query.getQueueID().toString())
               val result = hiveContext.hql(query.toHiveQL(false))
               result.collect()
             }

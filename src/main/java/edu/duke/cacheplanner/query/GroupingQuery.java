@@ -11,15 +11,15 @@ import edu.duke.cacheplanner.data.Dataset;
  * @author mayuresh
  */
 @SuppressWarnings("serial")
-public class GroupingQuery extends SingleTableQuery implements Serializable {
+public class GroupingQuery extends SingleDatasetQuery implements Serializable {
 
 	Column groupingColumn;
 
-  public GroupingQuery(String queryID, String queueID, Dataset dataset,
+  public GroupingQuery(int queryID, int queueId, Dataset dataset,
                           List<Projection> projections, List<Selection> selections,
                           Column grouping) {
-    super(queryID, queueID, dataset, projections, selections);
-    groupingColumn = grouping;
+	  super(queryID, queueId, dataset, projections, selections);
+	  groupingColumn = grouping;
 	}
 
 	/**

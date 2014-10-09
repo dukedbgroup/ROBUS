@@ -20,6 +20,7 @@ object Constants {
   final val SIZE = "size"
   final val COlUMNS = "columns"
   final val COLUMN = "col"
+  final val CACHE_SIZE = "cachesize"
   
   //distribution
   final val QUERY_DISTRIBUTION = "queryDistribution"
@@ -32,6 +33,7 @@ object Constants {
     
   //generator xml
   final val QUEUE_ID = "queueId"
+  final val QUEUE_NAME = "name"
   final val LAMBDA = "lambda"
   final val GENERATORS = "generators"
   final val GENERATOR = "generator"

@@ -5,7 +5,9 @@ import edu.duke.cacheplanner.listener.Listener
 import edu.duke.cacheplanner.generator.AbstractQueryGenerator
 import edu.duke.cacheplanner.algorithm.AbstractCachePlanner
 
-class Context(manager: ListenerManager, generators: java.util.List[AbstractQueryGenerator], planner: AbstractCachePlanner) {
+class Context(manager: ListenerManager, 
+    generators: java.util.List[AbstractQueryGenerator], 
+    planner: AbstractCachePlanner) {
   
   private val listenerManager = manager
   private val queryGenerators = generators

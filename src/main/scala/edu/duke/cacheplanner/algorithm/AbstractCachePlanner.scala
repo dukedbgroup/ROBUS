@@ -27,12 +27,17 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager, qu
 
 
   def initSparkContext: SparkContext = {
-    val conf = new SparkConf().setAppName("test").setMaster("spark://mint:7077")
+    val conf = new SparkConf().setAppName("cacheplanner").setMaster("spark://yahoo047:7077")
     //conf.set("spark.eventLog.enabled", "true")
     //conf.set("spark.eventLog.dir", "file:///home/shlee0605/shlee_test/spark-sql/event_log")
     conf.setJars(Seq("target/scala-2.10/CachePlanner-assembly-0.1.jar"))
     conf.set("spark.scheduler.mode", "FAIR")
+    // HACK: assuming that internal file has same pool names as corresponding queue id
+    // Also assuming weights and min shares match. 
+    // Ideally there should be a single config file
     conf.set("spark.scheduler.allocation.file", "conf/internal.xml")
+    conf.set("spark.executor.memory", "143m")	// this should give 2GB over entire cluster
+    conf.set("spark.storage.memoryFraction", "0.5")	// half of it would be 1G 
 
     val sc = new SparkContext(conf)
     sc

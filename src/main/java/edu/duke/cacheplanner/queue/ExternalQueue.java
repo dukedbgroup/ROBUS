@@ -38,6 +38,7 @@ public class ExternalQueue {
 
 	/**
 	 * request a queue to fetch a batch
+	 * TODO: make it time based
 	 */
 	public synchronized List<AbstractQuery> fetchABatch() { 
 		List<AbstractQuery> queries = new ArrayList<AbstractQuery>();
@@ -46,7 +47,7 @@ public class ExternalQueue {
 				queries.add(queue.poll());  
 				//notify an event to the listeners
 				listenerManager.postEvent(new QueryFetchedByCachePlanner
-						(Integer.parseInt(queries.get(i).getQueryID()), queueID));
+						(queries.get(i).getQueryID(), queueID));
 			}
 		} 
 		return queries;

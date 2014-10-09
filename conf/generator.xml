@@ -2,16 +2,33 @@
 <generators>
   <generator>
     <queueId>1</queueId>
+    <name>queue1</name>
     <lambda>2</lambda>
-    <meanColNum>2.0</meanColNum>
+    <meanColNum>1.0</meanColNum>
     <stdColNum>1.0</stdColNum>
     <groupingQueryProb>0.7</groupingQueryProb>
   </generator>
   <generator>
     <queueId>2</queueId>
-    <lambda>2.5</lambda>
-    <meanColNum>2.0</meanColNum>
+    <name>queue2</name>
+    <lambda>2</lambda>
+    <meanColNum>1.0</meanColNum>
     <stdColNum>1.0</stdColNum>
     <groupingQueryProb>0.7</groupingQueryProb>
   </generator>
-</generators>
+  <generator>
+    <queueId>3</queueId>
+    <name>queue3</name>
+    <lambda>2</lambda>
+    <meanColNum>1.0</meanColNum>
+    <stdColNum>1.0</stdColNum>
+    <groupingQueryProb>0.7</groupingQueryProb>
+  </generator>
+  <generator>
+    <queueId>4</queueId>
+    <name>queue4</name>
+    <lambda>2</lambda>
+    <meanColNum>1.0</meanColNum>
+    <stdColNum>1.0</stdColNum>
+    <groupingQueryProb>0.7</groupingQueryProb>
+  </generator></generators>

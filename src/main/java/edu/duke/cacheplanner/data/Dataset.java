@@ -6,13 +6,13 @@ package edu.duke.cacheplanner.data;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
  * @author mayuresh
  *
  */
+@SuppressWarnings("serial")
 public class Dataset implements Serializable {
 
 	final static String CACHED_TABLE_SUFFIX = "_cached"; 
@@ -21,7 +21,10 @@ public class Dataset implements Serializable {
 	String cachedName;
 	String path;
 	Set<Column> columns;
-	
+	/**
+	 * cache size of dataset.
+	 */
+	double estimatedSize;
 	//may be changed?
 	/**
 	 * Define a zipfian distribution over the columns of table
@@ -46,6 +49,7 @@ public class Dataset implements Serializable {
 
 	/**
 	 * @return the name
+	 * @deprecated
 	 */
 	public String getCachedName() {
 		return cachedName;
@@ -106,5 +110,29 @@ public class Dataset implements Serializable {
 	 */
 	public void setZipfExponent(double zipfExponent) {
 		this.zipfExponent = zipfExponent;
+	}
+
+	public double getEstimatedSize() {
+		return estimatedSize;
+	}
+
+	public void setEstimatedSize(double estimatedSize) {
+		this.estimatedSize = estimatedSize;
+	}
+
+	public boolean equals(Object obj) {
+		if(obj == null) {
+			return false;
+		}
+		if(!Dataset.class.equals(obj.getClass())) {
+			return false;
+		}
+		Dataset other = (Dataset)obj;
+		if(this.name.equals(other.name) && 
+				this.estimatedSize == other.estimatedSize && 
+				this.path.equals(other.path)) {
+			return true;
+		}
+		return false;
 	}
 }

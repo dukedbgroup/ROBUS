@@ -5,8 +5,8 @@ import java.io.Serializable;
 @SuppressWarnings("serial")
 public abstract class AbstractQuery implements Serializable {
 
-	protected String QueryID;
-	protected String QueueID;
+	protected int queryID;
+	protected int queueID;
 	protected double timeDelay;
 	// weight of the queue
 	protected double weight;
@@ -18,12 +18,12 @@ public abstract class AbstractQuery implements Serializable {
 		return weight;
 	}
 
-	public String getQueryID() {
-		return QueryID;
+	public int getQueryID() {
+		return queryID;
 	}
 
-	public String getQueueID() {
-		return QueueID;
+	public int getQueueID() {
+		return queueID;
 	}
 
 	public double getTimeDelay() {
@@ -41,12 +41,12 @@ public abstract class AbstractQuery implements Serializable {
 		timeDelay = delay;
 	}
 
-	public void setQueryID(String id) {
-		QueryID = id;
+	public void setQueryID(int id) {
+		queryID = id;
 	}
 
-	public void setQueueID(String id) {
-		QueueID = id;
+	public void setQueueID(int id) {
+		queueID = id;
 	}
 	/**
 	 * @param cached true if the query is on cached table in Shark, false otherwise

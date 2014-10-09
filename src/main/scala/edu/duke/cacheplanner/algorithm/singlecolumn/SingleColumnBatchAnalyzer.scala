@@ -7,7 +7,7 @@ import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import edu.duke.cacheplanner.conf.Factory
 import edu.duke.cacheplanner.data.Column
-import edu.duke.cacheplanner.query.SingleTableQuery
+import edu.duke.cacheplanner.query.SingleDatasetQuery
 
 /**
  * @author mayuresh
@@ -62,7 +62,7 @@ trait SingleColumnBatchAnalyzer {
 	 * Returns:
 	 * List of columns recommended for caching for the batch
 	 */
-	def analyzeBatch(queries: List[SingleTableQuery], 
+	def analyzeBatch(queries: List[SingleDatasetQuery], 
 	    cachedColumns: List[Column], 
 	    memorySize: Double): List[Column]
 

@@ -1,13 +1,23 @@
 <?xml version="1.0"?>
 <allocations>
-  <pool name="pool1">
+  <pool name="1">
     <schedulingMode>FAIR</schedulingMode>
     <weight>1</weight>
-    <minShare>2</minShare>
+    <minShare>1</minShare>
   </pool>
-  <pool name="pool2">
+  <pool name="2">
     <schedulingMode>FAIR</schedulingMode>
-    <weight>2</weight>
-    <minShare>3</minShare>
+    <weight>1</weight>
+    <minShare>1</minShare>
+  </pool>
+  <pool name="3">
+    <schedulingMode>FAIR</schedulingMode>
+    <weight>1</weight>
+    <minShare>1</minShare>
+  </pool>
+  <pool name="4">
+    <schedulingMode>FAIR</schedulingMode>
+    <weight>1</weight>
+    <minShare>1</minShare>
   </pool>
 </allocations>

@@ -3,7 +3,7 @@
  */
 package edu.duke.cacheplanner.algorithm.singlecolumn
 
-import edu.duke.cacheplanner.query.SingleTableQuery
+import edu.duke.cacheplanner.query.SingleDatasetQuery
 import edu.duke.cacheplanner.data.Column
 import scala.collection.mutable.MutableList
 
@@ -18,7 +18,7 @@ object SingleColumnGreedyAnalyzer extends SingleColumnBatchAnalyzer {
 	 * Benefit for column C in proportional fairness formulation is defined as:
 	 * \sum_{i in queries accessing C} W_i log (size_C * indicator_C)
 	 */
-	def columnToSizeAndBenefit(queries:List[SingleTableQuery]): 
+	def columnToSizeAndBenefit(queries:List[SingleDatasetQuery]): 
 		Map[String, (Double, Double)] = {
 			var knapMap = scala.collection.mutable.Map[String, (Double, Double)]()
 			for (query <- queries.toList) {
@@ -48,7 +48,7 @@ object SingleColumnGreedyAnalyzer extends SingleColumnBatchAnalyzer {
 	}
 
   override def analyzeBatch(
-			queries: List[SingleTableQuery], 
+			queries: List[SingleDatasetQuery], 
 			cachedColumns: List[Column], 
 			memorySize: Double): List[Column] = {
 			// create a map of [columnID -> (size, benefit)]

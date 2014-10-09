@@ -16,16 +16,16 @@ import edu.duke.cacheplanner.data.Dataset;
  * @author mayuresh
  */
 @SuppressWarnings("serial")
-public class SingleTableQuery extends AbstractQuery implements Serializable {
+public class SingleDatasetQuery extends AbstractQuery implements Serializable {
 
 	protected Dataset dataset;
 	protected List<Projection> projections;
 	protected List<Selection> selections;
 
-	public SingleTableQuery(String queryID, String queueID, Dataset dataset,
+	public SingleDatasetQuery(int queryID, int queueID, Dataset dataset,
 			List<Projection> projections, List<Selection> selections) {
-		this.QueryID = queryID;
-		this.QueueID = queueID;
+		this.queryID = queryID;
+		this.queueID = queueID;
 		setDataset(dataset);
 		setProjections(projections);
 		setSelections(selections);
@@ -89,6 +89,14 @@ public class SingleTableQuery extends AbstractQuery implements Serializable {
 	 */
 	protected void setSelections(List<Selection> selections) {
 		this.selections = selections;
+	}
+
+	/**
+	 * Returns the benefit a scan query would get when allocated cache for the dataset it needs
+	 * @return size of the dataset because that's our benefit function
+	 */
+	public double getScanBenefit() {
+		return dataset.getEstimatedSize();
 	}
 
 	@Override

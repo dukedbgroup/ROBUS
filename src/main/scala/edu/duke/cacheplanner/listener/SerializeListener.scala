@@ -1,7 +1,6 @@
 package edu.duke.cacheplanner.listener
 
 import com.google.gson.Gson
-import edu.duke.cacheplanner.query.{GroupingQuery, SingleTableQuery}
 import java.io.PrintWriter
 import java.io.File
 
