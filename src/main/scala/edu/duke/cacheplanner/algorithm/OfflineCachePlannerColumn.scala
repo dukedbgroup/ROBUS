@@ -1,14 +1,17 @@
 package edu.duke.cacheplanner.algorithm
 
 import edu.duke.cacheplanner.listener.ListenerManager
-import edu.duke.cacheplanner.listener.QueryPushedToSharkScheduler
+import edu.duke.cacheplanner.listener.QueryPushedToSparkScheduler
 import edu.duke.cacheplanner.query.AbstractQuery
 import java.util
+import edu.duke.cacheplanner.conf.ConfigManager
 import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.data.Dataset
 
-class OfflineCachePlanner(setup: Boolean, manager: ListenerManager, queues: util.List[ExternalQueue], data: java.util.List[Dataset])
-    extends AbstractCachePlanner(setup, manager, queues, data) {
+class OfflineCachePlannerColumn(setup: Boolean, manager: ListenerManager, 
+    queues: util.List[ExternalQueue], data: java.util.List[Dataset], 
+    config: ConfigManager) extends AbstractCachePlanner(
+        setup, manager, queues, data, config) {
   
   //change this to config
   val threshold:Double = 1

@@ -37,4 +37,12 @@
 			If replay mode is on, the input json file should be set.
 		</description>
 	</property>
-</configuration>
+	<property>
+		<name>cacheplanner.cachesize</name>
+		<value>1000</value>
+		<description>size of cache in MB</description></property>
+	<property>
+		<name>cacheplanner.workloadtime</name>
+		<value>300</value>
+		<description>total time workload should be run in seconds, not applicable in replay mode.</description>
+	</property></configuration>

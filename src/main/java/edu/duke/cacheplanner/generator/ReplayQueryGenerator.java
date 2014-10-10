@@ -37,8 +37,7 @@ public class ReplayQueryGenerator extends AbstractQueryGenerator {
 		            }
 		            externalQueue.addQuery(query);
 		            listenerManager.postEvent(new QuerySerialize(query));
-		            listenerManager.postEvent(new QueryGenerated
-		                    (query.getQueryID(), query.getQueueID()));
+		            listenerManager.postEvent(new QueryGenerated(query));
 	            }
 	          }
 	        }

@@ -9,11 +9,12 @@ trait ListenerEvent
 
 case class QuerySerialize(query: AbstractQuery) extends ListenerEvent
 
-case class QueryGenerated(queryID: Int, queueID: Int) extends ListenerEvent
+case class QueryGenerated(query: AbstractQuery) extends ListenerEvent
   
-case class QueryFetchedByCachePlanner(queryID: Int, queueID: Int) extends ListenerEvent
+case class QueryFetchedByCachePlanner(query: AbstractQuery) extends ListenerEvent
 
-case class QueryPushedToSharkScheduler(queryID: Int, queueID: Int) extends ListenerEvent
+case class QueryPushedToSparkScheduler(query: AbstractQuery, 
+    cacheUsed: Double) extends ListenerEvent
 
 /** An event to shutdown the listener thread. */
 case object ListenerShutdown extends ListenerEvent
@@ -37,6 +38,6 @@ trait Listener {
   /**
    * called when the query is pushed to SharkScheduler
    */
-  def onQueryPushedToSharkScheduler(event: QueryPushedToSharkScheduler) { }
+  def onQueryPushedToSparkScheduler(event: QueryPushedToSparkScheduler) { }
 
 }

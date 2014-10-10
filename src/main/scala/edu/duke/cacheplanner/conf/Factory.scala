@@ -8,7 +8,7 @@ import edu.duke.cacheplanner.generator.AbstractQueryGenerator
 import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.Context
 import edu.duke.cacheplanner.generator.SingleTableQueryGenerator
-import edu.duke.cacheplanner.algorithm.{OnlineCachePlanner, OfflineCachePlanner, AbstractCachePlanner}
+import edu.duke.cacheplanner.algorithm._
 import scala.reflect.internal.util
 import edu.duke.cacheplanner.query.AbstractQuery
 import scala.collection.mutable.ArrayBuffer
@@ -100,15 +100,22 @@ object Factory {
     val mode = configManager.getAlgorithmMode()
     val setup = configManager.getAlgorithmSetup()
     mode match {
-      case "offline" => return new OfflineCachePlanner(setup, listenerManager, 
-          externalQueues, datasets)
-      case "online" => return new OnlineCachePlanner(setup, listenerManager, 
-          externalQueues, datasets, configManager.getPlannerBatchTime)
+      case "offline" => return new OfflineCachePlannerColumn(setup, listenerManager, 
+          externalQueues, datasets, configManager)
+      case "online" => return new OnlineCachePlannerSingleDS(setup, listenerManager, 
+          externalQueues, datasets, configManager)
     }
   }
 
   def getDatasets() : java.util.List[Dataset] = {
     return datasets
   }
-  
+
+  def getQueues(): java.util.List[ExternalQueue] = {
+    return externalQueues
+  }
+
+  def getConfigManager(): ConfigManager = {
+    return configManager
+  }
 }

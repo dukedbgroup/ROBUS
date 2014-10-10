@@ -7,14 +7,17 @@ class LoggingListener extends Listener {
 
   //implement the event handler
   override def onQueryGenerated(event: QueryGenerated) { 
-    System.out.println("query generated(queryID, queueID) : " + event.queryID + ", " + event.queueID)
+    System.out.println("query generated(queryID, queueID) : " 
+        + event.query.getQueryID + ", " + event.query.getQueueID)
   }
   
   override def onQueryFetchedByCachePlanner(event: QueryFetchedByCachePlanner) { 
-    System.out.println("query fetched by CachePlanner(queryID, queueID) : " + event.queryID + ", " + event.queueID)
+    System.out.println("query fetched by CachePlanner(queryID, queueID) : " 
+        + event.query.getQueryID + ", " + event.query.getQueueID)
   }
   
-  override def onQueryPushedToSharkScheduler(event: QueryPushedToSharkScheduler) { 
-    System.out.println("query pushed to SharkScheduler(queryID, queueID) : " + event.queryID + ", " + event.queueID)
+  override def onQueryPushedToSparkScheduler(event: QueryPushedToSparkScheduler) { 
+    System.out.println("query pushed to SharkScheduler(queryID, queueID) : " 
+        + event.query.getQueryID + ", " + event.query.getQueueID)
   }  
 }

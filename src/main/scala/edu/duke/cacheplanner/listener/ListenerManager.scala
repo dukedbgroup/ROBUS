@@ -43,8 +43,8 @@ class ListenerManager {
         listenerList.foreach(_.onQueryGenerated(queryGenerated))
       case queryFetchedByCachePlanner: QueryFetchedByCachePlanner =>
         listenerList.foreach(_.onQueryFetchedByCachePlanner(queryFetchedByCachePlanner))
-      case queryPushedToSharkScheduler: QueryPushedToSharkScheduler =>
-        listenerList.foreach(_.onQueryPushedToSharkScheduler(queryPushedToSharkScheduler))
+      case queryPushedToSparkScheduler: QueryPushedToSparkScheduler =>
+        listenerList.foreach(_.onQueryPushedToSparkScheduler(queryPushedToSparkScheduler))
       case ListenerShutdown => 
     }
   }

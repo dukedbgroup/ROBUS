@@ -8,6 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
 import edu.duke.cacheplanner.algorithm.singlecolumn.SingleColumnGreedyAnalyzer
+import edu.duke.cacheplanner.conf.ConfigManager
 import edu.duke.cacheplanner.data.Column
 import edu.duke.cacheplanner.data.Dataset
 import edu.duke.cacheplanner.listener.ListenerManager
@@ -16,15 +17,17 @@ import edu.duke.cacheplanner.query.SingleDatasetQuery
 import edu.duke.cacheplanner.queue.ExternalQueue
 import scala.collection.mutable.ListBuffer
 
-class OnlineCachePlanner(setup: Boolean, manager: ListenerManager, 
+class OnlineCachePlannerColumn(setup: Boolean, manager: ListenerManager, 
     queues: java.util.List[ExternalQueue], data: java.util.List[Dataset], 
-    time: Long) extends AbstractCachePlanner(setup, manager, queues, data) {
+    config: ConfigManager) extends AbstractCachePlanner(
+        setup, manager, queues, data, config) {
 
-  val batchTime = time;
+  val batchTime = config.getPlannerBatchTime();
   var cachedCols = new scala.collection.mutable.ListBuffer[Column]()
 
   override def initPlannerThread(): Thread = {
     new Thread("OnlineCachePlanner") {
+
       override def run() {
         while (true) {
           println("cacheplanner workinggggggggggg")
@@ -48,7 +51,7 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager,
             
             // analyze the batch to find columns to cache
             val colsToCache : List[Column] = SingleColumnGreedyAnalyzer.analyzeBatch(
-                batch.toList, cachedCols.toList, 1000) //TODO: get the right memory size               
+                batch.toList, cachedCols.toList, config.getCacheSize().doubleValue())               
             println("cached from previous")
             cachedCols.foreach(c => println(c.getColName()))
                 
@@ -71,7 +74,8 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager,
               var matching = false
               var droppingCol:Column = null
               for (drop: Column <- dropCandidate) {
-                if(cache.getColName().equals(drop.getColName()) && cache.getDatasetName().equals(drop.getDatasetName())) {
+                if(cache.getColName().equals(drop.getColName()) && 
+                    cache.getDatasetName().equals(drop.getDatasetName())) {
                   matching = true
                   droppingCol = drop
                 }
@@ -170,7 +174,7 @@ class OnlineCachePlanner(setup: Boolean, manager: ListenerManager,
                 queryString = query.toHiveQLSingle(false, col)
               }
               println("query fired: " + queryString)
-              sc.setJobDescription(queryString)
+              sc.setJobGroup(query.getQueueID().toString, queryString)
               sc.setLocalProperty("spark.scheduler.pool", 
                   query.getQueueID().toString())
               val result = hiveContext.hql(query.toHiveQL(false))

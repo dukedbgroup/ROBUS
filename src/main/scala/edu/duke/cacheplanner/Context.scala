@@ -1,5 +1,6 @@
 package edu.duke.cacheplanner
 
+import edu.duke.cacheplanner.conf.ConfigManager
 import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.listener.Listener
 import edu.duke.cacheplanner.generator.AbstractQueryGenerator

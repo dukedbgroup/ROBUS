@@ -4,6 +4,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.hive.HiveContext
 import scala.collection.JavaConversions._
 import java.util
+import edu.duke.cacheplanner.conf.ConfigManager
 import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.data.Dataset
@@ -13,7 +14,9 @@ import org.apache.spark.sql.SchemaRDD
 /**
  * Abstract class for CachePlanner
  */
-abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager, queues: util.List[ExternalQueue], data: java.util.List[Dataset]) {
+abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager, 
+    queues: util.List[ExternalQueue], data: java.util.List[Dataset], 
+    config: ConfigManager) {
   val listenerManager: ListenerManager = manager
   val datasets = data
   val isMultipleSetup = setup // true = multi app setup, false = single app setup
@@ -22,10 +25,14 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager, qu
   val sc = initSparkContext
   val hiveContext = initHiveContext
   val plannerThread = initPlannerThread()
-  var schemaRDDs: scala.collection.mutable.Map[String, SchemaRDD] = new scala.collection.mutable.HashMap[String, SchemaRDD]()
+  var schemaRDDs: scala.collection.mutable.Map[String, SchemaRDD] = 
+    new scala.collection.mutable.HashMap[String, SchemaRDD]()
   initTables
 
 
+  /**
+   * TODO: read all the hardcoded parameters from a config file
+   */
   def initSparkContext: SparkContext = {
     val conf = new SparkConf().setAppName("cacheplanner").setMaster("spark://yahoo047:7077")
     //conf.set("spark.eventLog.enabled", "true")

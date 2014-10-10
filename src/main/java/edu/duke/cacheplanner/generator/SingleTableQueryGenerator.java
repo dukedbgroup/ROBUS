@@ -96,9 +96,14 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
     return new ArrayList<Column>(result);
   }
 
+  /**
+   * Temporarily disabling random selection
+   * TODO: use random selection when we know max and min over a column, ideally a histogram
+   * @return
+   */
   public SelectionOperator getRandomSelectionOperator() {
-    Random rand = new Random();
-    int operatorNum = rand.nextInt(3);
+//    Random rand = new Random();
+    int operatorNum = 1;//rand.nextInt(3);
     switch(operatorNum) {
       case 0 : return SelectionOperator.EQUAL;
       case 1 : return SelectionOperator.GREATER;
@@ -107,6 +112,11 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
     return null;
   }
 
+  /**
+   * Temporarily disabling random selection
+   * TODO: use random selection when we know max and min over a column, ideally a histogram
+   * @return
+   */
   public String getRandomValue(Column column) {
     Random rand = new Random();
     ColumnType type = column.getColumnType();
@@ -292,8 +302,7 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
             query.setTimeDelay(waitingTime);
             externalQueue.addQuery(query);
             listenerManager.postEvent(new QuerySerialize(query));
-            listenerManager.postEvent(new QueryGenerated
-                    (query.getQueryID(), query.getQueueID()));
+            listenerManager.postEvent(new QueryGenerated(query));
           }
         }
       };

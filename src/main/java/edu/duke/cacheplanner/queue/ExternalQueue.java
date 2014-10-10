@@ -24,32 +24,33 @@ public class ExternalQueue {
 
 	public ExternalQueue(int id, int w, int min, int size, String name) {
 		queueID = id;
-    queueName = name;
+		queueName = name;
 		setWeight(w);
 		setMinShare(min);
 		batchSize = size;
 		queue = new LinkedList<AbstractQuery>();
 	}
 
-	public ExternalQueue(int id, int w, int min, int size, String name, ListenerManager manager) {
+	public ExternalQueue(int id, int w, int min, int size, String name, 
+			ListenerManager manager) {
 		this(id, w, min, size, name);
 		listenerManager = manager;
 	}
 
 	/**
-	 * request a queue to fetch a batch
-	 * TODO: make it time based
+	 * return a batch of queries that arrived until current time
 	 */
 	public synchronized List<AbstractQuery> fetchABatch() { 
 		List<AbstractQuery> queries = new ArrayList<AbstractQuery>();
-		for(int i = 0; i < batchSize; i++) {
+//		for(int i = 0; i < batchSize; i++) {
 			if(queue.peek() != null) {
-				queries.add(queue.poll());  
+				AbstractQuery query = queue.poll();
+				queries.add(query);  
 				//notify an event to the listeners
 				listenerManager.postEvent(new QueryFetchedByCachePlanner
-						(queries.get(i).getQueryID(), queueID));
+						(query));
 			}
-		} 
+//		} 
 		return queries;
 	}
 

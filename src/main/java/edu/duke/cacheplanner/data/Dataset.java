@@ -15,7 +15,7 @@ import java.util.Set;
 @SuppressWarnings("serial")
 public class Dataset implements Serializable {
 
-	final static String CACHED_TABLE_SUFFIX = "_cached"; 
+	final static String CACHED_TABLE_SUFFIX = "_cache"; 
 
 	String name;
 	String cachedName;
@@ -49,7 +49,6 @@ public class Dataset implements Serializable {
 
 	/**
 	 * @return the name
-	 * @deprecated
 	 */
 	public String getCachedName() {
 		return cachedName;
