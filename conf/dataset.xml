@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <datasets>
   <dataset>
-    <name>store_sales-d1</name>
+    <name>store_sales_d1</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d1/store_sales</path>
     <columns>
       <col>
@@ -18,7 +18,7 @@
     </columns>
     <cachesize>1253</cachesize></dataset>
   <dataset>
-    <name>catalog_sales-d1</name>
+    <name>catalog_sales_d1</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d1/catalog_sales</path>
     <columns>
       <col>
@@ -34,7 +34,7 @@
     </columns>
     <cachesize>628</cachesize></dataset>  
   <dataset>
-    <name>store_sales-d2</name>
+    <name>store_sales_d2</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d2/store_sales</path>
     <columns>
       <col>
@@ -51,7 +51,7 @@
     </columns>
     <cachesize>1090</cachesize></dataset>
   <dataset>
-    <name>catalog_sales-d2</name>
+    <name>catalog_sales_d2</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d2/catalog_sales</path>
     <columns>
       <col>
@@ -67,7 +67,7 @@
     </columns>
     <cachesize>552</cachesize></dataset>  
   <dataset>
-    <name>store_sales-d3</name>
+    <name>store_sales_d3</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d3/store_sales</path>
     <columns>
       <col>
@@ -84,7 +84,7 @@
     </columns>
     <cachesize>490</cachesize></dataset>
   <dataset>
-    <name>catalog_sales-d3</name>
+    <name>catalog_sales_d3</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d3/catalog_sales</path>
     <columns>
       <col>
@@ -100,7 +100,7 @@
     </columns>
     <cachesize>245</cachesize></dataset>  
   <dataset>
-    <name>store_sales-d4</name>
+    <name>store_sales_d4</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d4/store_sales</path>
     <columns>
       <col>
@@ -117,7 +117,7 @@
     </columns>
     <cachesize>220</cachesize></dataset>
   <dataset>
-    <name>catalog_sales-d4</name>
+    <name>catalog_sales_d4</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d4/catalog_sales</path>
     <columns>
       <col>
@@ -133,7 +133,7 @@
     </columns>
     <cachesize>110</cachesize></dataset>  
   <dataset>
-    <name>store_sales-d5</name>
+    <name>store_sales_d5</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d5/store_sales</path>
     <columns>
       <col>
@@ -150,7 +150,7 @@
     </columns>
     <cachesize>22</cachesize></dataset>
   <dataset>
-    <name>catalog_sales-d5</name>
+    <name>catalog_sales_d5</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d5/catalog_sales</path>
     <columns>
       <col>
@@ -166,7 +166,7 @@
     </columns>
     <cachesize>11</cachesize></dataset>  
   <dataset>
-    <name>store_sales-d6</name>
+    <name>store_sales_d6</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d6/store_sales</path>
     <columns>
       <col>
@@ -183,7 +183,7 @@
     </columns>
     <cachesize>22</cachesize></dataset>
   <dataset>
-    <name>catalog_sales-d6</name>
+    <name>catalog_sales_d6</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d6/catalog_sales</path>
     <columns>
       <col>
@@ -199,7 +199,7 @@
     </columns>
     <cachesize>11</cachesize></dataset>  
   <dataset>
-    <name>store_sales-d7</name>
+    <name>store_sales_d7</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d7/store_sales</path>
     <columns>
       <col>
@@ -216,7 +216,7 @@
     </columns>
     <cachesize>14</cachesize></dataset>
   <dataset>
-    <name>catalog_sales-d7</name>
+    <name>catalog_sales_d7</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d7/catalog_sales</path>
     <columns>
       <col>
@@ -232,7 +232,7 @@
     </columns>
     <cachesize>7</cachesize></dataset>  
   <dataset>
-    <name>store_sales-d8</name>
+    <name>store_sales_d8</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d8/store_sales</path>
     <columns>
       <col>
@@ -249,7 +249,7 @@
     </columns>
     <cachesize>13</cachesize></dataset>
   <dataset>
-    <name>catalog_sales-d8</name>
+    <name>catalog_sales_d8</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d8/catalog_sales</path>
     <columns>
       <col>
@@ -265,7 +265,7 @@
     </columns>
     <cachesize>6.5</cachesize></dataset>  
   <dataset>
-    <name>store_sales-d9</name>
+    <name>store_sales_d9</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d9/store_sales</path>
     <columns>
       <col>
@@ -282,7 +282,7 @@
     </columns>
     <cachesize>5</cachesize></dataset>
   <dataset>
-    <name>catalog_sales-d9</name>
+    <name>catalog_sales_d9</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d9/catalog_sales</path>
     <columns>
       <col>
@@ -298,7 +298,7 @@
     </columns>
     <cachesize>2.6</cachesize></dataset>  
   <dataset>
-    <name>store_sales-d10</name>
+    <name>store_sales_d10</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d10/store_sales</path>
     <columns>
       <col>
@@ -315,7 +315,7 @@
     </columns>
     <cachesize>0.6</cachesize></dataset>
   <dataset>
-    <name>catalog_sales-d10</name>
+    <name>catalog_sales_d10</name>
     <path>hdfs://yahoo047:9000/cacheplanner/d10/catalog_sales</path>
     <columns>
       <col>

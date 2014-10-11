@@ -1,20 +1,24 @@
 package edu.duke.cacheplanner.generator;
 
-import edu.duke.cacheplanner.data.ColumnType;
-import edu.duke.cacheplanner.listener.QueryGenerated;
-import edu.duke.cacheplanner.listener.QuerySerialize;
-import edu.duke.cacheplanner.query.*;
-import edu.umbc.cs.maple.utils.MathUtils;
-
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
-import java.util.Arrays;
-import java.util.Collection;
 
-import edu.duke.cacheplanner.data.Dataset;
 import edu.duke.cacheplanner.data.Column;
+import edu.duke.cacheplanner.data.ColumnType;
+import edu.duke.cacheplanner.data.Dataset;
+import edu.duke.cacheplanner.listener.QueryGenerated;
+import edu.duke.cacheplanner.listener.QuerySerialize;
+import edu.duke.cacheplanner.query.AbstractQuery;
+import edu.duke.cacheplanner.query.AggregationFunction;
+import edu.duke.cacheplanner.query.GroupingQuery;
+import edu.duke.cacheplanner.query.Projection;
+import edu.duke.cacheplanner.query.Selection;
+import edu.duke.cacheplanner.query.SelectionOperator;
+import edu.duke.cacheplanner.query.SingleDatasetQuery;
 import edu.duke.cacheplanner.util.TruncatedNormal;
+import edu.umbc.cs.maple.utils.MathUtils;
 
 /**
  * Single Table Query Generator
@@ -41,6 +45,7 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
   public Dataset getRandomDataset() {
     //first look at the dataset distribution
     Random rand = new Random();
+   
     double p = rand.nextDouble();
     double cumulativeProb = 0;
     for(String d : queryDistribution.getQueueDistributionMap(queueId).keySet()) {

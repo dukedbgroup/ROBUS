@@ -12,11 +12,18 @@ object Main {
     val config = Factory.getConfigManager
     context.addListener(new LoggingListener)
     context.addListener(new SerializeListener(config.getReplayFilePath()))
-    context.addListener(new CachePlannerMetrics(Factory.getQueues))
+    val metrics = new CachePlannerMetrics(Factory.getQueues)
+    context.addListener(metrics)
     context.start()
     
     Thread.sleep(config.getWorkloadTime)	// total time of batch
     context.stop()
+
+    // compute final metrics
+    print("------------- metrics ---------------")
+    print("total wait time -> " + metrics.getTotalWaitTime)
+    print("throughput -> " + metrics.getThroughput)
+    print("resource fairness -> " + metrics.getResourceFairnessIndex)
       //oos.close()
       //fos.close()
   }

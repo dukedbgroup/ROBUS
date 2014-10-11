@@ -1,5 +1,6 @@
 package edu.duke.cacheplanner.conf
 
+import scala.collection.JavaConversions._
 import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.listener.LoggingListener
 import edu.duke.cacheplanner.data.Dataset
@@ -14,13 +15,17 @@ import edu.duke.cacheplanner.query.AbstractQuery
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Map
 import edu.duke.cacheplanner.generator.ReplayQueryGenerator
+import edu.duke.cacheplanner.data.QueueDistribution
+import edu.duke.cacheplanner.data.DatasetDistribution
 
 object Factory {
   val configManager = initConfigManager
   val listenerManager = initListener
+  // datasets have to be initialized before queues
   val datasets = initDatasets
-  val distribution = initDistribution
+  // queues have to be initialized before distribution
   val externalQueues = initExternalQueue
+  val distribution = initDistribution
   val queries = initQueries
   val generators = initGenerators
   val cachePlanner = initCachePlanner
@@ -43,7 +48,30 @@ object Factory {
   }
   
   def initDistribution: QueryDistribution = {
-    Parser.parseQueryDistribution("conf/distribution.xml")
+    val queryDistribution = new java.util.HashMap[Integer, QueueDistribution]()
+    for(queue <- externalQueues) {
+      val rankFileName = queue.getRankFile
+      val ranks = Parser.parseZipfRank("conf/" + rankFileName + ".xml")
+      val queueDistribution = new java.util.HashMap[String, DatasetDistribution]()
+      var rankSum = 0
+      ranks.foreach(t => rankSum += t.toInt)
+      var count = 0
+      for(dataset <- datasets) {
+        val colDistribution = new java.util.HashMap[String, java.lang.Double]()
+        val numCols = dataset.getColumns().size
+        for(column <- dataset.getColumns()) {
+          colDistribution.put(column.getColName(), (1d/numCols))	// FIXME: creating a uniform distribution over columns
+        }
+        val prob = ranks(count).toDouble / rankSum	// zipf probability is inversely proportional to rank
+        queueDistribution.put(dataset.getName(), 
+            new DatasetDistribution(prob, colDistribution))
+        count = count + 1
+      }
+      print("distirbutoin on queue " + queue.getId() + " = ")
+      queueDistribution.foreach(t => print(t._1 + "->" + t._2.getDataProb))
+      queryDistribution.put(queue.getId(), new QueueDistribution(queueDistribution))
+    }
+    return new QueryDistribution(queryDistribution)
   }
   
   def initQueries: Map[Int, java.util.Queue[AbstractQuery]] = {

@@ -4,20 +4,24 @@
     <weight>1</weight>
     <minShare>1</minShare>
     <batchSize>5</batchSize>
+    <datasetRanks>zipfranks1</datasetRanks>
   </queue>
   <queue id="2" name="queue2">
     <weight>1</weight>
     <minShare>1</minShare>
     <batchSize>5</batchSize>
+    <datasetRanks>zipfranks1</datasetRanks>
   </queue>
   <queue id="3" name="queue3">
     <weight>1</weight>
     <minShare>1</minShare>
     <batchSize>5</batchSize>
+    <datasetRanks>zipfranks1</datasetRanks>
   </queue>
   <queue id="4" name="queue4">
     <weight>1</weight>
     <minShare>1</minShare>
     <batchSize>5</batchSize>
+    <datasetRanks>zipfranks1</datasetRanks>
   </queue>
 </externalQueue>

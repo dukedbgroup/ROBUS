@@ -21,6 +21,7 @@ public class ExternalQueue {
 	private int batchSize; 
 	private ListenerManager listenerManager;
 	private Queue<AbstractQuery> queue;
+	private String rankFile;
 
 	public ExternalQueue(int id, int w, int min, int size, String name) {
 		queueID = id;
@@ -101,5 +102,19 @@ public class ExternalQueue {
 	 */
 	public void setMinShare(int minShare) {
 		this.minShare = minShare;
+	}
+
+	/**
+	 * @return the zipfRanks
+	 */
+	public String getRankFile() {
+		return rankFile;
+	}
+
+	/**
+	 * @param zipfRanks the zipfRanks to set
+	 */
+	public void setRankFile(String rankFile) {
+		this.rankFile = rankFile;
 	}
 }

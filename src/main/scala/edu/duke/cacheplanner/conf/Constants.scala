@@ -7,6 +7,10 @@ object Constants {
   final val WEIGHT = "weight"
   final val MIN_SHARE = "minShare"
   final val BATCH_SIZE = "batchSize"
+  final val ZIPF_RANK_FILE = "datasetRanks"
+
+  //zipf ranks on datasets
+  final val DATASET_RANKS = "dataset_ranks"
   
   //general config xml
   final val PROPERTY = "property"

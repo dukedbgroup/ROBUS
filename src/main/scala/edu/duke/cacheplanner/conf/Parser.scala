@@ -36,12 +36,21 @@ object Parser {
       val weight = (n \ Constants.WEIGHT).text.toInt
       val minShare = (n \ Constants.MIN_SHARE).text.toInt
       val batchSize = (n \ Constants.BATCH_SIZE).text.toInt
-      println(id, weight, minShare, batchSize)
-      queueList.add(new ExternalQueue(id, weight, minShare, batchSize, name))
+      val rankFile = (n \ Constants.ZIPF_RANK_FILE).text
+      val queue = new ExternalQueue(id, weight, minShare, batchSize, name)
+      queue.setRankFile(rankFile)
+      queueList.add(queue)
     }
     return queueList
   }
-  
+
+  /**
+   * parse zipfranks xml file for popularity ranks over datasets
+   */
+  def parseZipfRank(path: String): Array[String] = {
+    val rankData = scala.xml.XML.loadFile(path)
+    return rankData.text.split(',')
+  }
   /**
    * parse the config.xml file and create the map 
    */
