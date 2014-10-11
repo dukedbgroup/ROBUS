@@ -15,8 +15,8 @@ import edu.duke.cacheplanner.queue.ExternalQueue
 class CachePlannerMetrics(queues: java.util.List[ExternalQueue])
 extends Listener {
 
-  var queryWaitTimes: Map[AbstractQuery, Long] = Map()
-  var queryCacheSize: Map[AbstractQuery, Double] = Map()
+  var queryWaitTimes = scala.collection.mutable.Map[AbstractQuery, Long]()
+  var queryCacheSize = scala.collection.mutable.Map[AbstractQuery, Double]()
   // invariant: refers to time of first query seen by event QueryGenerated
   var timeFirstQueryGenerated:Long = 0L
   // invariant: refers to time of last query seen by event QueryPushedToSparkScheduler
@@ -26,17 +26,17 @@ extends Listener {
     if(timeFirstQueryGenerated == 0L) {
       timeFirstQueryGenerated = System.currentTimeMillis()
     }
-	queryWaitTimes(event.query) -> System.currentTimeMillis()
+	queryWaitTimes(event.query) = System.currentTimeMillis()
   }
   
   override def onQueryFetchedByCachePlanner(event: QueryFetchedByCachePlanner) { 
 	val startTime = queryWaitTimes(event.query)
-	queryWaitTimes(event.query) -> (System.currentTimeMillis() - startTime)
+	queryWaitTimes(event.query) = (System.currentTimeMillis() - startTime)
   }
   
   override def onQueryPushedToSparkScheduler(event: QueryPushedToSparkScheduler) {
     timeLastQueryPushed = System.currentTimeMillis()
-    queryCacheSize(event.query) -> event.cacheUsed
+    queryCacheSize(event.query) = event.cacheUsed
   }
 
   def getTotalWaitTime(): Long = {

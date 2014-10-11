@@ -37,10 +37,10 @@ if [ -n "$MASTER" ] ; then
     echo "No HADOOP_HOME specified. Please set HADOOP_HOME for cluster mode."
     exit 1
   fi
-  CLASSPATH+=:"$HADOOP_HOME/conf"
+  CLASSPATH+=:$HADOOP_HOME/conf
 fi
 
-CLASSPATH+=:$HIVE_CONF_DIR
+CLASSPATH+=:$SPARK_HOME/conf
 
 
 for jar in `find $SCALA_HOME/lib -name 'scala-library.jar'`; do
@@ -60,20 +60,20 @@ done
 
 PROJECT_CLASSES="$PROJECTDIR/target/scala-$SCALA_VERSION/classes"
 if [ -d "$PROJECT_CLASSES" ] ; then
-  CLASSPATH+=":$PROJECT_CLASSES"
+  CLASSPATH+=:$PROJECT_CLASSES
 else
   echo "Cannot find either compiled classes or compiled jar package for this project."
   echo "Have you compiled this project?"
   exit 1
 fi
 
-CLASSPATH+=":$PROJECTDIR/target/scala-$SCALA_VERSION/test-classes"
+CLASSPATH+=:$PROJECTDIR/target/scala-$SCALA_VERSION/test-classes
 for jar in `find $PROJECTDIR/target/scala-$SCALA_VERSION -name '*jar'`; do
   CLASSPATH+=:$jar
 done
 
-export CLASS_PATH
-export SPARK_CLASSPATH="$CLASSPATH"
+#export CLASS_PATH
+#export SPARK_CLASSPATH="$CLASSPATH"
 
 
 # Set JAVA_OPTS to be able to load native libraries and to set heap size
@@ -83,4 +83,4 @@ JAVA_OPTS+=" -Xms2g -Xmx2g -XX:MaxPermSize=256m "
 export JAVA_OPTS
 
 SCALA=${SCALA_HOME}/bin/scala
-java -d64 -cp $CLASSPATH edu.duke.cacheplanner.Main
+java -d64 -cp $CLASSPATH edu.duke.cacheplanner.Main $JAVA_OPTS

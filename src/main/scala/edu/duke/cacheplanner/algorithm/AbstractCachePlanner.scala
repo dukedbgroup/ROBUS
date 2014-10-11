@@ -35,6 +35,7 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
    */
   def initSparkContext: SparkContext = {
     val conf = new SparkConf().setAppName("cacheplanner").setMaster("spark://yahoo047:7077")
+    conf.setSparkHome(System.getenv("SPARK_HOME"))
     //conf.set("spark.eventLog.enabled", "true")
     //conf.set("spark.eventLog.dir", "file:///home/shlee0605/shlee_test/spark-sql/event_log")
     conf.setJars(Seq("target/scala-2.10/CachePlanner-assembly-0.1.jar"))
@@ -45,6 +46,7 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
     conf.set("spark.scheduler.allocation.file", "conf/internal.xml")
     conf.set("spark.executor.memory", "143m")	// this should give 2GB over entire cluster
     conf.set("spark.storage.memoryFraction", "0.5")	// half of it would be 1G 
+//    conf.set("spark.executor.extraClassPath", System.getenv("SPARK_CLASSPATH"))
 
     val sc = new SparkContext(conf)
     sc
@@ -52,6 +54,8 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
 
   def initHiveContext: HiveContext = {
     val hiveContext = new org.apache.spark.sql.hive.HiveContext(sc)
+    //FIXME: hardcoding hive warehouse, it's not picking from hive-site.xml for some reason
+    hiveContext.hql("SET hive.metastore.warehouse.dir=hdfs://yahoo047:9000/user/hive/warehouse")
     import hiveContext._
     hiveContext
   }
@@ -92,5 +96,4 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
    */
   def initPlannerThread(): Thread
 
-  
 }

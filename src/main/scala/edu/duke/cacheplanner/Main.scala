@@ -20,10 +20,10 @@ object Main {
     context.stop()
 
     // compute final metrics
-    print("------------- metrics ---------------")
-    print("total wait time -> " + metrics.getTotalWaitTime)
-    print("throughput -> " + metrics.getThroughput)
-    print("resource fairness -> " + metrics.getResourceFairnessIndex)
+    print("\n------------- metrics ---------------")
+    print("\ntotal wait time -> " + metrics.getTotalWaitTime)
+    print("\nthroughput -> " + metrics.getThroughput)
+    print("\nresource fairness -> " + metrics.getResourceFairnessIndex)
       //oos.close()
       //fos.close()
   }
