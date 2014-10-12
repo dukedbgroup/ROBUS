@@ -21,10 +21,16 @@ object Main {
     context.stop()
 
     // compute final metrics
-    print("\n------------- metrics ---------------")
-    print("\ntotal wait time -> " + metrics.getTotalWaitTime)
-    print("\nthroughput -> " + metrics.getThroughput)
-    print("\nresource fairness -> " + metrics.getResourceFairnessIndex)
+    println("------------- metrics ---------------")
+    println("total wait time -> " + metrics.getTotalWaitTime)
+    println("throughput -> " + metrics.getThroughput)
+    println("resource fairness -> " + metrics.getResourceFairnessIndex)
+    println("histogram on datasets loaded to cache -> ")
+    metrics.getDatasetLoadHistogram.foreach(println)
+    println("histogram on datasets retained in cache -> ")
+    metrics.getDatasetLoadHistogram.foreach(println)
+    println("histogram on datasets unloaded from cache -> ")
+    metrics.getDatasetLoadHistogram.foreach(println)
       //oos.close()
       //fos.close()
   }

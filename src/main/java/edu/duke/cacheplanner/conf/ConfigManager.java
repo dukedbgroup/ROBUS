@@ -13,14 +13,31 @@ public class ConfigManager {
 		return config.get("cacheplanner.generator.mode");
 	}
 
-	public boolean getAlgorithmSetup() {
+	@Deprecated public boolean getAlgorithmSetup() {
 		//true = multi app setup, false = single app setup
 		if(config.get("cacheplanner.algorithm.setup").equals("multi")) {
 			return true;
 		}
-		else {
-			return false;
+		return false;
+	}
+
+	public String getAlgorithmName() {
+		return config.get("cacheplanner.algorithm.name");
+	}
+
+	public String getCacheState() {
+		return config.get("cacheplanner.algorithm.cachestate");
+	}
+
+	public String getCachePartitioningStrategy() {
+		return config.get("cacheplanner.algorithm.cachepartitioning");
+	}
+
+	public boolean getUseCache() {
+		if(config.get("cacheplanner.algorithm.usecache").equals("true")) {
+			return true;
 		}
+		return false;
 	}
 
 	public String getReplayFilePath() {

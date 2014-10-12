@@ -26,6 +26,7 @@ object Factory {
   // queues have to be initialized before distribution
   val externalQueues = initExternalQueue
   val distribution = initDistribution
+  // queries have to be initialized before generators
   val queries = initQueries
   val generators = initGenerators
   val cachePlanner = initCachePlanner
@@ -128,11 +129,10 @@ object Factory {
   
   def initCachePlanner : AbstractCachePlanner = {
     val mode = configManager.getAlgorithmMode()
-    val setup = configManager.getAlgorithmSetup()
     mode match {
-      case "offline" => return new OfflineCachePlannerColumn(setup, listenerManager, 
+      case "offline" => return new OfflineCachePlannerColumn(true, listenerManager, 
           externalQueues, datasets, configManager)
-      case "online" => return new OnlineCachePlannerSingleDS(setup, listenerManager, 
+      case "online" => return new OnlineCachePlannerSingleDS(true, listenerManager, 
           externalQueues, datasets, configManager)
     }
   }

@@ -53,8 +53,10 @@ implements SingleDSBatchAnalyzer {
 	 */
 	private void buildBenefitMap() {
 		benefits = new HashMap<Dataset, Double>();
+		System.out.println("Benefits computed for each dataset: ");
 		for(Dataset ds: allDatasets) {
 			benefits.put(ds, ds.getEstimatedSize());
+			System.out.println(" " + ds.getName() + " -> " + ds.getEstimatedSize());
 		}
 	}
 

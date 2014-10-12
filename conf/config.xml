@@ -12,14 +12,34 @@
 		<value>multi</value>
 		<description>
 			Currently, supported modes are: multi, single
-		</description>
-	</property>
+		</description><!--no longer used; multi setup is assumed-->
+    </property>
     <property>
         <name>cacheplanner.algorithm.batchtime</name>
-        <value>50</value>
+        <value>10</value>
         <description>
             Only applicable in online mode. batch time in millisecond
         </description>
+    </property>
+    <property>
+    	<name>cacheplanner.algorithm.name</name>
+    	<value>MMF</value>
+    	<description>Currently supported: MMF, PF</description><!--Only applicable when mode=online-->
+    </property>
+    <property>
+    	<name>cacheplanner.algorithm.cachestate</name>
+    	<value>cold</value>
+    	<description>Currently supported: cold, warm</description><!--Only applicable when mode=online-->
+    </property>
+    <property>
+    	<name>cacheplanner.algorithm.cachepartitioning</name>
+    	<value>shareFairly</value>
+    	<description>Currently supported: partitionPhysically, partitionProbabilistically, shareUnfairly, shareFairly</description><!--Only application when mode=online-->
+    </property>
+    <property>
+    	<name>cacheplanner.algorithm.usecache</name>
+    	<value>true</value>
+    	<description>(true, false)</description><!--Only applicable when mode=offline-->
     </property>
     <property>
 		<name>cacheplanner.generator.mode</name>

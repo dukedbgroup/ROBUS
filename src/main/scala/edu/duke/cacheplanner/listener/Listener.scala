@@ -1,6 +1,7 @@
 package edu.duke.cacheplanner.listener
 
 import edu.duke.cacheplanner.query.AbstractQuery
+import edu.duke.cacheplanner.data.Dataset
 
 /**
  * Defining Listener Events
@@ -16,6 +17,12 @@ case class QueryFetchedByCachePlanner(query: AbstractQuery) extends ListenerEven
 case class QueryPushedToSparkScheduler(query: AbstractQuery, 
     cacheUsed: Double) extends ListenerEvent
 
+case class DatasetLoadedToCache(dataset: Dataset) extends ListenerEvent
+
+case class DatasetRetainedInCache(dataset: Dataset) extends ListenerEvent
+
+case class DatasetUnloadedFromCache(dataset: Dataset) extends ListenerEvent
+    
 /** An event to shutdown the listener thread. */
 case object ListenerShutdown extends ListenerEvent
 
@@ -36,8 +43,23 @@ trait Listener {
   def onQueryFetchedByCachePlanner(event: QueryFetchedByCachePlanner) { }
   
   /**
-   * called when the query is pushed to SharkScheduler
+   * called when the query is pushed to Spark Scheduler
    */
   def onQueryPushedToSparkScheduler(event: QueryPushedToSparkScheduler) { }
+
+  /**
+   * called when a dataset is loaded to spark cache
+   */
+  def onDatasetLoadedToCache(event: DatasetLoadedToCache) {}
+
+  /**
+   * called when a dataset is retained in spark cache
+   */
+  def onDatasetRetainedInCache(event: DatasetRetainedInCache) {}
+
+  /**
+   * called when a dataset is unloaded from spark cache
+   */
+  def onDatasetUnloadedFromCache(event: DatasetUnloadedFromCache) {}
 
 }

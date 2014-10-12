@@ -20,4 +20,17 @@ class LoggingListener extends Listener {
     System.out.println("query pushed to SharkScheduler(queryID, queueID) : " 
         + event.query.getQueryID + ", " + event.query.getQueueID)
   }  
+
+  override def onDatasetLoadedToCache(event: DatasetLoadedToCache) {
+    println("dataset loaded: " + event.dataset.getName());
+  }
+
+  override def onDatasetRetainedInCache(event: DatasetRetainedInCache) {
+    println("dataset retained: " + event.dataset.getName());    
+  }
+
+  override def onDatasetUnloadedFromCache(event: DatasetUnloadedFromCache) {
+    println("dataset unloaded: " + event.dataset.getName());    
+  }
+
 }
