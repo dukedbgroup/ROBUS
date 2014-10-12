@@ -22,7 +22,7 @@ public class QueryUtil {
 	}
 
 	public static String getCacheTableCreateSQL(Column column) {
-		String result = "CREATE TABLE " + column.getDatasetName() + "_" + column.getColName() +  " (";
+		String result = "CREATE TABLE IF NOT EXISTS " + column.getDatasetName() + "_" + column.getColName() +  " (";
 		result = result + column.getColName() + " " + column.getColumnType().toString() + ")";
 		return result;
 	}

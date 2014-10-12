@@ -39,30 +39,21 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
       // for static mode, set singleUser=true
       // for warm cache, set warmCache=true
 
-      override def run() {
-        while (true) {
-          println("single ds cacheplanner workinggggggggggg")
-          if (!started) {
-            return
-          }
-
-          try { 
-        	  Thread.sleep(batchTime)
-          } catch {
-            case e:InterruptedException => e.printStackTrace
-          }
-
-          if (isMultipleSetup) {
-            // create a batch of queries
-            var batch = scala.collection.mutable.ListBuffer[SingleDatasetQuery]()
+      def fetchNextBatch(): 
+      scala.collection.mutable.ListBuffer[SingleDatasetQuery] = {
+            var batch = 
+              scala.collection.mutable.ListBuffer[SingleDatasetQuery]()
             for (queue <- externalQueues.toList) {
               queue.fetchABatch().toList.foreach(
                   q =>  {
                     batch += q.asInstanceOf[SingleDatasetQuery]
                   })
             }
-            
-            // analyze the batch to find columns to cache
+            return batch
+      }
+
+      def processBatch(
+          batch: scala.collection.mutable.ListBuffer[SingleDatasetQuery]) = {
             val javaBatch: java.util.List[SingleDatasetQuery] = batch
             val javaCachedDatasets: java.util.List[Dataset] = cachedDatasets
             val datasetsToCache : List[Dataset] = algo.analyzeBatch(
@@ -106,6 +97,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             // fire queries to drop the cache
             for(ds <- dropCandidate) {
               hiveContext.hql("UNCACHE TABLE " + ds.getCachedName())
+              hiveContext.hql(QueryUtil.getDropTableSQL(ds.getCachedName()))
             }
 
             // fire queries to cache columns
@@ -117,12 +109,17 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
               println(drop_cache_table)
               println(query_create)
               hiveContext.hql(drop_cache_table)
-              hiveContext.hql(query_create)
+              try {
+            	  hiveContext.hql(query_create)
+              } catch{
+                case e: Exception => 
+                println("not able to create table. "); e.printStackTrace()
+                }
               hiveContext.hql("CACHE TABLE " + ds.getCachedName())	// not cached at this stage since spark evaluates lazily
             }
             
             // fire sql queries
-            for(query <- batch.toList) {
+            for(query <- batch) {
               var queryString: String = ""
               var cacheUsed: Double = 0
               if(cachedDatasets.contains(query.getDataset())) {
@@ -142,12 +139,36 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
               val result = hiveContext.hql(queryString)
               result.collect()
             }
-            //wait for all the threads are done
 
+      }
+      
+      override def run() {
+        while (true) {
+          println("single ds cacheplanner workinggggggggggg")
+          if (!started) {
+            // before returning schedule remaining queries
+            processBatch(fetchNextBatch)
+            println("returning because stopped!")
+            return
           }
-          else {
-            //single app mode
+
+          try { 
+        	  Thread.sleep(batchTime * 1000)
+          } catch {
+            case e:InterruptedException => e.printStackTrace
           }
+
+//          if (isMultipleSetup) {
+          // create a batch of queries
+          val batch = fetchNextBatch
+          // analyze the batch to find columns to cache
+          processBatch(batch)
+          //wait for all the threads are done
+
+//          }
+//          else {
+//            //single app mode
+//          }
         }
       }
     }

@@ -112,7 +112,7 @@ public class SingleDatasetQuery extends AbstractQuery implements Serializable {
     }
     result = result + " FROM ";
     if(cached) {
-      result = result + dataset.getName() + "_cached";
+      result = result + dataset.getCachedName();
     }
     else {
       result = result + dataset.getName();

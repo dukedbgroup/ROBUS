@@ -37,7 +37,7 @@ public abstract class AbstractQueryGenerator {
    * inter query arrival times(in seconds) would be given by mean lambda
    */
   public double getPoissonDelay() {
-    double mean = 1.0 / (lambda); // 
+    double mean = 1.0 / (1000 * lambda); // convert the number in milliseconds 
     return Math.log(Math.random()) / -mean;
   }
 

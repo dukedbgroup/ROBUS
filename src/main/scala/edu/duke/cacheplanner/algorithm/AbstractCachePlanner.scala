@@ -15,18 +15,17 @@ import org.apache.spark.sql.SchemaRDD
  * Abstract class for CachePlanner
  */
 abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager, 
-    queues: util.List[ExternalQueue], data: java.util.List[Dataset], 
+    queues: util.List[ExternalQueue], datasets: java.util.List[Dataset], 
     config: ConfigManager) {
   val listenerManager: ListenerManager = manager
-  val datasets = data
   val isMultipleSetup = setup // true = multi app setup, false = single app setup
   var started = false
   val externalQueues = queues
   val sc = initSparkContext
   val hiveContext = initHiveContext
   val plannerThread = initPlannerThread()
-  var schemaRDDs: scala.collection.mutable.Map[String, SchemaRDD] = 
-    new scala.collection.mutable.HashMap[String, SchemaRDD]()
+//  @volatile var schemaRDDs: scala.collection.mutable.Map[String, SchemaRDD] = 
+//    new scala.collection.mutable.HashMap[String, SchemaRDD]()
   initTables
 
 
@@ -44,9 +43,8 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
     // Also assuming weights and min shares match. 
     // Ideally there should be a single config file
     conf.set("spark.scheduler.allocation.file", "conf/internal.xml")
-    conf.set("spark.executor.memory", "143m")	// this should give 2GB over entire cluster
-    conf.set("spark.storage.memoryFraction", "0.5")	// half of it would be 1G 
-//    conf.set("spark.executor.extraClassPath", System.getenv("SPARK_CLASSPATH"))
+    conf.set("spark.executor.memory", "4096m")	// 4GB per node
+    conf.set("spark.storage.memoryFraction", "0.0178")	// this fraction makes cache space = 1G 
 
     val sc = new SparkContext(conf)
     sc
@@ -54,18 +52,16 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
 
   def initHiveContext: HiveContext = {
     val hiveContext = new org.apache.spark.sql.hive.HiveContext(sc)
-    //FIXME: hardcoding hive warehouse, it's not picking from hive-site.xml for some reason
-    hiveContext.hql("SET hive.metastore.warehouse.dir=hdfs://yahoo047:9000/user/hive/warehouse")
     import hiveContext._
     hiveContext
   }
 
   def initTables() {
-    for(data <- datasets.toList) {
+    for(data <- datasets) {
       println(QueryUtil.getTableCreateSQL(data))
       hiveContext.hql(QueryUtil.getDropTableSQL(data.getName()))
       val schema = hiveContext.hql(QueryUtil.getTableCreateSQL(data))
-      schemaRDDs(data.getName()) = schema
+//      schemaRDDs(data.getName()) = schema
     }
   }
 

@@ -28,7 +28,10 @@ extends Listener {
     }
 	queryWaitTimes(event.query) = System.currentTimeMillis()
   }
-  
+
+  /**
+   * Assuming that every query that is generated is fetched by cache planner
+   */
   override def onQueryFetchedByCachePlanner(event: QueryFetchedByCachePlanner) { 
 	val startTime = queryWaitTimes(event.query)
 	queryWaitTimes(event.query) = (System.currentTimeMillis() - startTime)
