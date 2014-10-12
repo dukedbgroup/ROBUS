@@ -28,7 +28,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
     config: ConfigManager) extends AbstractCachePlanner(
         setup, manager, queues, data, config) {
 
-  val batchTime = config.getPlannerBatchTime();
+  val batchTime = config.getPlannerBatchTime()
 
   override def initPlannerThread(): Thread = {
     new Thread("OnlineCachePlanner") {
@@ -95,7 +95,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
           // pick a queue at random to favor
           val rnd = Math.random()
           var cumulative = 0d
-          var luckyQueue = 0 
+          var luckyQueue = 1
           queueProbability.foreach(t => {
             cumulative += t._2; 
             if(rnd < cumulative) {luckyQueue = t._1}
@@ -266,9 +266,6 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             println("drop candidate:")
             dropCandidate.foreach(c=> println(c.getName()))
             
-//            cachedDatasets = new ListBuffer[Dataset]()
-//            datasetsToCache.foreach(c => cachedDatasets += c)
-
             // fire queries to drop the cache
             for(ds <- dropCandidate) {
               hiveContext.hql("UNCACHE TABLE " + ds.getCachedName())
@@ -301,7 +298,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             for(query <- batch) {
               var queryString: String = ""
               var cacheUsed: Double = 0
-              if(cachedDatasets.contains(query.getDataset())) {
+              if(datasetsToCache.contains(query.getDataset())) {	//datasetsToCache are already cached at this time
                 println("use cache table: " + query.getDataset())
                 queryString = query.toHiveQL(true)
                 cacheUsed = query.getScanBenefit()
@@ -310,13 +307,12 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 queryString = query.toHiveQL(false)
               }
               println("query fired: " + queryString)
+
+              // submit query to spark through a thread
+              // TODO: use a thread pool
               manager.postEvent(new QueryPushedToSparkScheduler(query, 
                   cacheUsed))
-              sc.setJobGroup(query.getQueueID().toString(), queryString)
-              sc.setLocalProperty("spark.scheduler.pool", 
-                  query.getQueueID().toString())
-              val result = hiveContext.hql(queryString)
-              result.collect()
+              new ExecutorThread(query.getQueueID().toString, queryString).start()
             }
 
       }
@@ -344,6 +340,18 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
         }
       }
+
+      class ExecutorThread(queueString: String, queryString: String) extends java.lang.Thread {
+        
+        override def run() {
+              sc.setJobGroup(queueString, queryString)
+              sc.setLocalProperty("spark.scheduler.pool", queueString)
+              val result = hiveContext.hql(queryString)
+              result.collect()          
+        }
+
+      }
+
     }
   }
 }
