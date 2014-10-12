@@ -12,7 +12,7 @@ class ListenerManager {
   
   private val listenerList = new ArrayBuffer[Listener]
   
-  private val QUEUE_CAPACITY = 1000
+  private val QUEUE_CAPACITY = 10000
   private val eventQueue = new LinkedBlockingQueue[ListenerEvent](QUEUE_CAPACITY)
   private var started = false
 
@@ -45,6 +45,12 @@ class ListenerManager {
         listenerList.foreach(_.onQueryFetchedByCachePlanner(queryFetchedByCachePlanner))
       case queryPushedToSparkScheduler: QueryPushedToSparkScheduler =>
         listenerList.foreach(_.onQueryPushedToSparkScheduler(queryPushedToSparkScheduler))
+      case dataEvent: DatasetLoadedToCache =>
+        listenerList.foreach(_.onDatasetLoadedToCache(dataEvent))
+      case dataEvent: DatasetRetainedInCache =>
+        listenerList.foreach(_.onDatasetRetainedInCache(dataEvent))
+      case dataEvent: DatasetUnloadedFromCache =>
+        listenerList.foreach(_.onDatasetUnloadedFromCache(dataEvent))
       case ListenerShutdown => 
     }
   }

@@ -43,7 +43,8 @@ public class ExternalQueue {
 	 */
 	public synchronized List<AbstractQuery> fetchABatch() { 
 		List<AbstractQuery> queries = new ArrayList<AbstractQuery>();
-//		for(int i = 0; i < batchSize; i++) {
+//		int size = queue.size();	//fetch all the queries
+		for(int i = 0; i < batchSize; i++) {
 			if(queue.peek() != null) {
 				AbstractQuery query = queue.poll();
 				queries.add(query);  
@@ -51,7 +52,7 @@ public class ExternalQueue {
 				listenerManager.postEvent(new QueryFetchedByCachePlanner
 						(query));
 			}
-//		} 
+		} 
 		return queries;
 	}
 

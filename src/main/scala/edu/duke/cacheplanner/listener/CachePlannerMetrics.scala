@@ -20,6 +20,14 @@ extends Listener {
   var queryWaitTimes = scala.collection.mutable.Map[AbstractQuery, Long]()
   // map of query to amount of cache it used
   var queryCacheSize = scala.collection.mutable.Map[AbstractQuery, Double]()
+  // count of number of queries generated
+  var numQueriesGenerated: Long = 0L
+  // count of number of queries fetched from queues
+  var numQueriesFetched: Long = 0L
+  // count of number of queries submitted to Spark
+  var numQueriesSubmitted: Long = 0L
+  // count of number of queries that used cached data per queue
+  var numQueriesCachedPerQueue = scala.collection.mutable.Map[Int, Long]()
 
   // map of dataset to number of times it was cached
   var datasetLoaded = scala.collection.mutable.Map[Dataset, Long]()
@@ -38,6 +46,7 @@ extends Listener {
       timeFirstQueryGenerated = System.currentTimeMillis()
     }
 	queryWaitTimes(event.query) = System.currentTimeMillis()
+	numQueriesGenerated = numQueriesGenerated + 1
   }
 
   /**
@@ -46,11 +55,15 @@ extends Listener {
   override def onQueryFetchedByCachePlanner(event: QueryFetchedByCachePlanner) { 
 	val startTime = queryWaitTimes(event.query)
 	queryWaitTimes(event.query) = (System.currentTimeMillis() - startTime)
+	numQueriesFetched = numQueriesFetched + 1
   }
   
   override def onQueryPushedToSparkScheduler(event: QueryPushedToSparkScheduler) {
     timeLastQueryPushed = System.currentTimeMillis()
     queryCacheSize(event.query) = event.cacheUsed
+	numQueriesSubmitted = numQueriesSubmitted + 1
+	val current = numQueriesCachedPerQueue.getOrElse(event.query.getQueueID(), 0L)
+	numQueriesCachedPerQueue(event.query.getQueueID()) = current + 1
   }
 
   override def onDatasetLoadedToCache(event: DatasetLoadedToCache) {
@@ -83,7 +96,7 @@ extends Listener {
   }
 
   def getThroughput(): Double = {
-    return (timeLastQueryPushed - timeFirstQueryGenerated).doubleValue / queryWaitTimes.size
+    return (timeLastQueryPushed - timeFirstQueryGenerated).doubleValue / numQueriesGenerated
   }
 
   def getResourceFairnessIndex(): Double = {
@@ -107,5 +120,21 @@ extends Listener {
 
   def getDatasetUnloadHistogram(): List[(String, Long)] = {
     return datasetUnloaded.toList map {t => (t._1.getName(), t._2)} sortBy {_._2}
+  }
+
+  def getNumQueriesGenerated(): Long = {
+    return numQueriesGenerated
+  }
+
+  def getNumQueriesFetched(): Long = {
+    return numQueriesFetched
+  }
+
+  def getNumQueriesSubmitted(): Long = {
+    return numQueriesSubmitted
+  }
+
+  def getNumQueriesCached(): List[(Int, Long)] = {
+    return numQueriesCachedPerQueue.toList
   }
 }

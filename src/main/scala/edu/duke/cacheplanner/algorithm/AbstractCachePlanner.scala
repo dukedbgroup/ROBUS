@@ -44,6 +44,7 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
     conf.set("spark.executor.memory", "4096m")	// 4GB per node
     // this fraction makes cache space about 1.5-2GB, but we are going to use only 1GB for algorithms
     conf.set("spark.storage.memoryFraction", "0.0278")
+    conf.set("spark.akka.frameSize", "512")
 
     conf.set("spark.eventLog.enabled", "true")
 	conf.set("spark.eventLog.dir", "spark_event_log")

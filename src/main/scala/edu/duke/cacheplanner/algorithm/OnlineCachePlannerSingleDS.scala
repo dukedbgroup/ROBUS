@@ -53,6 +53,9 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
         override def run() = {
           val batch = fetchNextBatch
+          if(batch == null || batch.size == 0) {
+            throw new Exception("No more queries remained to process.")
+          }
           val datasetsToCache = runAlgorithm(batch, cachedDatasets, cacheSize)
           scheduleBatch(batch, cachedDatasets, datasetsToCache)
           cachedDatasets = datasetsToCache
@@ -100,6 +103,9 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
           // run algo only on queries from luckyQueue, but schedule all queries
           val batch = fetchNextBatch
+          if(batch == null || batch.size == 0) {
+            throw new Exception("No more queries remained to process.")
+          }
           var filteredBatch = 
             scala.collection.mutable.ListBuffer[SingleDatasetQuery]()
           batch.foreach(t => if(t.getQueueID == luckyQueue) {
@@ -131,6 +137,9 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
         override def run() = {
           val batch = fetchNextBatch
+          if(batch == null || batch.size == 0) {
+            throw new Exception("No more queries remained to process.")
+          }
           var batchPerQueue = 
             scala.collection.mutable.Map[Int, scala.collection.mutable.ListBuffer[SingleDatasetQuery]]()
           batch.foreach(q => {
@@ -315,20 +324,23 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
       override def run() {
         while (true) {
           println("single ds cacheplanner invoked")
-          if (!started) {
-            // before returning schedule remaining queries
-            setup.run() //processBatch(fetchNextBatch)
-            println("returning because stopped!")
-            return
-          }
-
           try { 
         	  Thread.sleep(batchTime * 1000)
           } catch {
             case e:InterruptedException => e.printStackTrace
           }
 
-          setup.run()
+          if (!started) {
+            // before returning schedule remaining queries
+            try {
+            	setup.run()
+            } catch { case e: Exception => {
+            	e.printStackTrace()
+            	return
+            }}
+          } else {
+        	  setup.run()
+          }
 
         }
       }
