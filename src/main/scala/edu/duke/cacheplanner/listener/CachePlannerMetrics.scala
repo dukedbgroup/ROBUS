@@ -30,7 +30,10 @@ extends Listener {
   var numQueriesSubmittedPerQueue = scala.collection.mutable.Map[Int, Long]()
   // count of number of queries that used cached data per queue
   var numQueriesCachedPerQueue = scala.collection.mutable.Map[Int, Long]()
-  
+
+  // exec time aggregated over queries over each queue
+  var execTimesPerQueue = scala.collection.mutable.Map[Int, Long]()
+
   // map of dataset to number of times it was cached
   var datasetLoaded = scala.collection.mutable.Map[Dataset, Long]()
   // map of dataset to number of times it was retained
@@ -64,6 +67,8 @@ extends Listener {
   
   override def onQueryPushedToSparkScheduler(event: QueryPushedToSparkScheduler) {
     timeLastQueryPushed = System.currentTimeMillis()
+    // TODO: populate execTimesPerQueue using queryPushed and queryFetched events
+
 	numQueriesSubmitted = numQueriesSubmitted + 1
 	val current = numQueriesSubmittedPerQueue.getOrElse(
 		    event.query.getQueueID(), 0L)
@@ -120,7 +125,6 @@ extends Listener {
       runningSumSquares += waitByWeight * waitByWeight
     }
     (runningSum * runningSum) / (queues.size() * runningSumSquares)
-    
   }
   
   def getTotalCacheUsed(queueId: Int): Double = {
@@ -136,7 +140,7 @@ extends Listener {
   }
 
   def getThroughput(): Double = {
-    getTimeOfWorkload.doubleValue / numQueriesGenerated
+    numQueriesGenerated.doubleValue / getTimeOfWorkload.doubleValue
   }
 
   def getResourceFairnessIndex(): Double = {

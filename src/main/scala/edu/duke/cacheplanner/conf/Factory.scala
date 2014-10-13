@@ -132,7 +132,7 @@ object Factory {
     mode match {
 //      case "offline" => return new OfflineCachePlannerColumn(true, listenerManager, 
 //          externalQueues, datasets, distribution, configManager)
-      case "online" => return new OnlineCachePlannerSingleDS(true, listenerManager, 
+      case _ => return new OnlineCachePlannerSingleDS(true, listenerManager, 
           externalQueues, datasets, distribution, configManager)
     }
   }

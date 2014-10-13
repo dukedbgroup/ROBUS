@@ -168,8 +168,10 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
        */
       class CacheOnceGreedySetup extends CachePartitionSetup {
         
-        var cachedDatasets = List[Dataset]()
+        var datasetsToCache = scala.collection.mutable.ListBuffer[Dataset]()
         var cacheSize = config.getCacheSize().doubleValue()
+
+        var firstRun = true
 
         def findDataset(name: String): Dataset = {
           var ds = data.get(0)
@@ -187,16 +189,18 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
         	    dataProb(d._1) = current + queue.getWeight * prob
         	  })
           }
-          val sortedProb = dataProb.toList.sortBy {-_._2}
+          val sortedProb: List[(String, Double)] = dataProb.toList.sortBy {-_._2}
 
           var remainingCache = cacheSize
           sortedProb.foreach(s => {
             val ds = findDataset(s._1);
             if(ds.getEstimatedSize <= remainingCache) {
-              cachedDatasets.add(ds)
+              datasetsToCache.add(ds)
               remainingCache = remainingCache - ds.getEstimatedSize
             }
           })
+
+          firstRun = true
         }
 
         override def run() = {
@@ -204,7 +208,14 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
           if(batch == null || batch.size == 0) {
             throw new Exception("No more queries remained to process.")
           }
-          scheduleBatch(batch, cachedDatasets, List[Dataset]())
+
+          if(firstRun) {
+        	scheduleBatch(batch, List[Dataset](), datasetsToCache.toList)
+        	firstRun = false
+          } else {
+            scheduleBatch(batch, datasetsToCache.map(d=>d).toList, 
+                datasetsToCache.map(d=>d).toList)
+          }
         }
         
       }
@@ -215,9 +226,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
        */
       class NoCacheSetup extends CacheOnceGreedySetup {
 
-        override def init() = {
-        	cachedDatasets = List[Dataset]()
-        }
+        override def init() = {}
 
       }
 
@@ -241,23 +250,27 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
       }
 
       def buildSetup: CachePartitionSetup = {
-        val confValue = config.getCachePartitioningStrategy()
-        if(confValue.equals("shareFairly")) {
-          new FairShareSetup()
-        } else if(confValue.equals("shareUnfairly")) {
-          new UnfairShareSetup()
-        } else if(confValue.equals("partitionProbabilistically")) {
-          new ProbabilisticPartitionSetup()
-        } else if(confValue.equals("partitionPhysically")) {
-          new PhysicalPartitionSetup()
-        }
-
-        //HACK: overloading this class with offline algorithms as well
-        val offlineUseCache = config.getUseCache()
-        if(offlineUseCache) {
-          new CacheOnceGreedySetup()
+        if(config.getAlgorithmMode().equals("online")) {
+          val confValue = config.getCachePartitioningStrategy()
+          if(confValue.equals("shareFairly")) {
+            new FairShareSetup()
+          } else if(confValue.equals("shareUnfairly")) {
+            new UnfairShareSetup()
+          } else if(confValue.equals("partitionProbabilistically")) {
+            new ProbabilisticPartitionSetup()
+          } else if(confValue.equals("partitionPhysically")) {
+            new PhysicalPartitionSetup()
+          } else {
+            new FairShareSetup()
+          }
         } else {
-          new NoCacheSetup()
+          //HACK: overloading this class with offline algorithms as well
+          val useCache = config.getUseCache()
+          if(useCache) {
+            new CacheOnceGreedySetup()
+          } else {
+            new NoCacheSetup()
+          }
         }
       }
 
@@ -346,7 +359,15 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                   ds.getCachedName())
               hiveContext.hql(drop_cache_table)
 
-              new CacheThread(ds).start()
+              val queryString = QueryUtil.getCreateTableAsCachedSQL(ds)
+              try {
+           	    hiveContext.hql(queryString)
+              } catch{
+                case e: Exception => 
+                 println("not able to create table. "); e.printStackTrace()
+              }
+              hiveContext.hql("CACHE TABLE " + ds.getCachedName())	// not cached at this stage since spark evaluates lazily
+//              new CacheThread(ds).start()
 
               manager.postEvent(new DatasetLoadedToCache(ds))
             }
@@ -367,9 +388,9 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
               // submit query to spark through a thread
               // TODO: use a thread pool
-              manager.postEvent(new QueryPushedToSparkScheduler(query, 
-                  cacheUsed))
               new ExecutorThread(query.getQueueID().toString, queryString).start()
+
+              manager.postEvent(new QueryPushedToSparkScheduler(query, cacheUsed))
             }
 
       }
@@ -403,7 +424,11 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
         override def run() {
           // pick a queue at random
           // TODO: use weights of queues
-          val queueString = queues.get((Math.random() * queues.size()).intValue) toString
+/*          val queueString = queues.get(
+              (Math.random() * queues.size()).intValue).getId().toString
+*/
+          // scraping above as it leads to concurrent modification exception in hive metastore
+          val queueString = "default"
 
           val queryString = QueryUtil.getCreateTableAsCachedSQL(ds)
           sc.setJobGroup(queueString, queryString)
