@@ -12,6 +12,7 @@ import edu.duke.cacheplanner.algorithm.singleds.PFBatchAnalyzer
 import edu.duke.cacheplanner.conf.ConfigManager
 import edu.duke.cacheplanner.data.Column
 import edu.duke.cacheplanner.data.Dataset
+import edu.duke.cacheplanner.data.QueryDistribution
 import edu.duke.cacheplanner.listener._
 import edu.duke.cacheplanner.query.QueryUtil
 import edu.duke.cacheplanner.query.SingleDatasetQuery
@@ -25,8 +26,8 @@ import edu.duke.cacheplanner.algorithm.singleds.AbstractSingleDSBatchAnalyzer
  */
 class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager, 
     queues: java.util.List[ExternalQueue], data: java.util.List[Dataset], 
-    config: ConfigManager) extends AbstractCachePlanner(
-        setup, manager, queues, data, config) {
+    distribution: QueryDistribution, config: ConfigManager) extends 
+    AbstractCachePlanner(setup, manager, queues, data, config) {
 
   val batchTime = config.getPlannerBatchTime()
 
@@ -163,6 +164,64 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
       }
 
       /**
+       * When we want to cache only once 
+       */
+      class CacheOnceGreedySetup extends CachePartitionSetup {
+        
+        var cachedDatasets = List[Dataset]()
+        var cacheSize = config.getCacheSize().doubleValue()
+
+        def findDataset(name: String): Dataset = {
+          var ds = data.get(0)
+          data.foreach(d => if(d.getName.equals(name)) {ds = d})
+          ds
+        }
+
+        override def init() = {
+          var dataProb = scala.collection.mutable.Map[String, Double]()
+          for(queue <- queues) {
+        	  val dataDistri = distribution.getQueueDistributionMap(queue.getId)
+        	  dataDistri.foreach(d => {
+        	    val prob = d._2.getDataProb;
+        	    val current = dataProb.getOrElse(d._1, 0d);
+        	    dataProb(d._1) = current + queue.getWeight * prob
+        	  })
+          }
+          val sortedProb = dataProb.toList.sortBy {-_._2}
+
+          var remainingCache = cacheSize
+          sortedProb.foreach(s => {
+            val ds = findDataset(s._1);
+            if(ds.getEstimatedSize <= remainingCache) {
+              cachedDatasets.add(ds)
+              remainingCache = remainingCache - ds.getEstimatedSize
+            }
+          })
+        }
+
+        override def run() = {
+          val batch = fetchNextBatch
+          if(batch == null || batch.size == 0) {
+            throw new Exception("No more queries remained to process.")
+          }
+          scheduleBatch(batch, cachedDatasets, List[Dataset]())
+        }
+        
+      }
+
+      /**
+       * When we don't want to use the cache
+       * Baseline case
+       */
+      class NoCacheSetup extends CacheOnceGreedySetup {
+
+        override def init() = {
+        	cachedDatasets = List[Dataset]()
+        }
+
+      }
+
+      /**
        * Algorithm specifications follow.
        */
       val algo = buildAlgo
@@ -192,7 +251,14 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
         } else if(confValue.equals("partitionPhysically")) {
           new PhysicalPartitionSetup()
         }
-        new FairShareSetup()
+
+        //HACK: overloading this class with offline algorithms as well
+        val offlineUseCache = config.getUseCache()
+        if(offlineUseCache) {
+          new CacheOnceGreedySetup()
+        } else {
+          new NoCacheSetup()
+        }
       }
 
       /**

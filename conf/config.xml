@@ -34,7 +34,7 @@
     <property>
     	<name>cacheplanner.algorithm.cachepartitioning</name>
     	<value>shareFairly</value>
-    	<description>Currently supported: partitionPhysically, partitionProbabilistically, shareUnfairly, shareFairly</description><!--Only application when mode=online-->
+    	<description>Currently supported: partitionPhysically, partitionProbabilistically, shareUnfairly, shareFairly</description><!--Only applicable when mode=online-->
     </property>
     <property>
     	<name>cacheplanner.algorithm.usecache</name>
@@ -63,6 +63,6 @@
 		<description>size of cache in MB</description></property>
 	<property>
 		<name>cacheplanner.workloadtime</name>
-		<value>300</value>
+		<value>120</value>
 		<description>total time workload should be run in seconds, not applicable in replay mode.</description>
 	</property></configuration>

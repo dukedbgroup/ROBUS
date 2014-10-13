@@ -68,7 +68,7 @@ object Factory {
             new DatasetDistribution(prob, colDistribution))
         count = count + 1
       }
-      print("\nDistribution on queue " + queue.getId() + " = sum ")
+      println("Distribution on queue " + queue.getId() + " = sum ")
       rankSum = 0d
       queueDistribution.foreach(t => rankSum += t._2.getDataProb)
       print(rankSum)
@@ -130,10 +130,10 @@ object Factory {
   def initCachePlanner : AbstractCachePlanner = {
     val mode = configManager.getAlgorithmMode()
     mode match {
-      case "offline" => return new OfflineCachePlannerColumn(true, listenerManager, 
-          externalQueues, datasets, configManager)
+//      case "offline" => return new OfflineCachePlannerColumn(true, listenerManager, 
+//          externalQueues, datasets, distribution, configManager)
       case "online" => return new OnlineCachePlannerSingleDS(true, listenerManager, 
-          externalQueues, datasets, configManager)
+          externalQueues, datasets, distribution, configManager)
     }
   }
 
