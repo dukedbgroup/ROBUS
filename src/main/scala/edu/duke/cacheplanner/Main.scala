@@ -29,7 +29,12 @@ object Main {
     println("num queries submitted -> " + metrics.getNumQueriesSubmitted)
     println("num queries that used cache -> ")
     metrics.getNumQueriesCached.foreach(println)
+    println("fraction of queries that used cache -> ")
+    metrics.getFractionQueriesCached.foreach(println)
+    println("cache utilization per batch -> " 
+        + metrics.getTotalCacheLoaded * config.getPlannerBatchTime() / config.getWorkloadTime())
     println("resource fairness -> " + metrics.getResourceFairnessIndex)
+    println("wait time fairness -> " + metrics.getWaitTimeFairnessIndex)
     println("histogram on datasets loaded to cache -> ")
     metrics.getDatasetLoadHistogram.foreach(println)
     println("histogram on datasets retained in cache -> ")

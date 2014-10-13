@@ -31,10 +31,12 @@ class Context(manager: ListenerManager,
   }
   
   def stop() {
-    listenerManager.stop()
     for(gen <- queryGenerators.toArray()) {
       gen.asInstanceOf[AbstractQueryGenerator].stop()
     }
+    // cache planner won't stop before finishing running all generated queries
     cachePlanner.stop()
+    // listener manager will have to wait as well to listen to all planner events
+    listenerManager.stop()
   }
 }

@@ -51,6 +51,8 @@ public class ExternalQueue {
 				//notify an event to the listeners
 				listenerManager.postEvent(new QueryFetchedByCachePlanner
 						(query));
+			} else {
+				break;
 			}
 		} 
 		return queries;

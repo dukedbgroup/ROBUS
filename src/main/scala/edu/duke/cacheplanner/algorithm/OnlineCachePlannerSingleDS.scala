@@ -278,18 +278,9 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             for(ds <- cacheCandidate) {
               var drop_cache_table = QueryUtil.getDropTableSQL(
                   ds.getCachedName())
-              var query_create = QueryUtil.getCreateTableAsCachedSQL(ds)
-              println("running queries")
-              println(drop_cache_table)
-              println(query_create)
               hiveContext.hql(drop_cache_table)
-              try {
-            	  hiveContext.hql(query_create)
-              } catch{
-                case e: Exception => 
-                println("not able to create table. "); e.printStackTrace()
-                }
-              hiveContext.hql("CACHE TABLE " + ds.getCachedName())	// not cached at this stage since spark evaluates lazily
+
+              new CacheThread(ds).start()
 
               manager.postEvent(new DatasetLoadedToCache(ds))
             }
@@ -339,6 +330,29 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
           }
 
         }
+      }
+
+      class CacheThread(ds: Dataset) extends java.lang.Thread {
+
+        override def run() {
+          // pick a queue at random
+          // TODO: use weights of queues
+          val queueString = queues.get((Math.random() * queues.size()).intValue) toString
+
+          val queryString = QueryUtil.getCreateTableAsCachedSQL(ds)
+          sc.setJobGroup(queueString, queryString)
+          sc.setLocalProperty("spark.scheduler.pool", queueString)
+
+          try {
+           	  hiveContext.hql(queryString)
+          } catch{
+              case e: Exception => 
+              println("not able to create table. "); e.printStackTrace()
+          }
+          hiveContext.hql("CACHE TABLE " + ds.getCachedName())	// not cached at this stage since spark evaluates lazily
+          
+        }
+
       }
 
       class ExecutorThread(queueString: String, queryString: String) extends java.lang.Thread {
