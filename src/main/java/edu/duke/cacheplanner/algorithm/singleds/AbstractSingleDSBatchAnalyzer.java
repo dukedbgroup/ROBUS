@@ -25,7 +25,7 @@ implements SingleDSBatchAnalyzer {
 	/**
 	 * Map of benefit per dataset
 	 */
-	Map<Dataset, Double> benefits;
+	Map<String, Double> benefits;
 
 	/**
 	 * When set, the batch is analyzed as if belonging to a single user 
@@ -52,10 +52,10 @@ implements SingleDSBatchAnalyzer {
 	 * Build a map giving benefit of caching each dataset
 	 */
 	private void buildBenefitMap() {
-		benefits = new HashMap<Dataset, Double>();
+		benefits = new HashMap<String, Double>();
 		System.out.println("Benefits computed for each dataset: ");
 		for(Dataset ds: allDatasets) {
-			benefits.put(ds, ds.getEstimatedSize());
+			benefits.put(ds.getName(), ds.getEstimatedSize());
 			System.out.println(" " + ds.getName() + " -> " + ds.getEstimatedSize());
 		}
 	}

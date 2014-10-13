@@ -72,14 +72,14 @@ public class PFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 			}
 			if (warmCache) {
 				if (cachedDatasets.contains(query.getDataset())) {
-					utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(query.getDataset().getName())] += ((warmCacheConstant) * benefits.get(query.getDataset()));
+					utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(query.getDataset().getName())] += ((warmCacheConstant) * benefits.get(query.getDataset().getName()));
 				}
 				else {
-					utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(query.getDataset().getName())] += benefits.get(query.getDataset());
+					utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(query.getDataset().getName())] += benefits.get(query.getDataset().getName());
 				}
 			}
 			else {
-				utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(query.getDataset().getName())] += benefits.get(query.getDataset());
+				utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(query.getDataset().getName())] += benefits.get(query.getDataset().getName());
 			}		
 		}
 

@@ -26,6 +26,8 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
   val plannerThread = initPlannerThread()
 //  @volatile var schemaRDDs: scala.collection.mutable.Map[String, SchemaRDD] = 
 //    new scala.collection.mutable.HashMap[String, SchemaRDD]()
+
+  // Following statement could be committed if hive warehouse has already loaded all the tables to save time
   initTables
 
 

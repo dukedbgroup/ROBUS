@@ -347,7 +347,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             // fire queries to drop the cache
             for(ds <- dropCandidate) {
               hiveContext.hql("UNCACHE TABLE " + ds.getCachedName())
-              hiveContext.hql(QueryUtil.getDropTableSQL(ds.getCachedName()))
+//              hiveContext.hql(QueryUtil.getDropTableSQL(ds.getCachedName()))
 
               manager.postEvent(new DatasetUnloadedFromCache(ds))
             }
@@ -376,14 +376,13 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             for(query <- batch) {
               var queryString: String = ""
               var cacheUsed: Double = 0
+              println("use table: " + query.getDataset())
+              queryString = query.toHiveQL(true)
               if(datasetsToCache.contains(query.getDataset())) {	//datasetsToCache are already cached at this time
-                println("use cache table: " + query.getDataset())
-                queryString = query.toHiveQL(true)
                 cacheUsed = query.getScanBenefit()
-              } else {
-                println("use external table: " + query.getDataset())
+              } /*else {
                 queryString = query.toHiveQL(false)
-              }
+              }*/
               println("query fired: " + queryString)
 
               // submit query to spark through a thread
