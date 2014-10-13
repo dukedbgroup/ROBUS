@@ -65,6 +65,18 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
       hiveContext.hql(QueryUtil.getDropTableSQL(data.getName()))
       val schema = hiveContext.hql(QueryUtil.getTableCreateSQL(data))
 //      schemaRDDs(data.getName()) = schema
+
+      // We could query external tables as well, but loading each table in hive
+      // warehouse to have a fair comparison of all the algorithms
+      var drop_cache_table = QueryUtil.getDropTableSQL(data.getCachedName())
+      hiveContext.hql(drop_cache_table)
+      val queryString = QueryUtil.getCreateTableAsCachedSQL(data)
+      try {
+   	    hiveContext.hql(queryString)
+      } catch {
+        case e: Exception => 
+          println("not able to create table. "); e.printStackTrace()
+      }
     }
   }
 

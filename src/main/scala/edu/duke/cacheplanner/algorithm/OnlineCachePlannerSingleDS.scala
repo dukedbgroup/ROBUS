@@ -145,11 +145,10 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             scala.collection.mutable.Map[Int, scala.collection.mutable.ListBuffer[SingleDatasetQuery]]()
           batch.foreach(q => {
             val queue = q.getQueueID;
-            if(batchPerQueue(queue) == null) {
-              batchPerQueue(queue) = 
-                new scala.collection.mutable.ListBuffer[SingleDatasetQuery]()
-            }
-            batchPerQueue(queue).add(q)
+            val current = batchPerQueue.getOrElse(queue,
+                scala.collection.mutable.ListBuffer[SingleDatasetQuery]());
+            current.add(q)
+            batchPerQueue(queue) = current
           })
           
           batchPerQueue.foreach(q => {
@@ -355,21 +354,22 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
             // fire queries to cache columns
             for(ds <- cacheCandidate) {
-              var drop_cache_table = QueryUtil.getDropTableSQL(
-                  ds.getCachedName())
-              hiveContext.hql(drop_cache_table)
+//              var drop_cache_table = QueryUtil.getDropTableSQL(
+//                  ds.getCachedName())
+//              hiveContext.hql(drop_cache_table)
+//
+//              val queryString = QueryUtil.getCreateTableAsCachedSQL(ds)
+//              try {
+//           	    hiveContext.hql(queryString)
+//              } catch{
+//                case e: Exception => 
+//                 println("not able to create table. "); e.printStackTrace()
+//              }
 
-              val queryString = QueryUtil.getCreateTableAsCachedSQL(ds)
-              try {
-           	    hiveContext.hql(queryString)
-              } catch{
-                case e: Exception => 
-                 println("not able to create table. "); e.printStackTrace()
-              }
-              hiveContext.hql("CACHE TABLE " + ds.getCachedName())	// not cached at this stage since spark evaluates lazily
+                hiveContext.hql("CACHE TABLE " + ds.getCachedName())	// not cached at this stage since spark evaluates lazily
 //              new CacheThread(ds).start()
+                manager.postEvent(new DatasetLoadedToCache(ds))
 
-              manager.postEvent(new DatasetLoadedToCache(ds))
             }
             
             // fire sql queries

@@ -61,13 +61,14 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		double [][] utility_table = new double [N][num_columns];	
 		double [][] lookup_table = new double [(int)size_columns_powerset][N];
 		boolean [][] lookup_table_column_indices = new boolean [(int)size_columns_powerset][num_columns];
-
+		double[] throwAway = new double[N];
+		
 		//Construction of internal utility table
 		for(SingleDatasetQuery query: queries) {
 			(columns[datasetSeen.indexOf(query.getDataset().getName())]) = new Column();
 			(columns[datasetSeen.indexOf(query.getDataset().getName())]).setID(datasetSeen.indexOf(query.getDataset().getName()));
 			(columns[datasetSeen.indexOf(query.getDataset().getName())]).setSize(query.getDataset().getEstimatedSize());
-			int queueIndex = 0;
+			int queueIndex = 1;
 			if(!singleTenant) {
 				queueIndex = query.getQueueID();
 			}
@@ -98,7 +99,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 				}
 			}
 			Allocation S = new Allocation();
-			S.Oracle(w, lookup_table, lookup_table_column_indices, columns, num_columns, N, (int)size_columns_powerset, cache_size);
+			S.Oracle(w, lookup_table, lookup_table_column_indices, columns, num_columns, N, (int)size_columns_powerset, cache_size, throwAway);
 			// case of single tenant
 			if(N==1) {
 				return getCacheAllocation(queries, datasetSeen, columns, S);
@@ -123,7 +124,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		//Algorithm 1 Iteration
 		for (int k = 0; k < T; k++) {
 			Allocation S = new Allocation();
-			S.Oracle(w, lookup_table, lookup_table_column_indices, columns, num_columns, N, (int)size_columns_powerset, cache_size);
+			S.Oracle(w, lookup_table, lookup_table_column_indices, columns, num_columns, N, (int)size_columns_powerset, cache_size, throwAway);
 			S.setCacheProb(1.0/T);
 			double w_sum = 0.0, utility = 0.0;
 			for (int i = 0; i < N; i++) {
