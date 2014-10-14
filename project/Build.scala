@@ -46,7 +46,8 @@ object CachePlannerBuild extends Build {
 //      "org.apache.hadoop" % "hadoop-client" % HADOOP_VERSION,
       "org.apache.commons" % "commons-math3" % "3.2",
       "org.apache.spark" %% "spark-hive" % SPARK_VERSION,
-      "com.google.code.gson" % "gson" %"2.2.4"
+      "com.google.code.gson" % "gson" %"2.2.4",
+      "mysql" % "mysql-connector-java" % "5.1.26"
   ),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-compiler" % _)
   ) ++ assemblySettings ++ extraAssemblySettings

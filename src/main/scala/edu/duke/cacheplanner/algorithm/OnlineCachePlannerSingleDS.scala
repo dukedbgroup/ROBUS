@@ -97,10 +97,16 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
           val rnd = Math.random()
           var cumulative = 0d
           var luckyQueue = 1
-          queueProbability.foreach(t => {
-            cumulative += t._2; 
-            if(rnd < cumulative) {luckyQueue = t._1}
-          })
+	  val loop = new scala.util.control.Breaks
+	  loop.breakable {
+            for (t <- queueProbability.toList) {
+              cumulative += t._2 
+              if(rnd < cumulative) {
+	        luckyQueue = t._1
+	        loop.break
+	      }
+            }
+	  }
 
           // run algo only on queries from luckyQueue, but schedule all queries
           val batch = fetchNextBatch
@@ -112,8 +118,11 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
           batch.foreach(t => if(t.getQueueID == luckyQueue) {
             filteredBatch.add(t)
           })
-          val datasetsToCache = runAlgorithm(filteredBatch.toList, 
-              cachedDatasets, cacheSize)
+	  // HACK: if luckyQueue has no queries, maintain the cache state
+	  // Ideally, luckyQueue should be picked only from queues having queries.
+	  val datasetsToCache = if(filteredBatch.size > 0) {
+            runAlgorithm(filteredBatch.toList, cachedDatasets, cacheSize)
+	  } else { cachedDatasets }
           scheduleBatch(batch, cachedDatasets, datasetsToCache)
           cachedDatasets = datasetsToCache
         }
@@ -212,8 +221,8 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
         	scheduleBatch(batch, List[Dataset](), datasetsToCache.toList)
         	firstRun = false
           } else {
-            scheduleBatch(batch, datasetsToCache.map(d=>d).toList, 
-                datasetsToCache.map(d=>d).toList)
+            scheduleBatch(batch, datasetsToCache.toList, 
+                datasetsToCache.toList)
           }
         }
         
@@ -346,7 +355,12 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             
             // fire queries to drop the cache
             for(ds <- dropCandidate) {
-              hiveContext.hql("UNCACHE TABLE " + ds.getCachedName())
+              try {
+                hiveContext.hql("UNCACHE TABLE " + ds.getCachedName())
+              } catch {
+                case e: Exception => println("If is is physical partitioning case, someone else may have uncached already!"); 
+                e.printStackTrace()
+              }
 //              hiveContext.hql(QueryUtil.getDropTableSQL(ds.getCachedName()))
 
               manager.postEvent(new DatasetUnloadedFromCache(ds))
@@ -366,7 +380,12 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 //                 println("not able to create table. "); e.printStackTrace()
 //              }
 
+              try {
                 hiveContext.hql("CACHE TABLE " + ds.getCachedName())	// not cached at this stage since spark evaluates lazily
+              } catch {
+                case e: Exception => println("If is is physical partitioning case, someone else may have cached already!"); 
+                e.printStackTrace()
+              }
 //              new CacheThread(ds).start()
                 manager.postEvent(new DatasetLoadedToCache(ds))
 
