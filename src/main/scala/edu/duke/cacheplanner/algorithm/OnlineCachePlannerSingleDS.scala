@@ -432,9 +432,12 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             	return
             }}
           } else {
+            try {
         	  setup.run()
-          }
-
+            } catch { case e: Exception => {
+              e.printStackTrace()
+               println("not returning")
+          }}}
         }
       }
 
