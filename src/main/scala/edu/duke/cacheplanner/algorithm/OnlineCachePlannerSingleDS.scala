@@ -88,13 +88,13 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
         override def init() = {
           var totalWeight = 0
-          queues.foreach(q => totalWeight = totalWeight + q.getWeight())
-          queues.foreach(q => queueProbability(q.getId) = q.getWeight / totalWeight)
+          queues.foreach(q => totalWeight = totalWeight + q.getWeight)
+          queues.foreach(q => queueProbability(q.getId) = (q.getWeight.doubleValue / totalWeight))
         }
 
         override def run() = {
           // pick a queue at random to favor
-          val rnd = Math.random()
+          val rnd = Math.random 
           var cumulative = 0d
           var luckyQueue = 1
 	  val loop = new scala.util.control.Breaks
