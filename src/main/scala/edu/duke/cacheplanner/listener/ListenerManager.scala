@@ -45,6 +45,8 @@ class ListenerManager {
         listenerList.foreach(_.onQueryFetchedByCachePlanner(queryFetchedByCachePlanner))
       case queryPushedToSparkScheduler: QueryPushedToSparkScheduler =>
         listenerList.foreach(_.onQueryPushedToSparkScheduler(queryPushedToSparkScheduler))
+      case queryFinished: QueryFinished =>
+        listenerList.foreach(_.onQueryFinished(queryFinished))
       case dataEvent: DatasetLoadedToCache =>
         listenerList.foreach(_.onDatasetLoadedToCache(dataEvent))
       case dataEvent: DatasetRetainedInCache =>

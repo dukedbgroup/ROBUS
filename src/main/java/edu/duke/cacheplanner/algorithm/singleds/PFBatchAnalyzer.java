@@ -40,8 +40,14 @@ public class PFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		AllocationDistribution Q = new AllocationDistribution();
 
 		//API forward conversion
+		int singleTenantQueue = 1;
+		if(singleTenant) {
+			N = 1;
+			singleTenantQueue = queries.get(0).getQueueID(); // just setting to first queueID seen
+			queueSeen.add(singleTenantQueue);
+		}
 		for(SingleDatasetQuery query: queries) {
-			if(!(queueSeen.contains(query.getQueueID()))) {
+			if(!singleTenant && !(queueSeen.contains(query.getQueueID()))) {
 				N++;
 				queueSeen.add(query.getQueueID());
 			}
@@ -49,9 +55,6 @@ public class PFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 				num_columns++;
 				datasetSeen.add(query.getDataset().getName());
 			}
-		}
-		if (singleTenant) {
-			N = 1; 
 		}
 
 		//Old variable declarations / allocations		
@@ -66,7 +69,7 @@ public class PFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 			(columns[datasetSeen.indexOf(query.getDataset().getName())]) = new Column();
 			(columns[datasetSeen.indexOf(query.getDataset().getName())]).setID(datasetSeen.indexOf(query.getDataset().getName()));
 			(columns[datasetSeen.indexOf(query.getDataset().getName())]).setSize(query.getDataset().getEstimatedSize());
-			int queueIndex = 1;
+			int queueIndex = singleTenantQueue;
 			if(!singleTenant) {
 				queueIndex = query.getQueueID();
 			}

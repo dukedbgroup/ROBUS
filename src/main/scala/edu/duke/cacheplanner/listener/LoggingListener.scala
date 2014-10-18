@@ -21,6 +21,11 @@ class LoggingListener extends Listener {
         + event.query.getQueryID + ", " + event.query.getQueueID)
   }  
 
+  override def onQueryFinished(event: QueryFinished) {
+    println("query finished(queryID, queueID) : " 
+        + event.query.getQueryID + ", " + event.query.getQueueID);
+  }
+
   override def onDatasetLoadedToCache(event: DatasetLoadedToCache) {
     println("dataset loaded: " + event.dataset.getName());
   }

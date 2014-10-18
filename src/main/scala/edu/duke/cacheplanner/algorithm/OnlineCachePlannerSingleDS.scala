@@ -212,8 +212,8 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
         	scheduleBatch(batch, List[Dataset](), datasetsToCache.toList)
         	firstRun = false
           } else {
-            scheduleBatch(batch, datasetsToCache.map(d=>d).toList, 
-                datasetsToCache.map(d=>d).toList)
+            scheduleBatch(batch, datasetsToCache.toList, 
+                datasetsToCache.toList)
           }
         }
         
@@ -346,7 +346,12 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             
             // fire queries to drop the cache
             for(ds <- dropCandidate) {
-              hiveContext.hql("UNCACHE TABLE " + ds.getCachedName())
+              try {
+                hiveContext.hql("UNCACHE TABLE " + ds.getCachedName())
+              } catch {
+                case e: Exception => println("If is is physical partitioning case, someone else may have uncached already!"); 
+                e.printStackTrace()
+              }
 //              hiveContext.hql(QueryUtil.getDropTableSQL(ds.getCachedName()))
 
               manager.postEvent(new DatasetUnloadedFromCache(ds))
@@ -366,7 +371,12 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 //                 println("not able to create table. "); e.printStackTrace()
 //              }
 
+              try {
                 hiveContext.hql("CACHE TABLE " + ds.getCachedName())	// not cached at this stage since spark evaluates lazily
+              } catch {
+                case e: Exception => println("If is is physical partitioning case, someone else may have cached already!"); 
+                e.printStackTrace()
+              }
 //              new CacheThread(ds).start()
                 manager.postEvent(new DatasetLoadedToCache(ds))
 
@@ -388,7 +398,8 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
               // submit query to spark through a thread
               // TODO: use a thread pool
-              new ExecutorThread(query.getQueueID().toString, queryString).start()
+              new ExecutorThread(query.getQueueID().toString, queryString, query)
+              .start()
 
               manager.postEvent(new QueryPushedToSparkScheduler(query, cacheUsed))
             }
@@ -446,13 +457,21 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
       }
 
-      class ExecutorThread(queueString: String, queryString: String) extends java.lang.Thread {
+      class ExecutorThread(queueString: String, queryString: String, 
+          query: SingleDatasetQuery) extends java.lang.Thread {
         
         override def run() {
               sc.setJobGroup(queueString, queryString)
               sc.setLocalProperty("spark.scheduler.pool", queueString)
-              val result = hiveContext.hql(queryString)
-              result.collect()          
+              try {
+                val result = hiveContext.hql(queryString)
+                result.collect()
+              } catch {
+                case e: Exception => 
+              } finally{
+                // hopefully, this is called after query is finished
+                manager.postEvent(new QueryFinished(query))                
+              }
         }
 
       }

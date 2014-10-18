@@ -17,6 +17,8 @@ case class QueryFetchedByCachePlanner(query: AbstractQuery) extends ListenerEven
 case class QueryPushedToSparkScheduler(query: AbstractQuery, 
     cacheUsed: Double) extends ListenerEvent
 
+case class QueryFinished(query: AbstractQuery) extends ListenerEvent
+
 case class DatasetLoadedToCache(dataset: Dataset) extends ListenerEvent
 
 case class DatasetRetainedInCache(dataset: Dataset) extends ListenerEvent
@@ -46,6 +48,11 @@ trait Listener {
    * called when the query is pushed to Spark Scheduler
    */
   def onQueryPushedToSparkScheduler(event: QueryPushedToSparkScheduler) { }
+
+  /**
+   * called when the query is finished executing
+   */
+  def onQueryFinished(event: QueryFinished) { }
 
   /**
    * called when a dataset is loaded to spark cache

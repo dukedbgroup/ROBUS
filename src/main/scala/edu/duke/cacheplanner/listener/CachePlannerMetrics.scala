@@ -7,6 +7,7 @@ import scala.collection.JavaConversions._
 
 import edu.duke.cacheplanner.data.Dataset
 import edu.duke.cacheplanner.query.AbstractQuery
+import edu.duke.cacheplanner.query.SingleDatasetQuery
 import edu.duke.cacheplanner.queue.ExternalQueue
 
 /**
@@ -18,8 +19,12 @@ extends Listener {
 
   // map of query to its wait time in queue
   var queryWaitTimes = scala.collection.mutable.Map[AbstractQuery, Long]()
+  // exec time per query
+  var queryExecTimes = scala.collection.mutable.Map[AbstractQuery, Long]()
   // map of query to amount of cache it used
   var queryCacheSize = scala.collection.mutable.Map[AbstractQuery, Double]()
+  // map of dataset to number of queries requesting it
+  var queriesPerDataset = scala.collection.mutable.Map[Dataset, Long]()
   // count of number of queries generated
   var numQueriesGenerated: Long = 0L
   // count of number of queries fetched from queues
@@ -30,9 +35,6 @@ extends Listener {
   var numQueriesSubmittedPerQueue = scala.collection.mutable.Map[Int, Long]()
   // count of number of queries that used cached data per queue
   var numQueriesCachedPerQueue = scala.collection.mutable.Map[Int, Long]()
-
-  // exec time aggregated over queries over each queue
-  var execTimesPerQueue = scala.collection.mutable.Map[Int, Long]()
 
   // map of dataset to number of times it was cached
   var datasetLoaded = scala.collection.mutable.Map[Dataset, Long]()
@@ -45,8 +47,8 @@ extends Listener {
 
   // invariant: refers to time of first query seen by event QueryGenerated
   var timeFirstQueryGenerated:Long = 0L
-  // invariant: refers to time of last query seen by event QueryPushedToSparkScheduler
-  var timeLastQueryPushed:Long = 0L
+  // invariant: refers to time of last query seen by event QueryFinished
+  var timeLastQueryFinished:Long = 0L
 
   override def onQueryGenerated(event: QueryGenerated) {
     if(timeFirstQueryGenerated == 0L) {
@@ -66,8 +68,7 @@ extends Listener {
   }
   
   override def onQueryPushedToSparkScheduler(event: QueryPushedToSparkScheduler) {
-    timeLastQueryPushed = System.currentTimeMillis()
-    // TODO: populate execTimesPerQueue using queryPushed and queryFetched events
+    queryExecTimes(event.query) = System.currentTimeMillis()
 
 	numQueriesSubmitted = numQueriesSubmitted + 1
 	val current = numQueriesSubmittedPerQueue.getOrElse(
@@ -80,6 +81,17 @@ extends Listener {
 		    event.query.getQueueID(), 0L)
 		numQueriesCachedPerQueue(event.query.getQueueID()) = currentNum + 1
 	}
+
+    // HACK: assuming singledatasetquery in order to fetch dataset
+    val query = event.query.asInstanceOf[SingleDatasetQuery]
+    val count = queriesPerDataset.getOrElse(query.getDataset(), 0L)
+    queriesPerDataset(query.getDataset()) = count + 1
+  }
+
+  override def onQueryFinished(event: QueryFinished) {
+    timeLastQueryFinished = System.currentTimeMillis()
+	val startTime = queryExecTimes(event.query)
+    queryExecTimes(event.query) = System.currentTimeMillis() - startTime    
   }
 
   override def onDatasetLoadedToCache(event: DatasetLoadedToCache) {
@@ -105,6 +117,17 @@ extends Listener {
     return totalTime
   }
 
+  def getMeanExecTimePerQueue: List[(Int, Long)] = {
+    var totalExecTimes = scala.collection.mutable.Map[Int, Long]()
+    queryExecTimes.foreach(q => {
+      val queue = q._1.getQueueID;
+      val time = totalExecTimes.getOrElse(queue, 0L);
+      totalExecTimes(queue) = time + q._2
+    })
+    totalExecTimes map {t => 
+      (t._1, t._2 / numQueriesSubmittedPerQueue(t._1))} toList
+  }
+
   def getWaitTimePerQueue(): scala.collection.mutable.Map[Int, Long] = {
     var waitTimes = scala.collection.mutable.Map[Int, Long]()
     queryWaitTimes.foreach(q => {
@@ -126,28 +149,37 @@ extends Listener {
     }
     (runningSum * runningSum) / (queues.size() * runningSumSquares)
   }
-  
-  def getTotalCacheUsed(queueId: Int): Double = {
-    var totalCache = 0d
+
+  /**
+   * Enumerate over all queries of the given queueId.
+   * Add up cache share of each query. 
+   * Cache share = (size in cache) / (total number of queries requesting the same view)
+   */
+  def getTotalCacheShareUsed(queueId: Int): Double = {
+    var totalCacheShare = 0d
     queryCacheSize.foreach(t => if(t._1.getQueueID == queueId) {
-      totalCache += t._2
+      totalCacheShare += t._2 / queriesPerDataset(
+          t._1.asInstanceOf[SingleDatasetQuery].getDataset)	// HACK: assuming singledatasetquery
     })
-    totalCache
+    totalCacheShare
   }
 
   def getTimeOfWorkload(): Long = {
-    timeLastQueryPushed - timeFirstQueryGenerated
+    timeLastQueryFinished - timeFirstQueryGenerated
   }
 
   def getThroughput(): Double = {
-    numQueriesGenerated.doubleValue / getTimeOfWorkload.doubleValue
+    numQueriesGenerated.doubleValue * 1000 / getTimeOfWorkload.doubleValue
   }
 
+  /**
+   * compute core fairness index.
+   */
   def getResourceFairnessIndex(): Double = {
     var runningSum = 0d;
     var runningSumSquares = 0d;
     for(queue <- queues) {
-      val cacheByWeight = getTotalCacheUsed(queue.getId) / queue.getWeight
+      val cacheByWeight = getTotalCacheShareUsed(queue.getId) / queue.getWeight
       runningSum += cacheByWeight
       runningSumSquares += cacheByWeight * cacheByWeight
     }
@@ -155,15 +187,15 @@ extends Listener {
   }
 
   def getDatasetLoadHistogram(): List[(String, Long)] = {
-    datasetLoaded.toList map {t => (t._1.getName(), t._2)} sortBy {_._2}
+    datasetLoaded.toList map {t => (t._1.getName(), t._2)} sortBy {-_._2}
   }
 
   def getDatasetRetainHistogram(): List[(String, Long)] = {
-    datasetRetained.toList map {t => (t._1.getName(), t._2)} sortBy {_._2}
+    datasetRetained.toList map {t => (t._1.getName(), t._2)} sortBy {-_._2}
   }
 
   def getDatasetUnloadHistogram(): List[(String, Long)] = {
-    datasetUnloaded.toList map {t => (t._1.getName(), t._2)} sortBy {_._2}
+    datasetUnloaded.toList map {t => (t._1.getName(), t._2)} sortBy {-_._2}
   }
 
   def getNumQueriesGenerated(): Long = {
