@@ -88,19 +88,25 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
         override def init() = {
           var totalWeight = 0
-          queues.foreach(q => totalWeight = totalWeight + q.getWeight())
-          queues.foreach(q => queueProbability(q.getId) = q.getWeight / totalWeight)
+          queues.foreach(q => totalWeight = totalWeight + q.getWeight)
+          queues.foreach(q => queueProbability(q.getId) = (q.getWeight.doubleValue / totalWeight))
         }
 
         override def run() = {
           // pick a queue at random to favor
-          val rnd = Math.random()
+          val rnd = Math.random 
           var cumulative = 0d
           var luckyQueue = 1
-          queueProbability.foreach(t => {
-            cumulative += t._2; 
-            if(rnd < cumulative) {luckyQueue = t._1}
-          })
+	  val loop = new scala.util.control.Breaks
+	  loop.breakable {
+            for (t <- queueProbability.toList) {
+              cumulative += t._2 
+              if(rnd < cumulative) {
+	        luckyQueue = t._1
+	        loop.break
+	      }
+            }
+	  }
 
           // run algo only on queries from luckyQueue, but schedule all queries
           val batch = fetchNextBatch
@@ -112,8 +118,11 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
           batch.foreach(t => if(t.getQueueID == luckyQueue) {
             filteredBatch.add(t)
           })
-          val datasetsToCache = runAlgorithm(filteredBatch.toList, 
-              cachedDatasets, cacheSize)
+	  // HACK: if luckyQueue has no queries, maintain the cache state
+	  // Ideally, luckyQueue should be picked only from queues having queries.
+	  val datasetsToCache = if(filteredBatch.size > 0) {
+            runAlgorithm(filteredBatch.toList, cachedDatasets, cacheSize)
+	  } else { cachedDatasets }
           scheduleBatch(batch, cachedDatasets, datasetsToCache)
           cachedDatasets = datasetsToCache
         }
@@ -424,9 +433,12 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             	return
             }}
           } else {
+            try {
         	  setup.run()
-          }
-
+            } catch { case e: Exception => {
+              e.printStackTrace()
+               println("not returning")
+          }}}
         }
       }
 
