@@ -1,4 +1,4 @@
-package edu.duke.cacheplanner.algorithm.singleds;
+package edu.duke.cacheplanner.algorithm.singleds.allocation;
 /*
   File: Allocation.java
   Author: Brandon Fain
@@ -8,22 +8,30 @@ package edu.duke.cacheplanner.algorithm.singleds;
  */
 
 import java.util.ArrayList;
+import java.util.List;
+
 
 public class Allocation {
 
 	// // PRIVATE DATA ////
 
-	private ArrayList<Column> columns;
+	private List<Column> columns;
 	private double cacheProb;
+	
+	/**
+	 * this is probably not the place to store these indices, but Newton's 
+	 * method in {@code AllocationDistribution} requires this.
+	 */
+	private double[] precomputed;
 
 	// // CONSTRUCTORS ////
 
-	Allocation() {
+	public Allocation() {
 		columns = new ArrayList<Column>();
 		cacheProb = 0.0;
 	}
 
-	void copy(Allocation copyThis) {
+	public void copy(Allocation copyThis) {
 		(this.columns).clear();
 		for (int i = 0; i < (copyThis.columns).size(); i++) {
 			(this.columns).add(copyThis.item(i));
@@ -33,11 +41,15 @@ public class Allocation {
 
 	// // PUBLIC METHODS ////
 
-	void setCacheProb(double newCacheProb) {
+	public void setCacheProb(double newCacheProb) {
 		this.cacheProb = newCacheProb;
 	}
 
-	boolean contains(Column checkThis) {
+	public void setPrecomputed(double[] precomupted) {
+		this.precomputed = precomupted;
+	}
+
+	public boolean contains(Column checkThis) {
 		for (int i = 0; i < columns.size(); i++) {
 			if (checkThis.getID() == ((this.columns).get(i)).getID()) {
 				return true;
@@ -52,13 +64,21 @@ public class Allocation {
 		return (return_item);
 	}
 
-	double getCacheProb() {
+	public List<Column> getColumns() {
+		return columns;
+	}
+
+	public double getCacheProb() {
 		return this.cacheProb;
 	}
 
-	void Oracle(double[] w, double[][] lookup_table, boolean[][] table_indices,
+	public double[] getPrecomputed() {
+		return precomputed;
+	}
+
+	public void Oracle(double[] w, double[][] lookup_table, boolean[][] table_indices,
 			Column[] columns, int num_columns, int num_users, int table_size,
-			double max_size, double[] precomputed) {
+			double max_size) {
 
 		double size = 0.0;
 		double best_weighted_sum = 0.0;
@@ -85,10 +105,11 @@ public class Allocation {
 			}
 		}
 
+		precomputed = new double[num_users];
+		for (int j = 0; j < num_users; j++) {
+			precomputed[j] = lookup_table[best_allocation_index][j];
+		}
 		for (int i = 0; i < num_columns; i++) {
-			for (int j = 0; j < num_users; j++) {
-				precomputed[j] = lookup_table[best_allocation_index][j];
-			}
 			if (table_indices[best_allocation_index][i]) {
 				(this.columns).add(columns[i]);
 			}
@@ -104,6 +125,12 @@ public class Allocation {
 	void addColumn(Column new_column) {
 		(this.columns).add(new_column);
 	}
-	// // PRIVATE METHODS ////
 
+	public boolean equals(Object obj) {
+		if(obj == null || !Allocation.class.equals(obj.getClass())) {
+			return false;
+		}
+		Allocation other = (Allocation) obj;
+		return this.columns.equals(other.getColumns());
+	}
 }

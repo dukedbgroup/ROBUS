@@ -5,49 +5,54 @@
 
   Description:
  */
-package edu.duke.cacheplanner.algorithm.singleds;
+package edu.duke.cacheplanner.algorithm.singleds.allocation;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class AllocationDistribution {
-    
-    //// PRIVATE DATA ////
-    
-    private ArrayList<Allocation> allocations;
 
-    //// CONSTRUCTORS ////
+	//// PRIVATE DATA ////
 
-    AllocationDistribution () {
-	allocations = new ArrayList<Allocation>();
-    }
+	protected List<Allocation> allocations;
 
-    void copy (AllocationDistribution copyThis) {
-	(this.allocations).clear();
-	for (int i = 0; i < (copyThis.allocations).size(); i++) {
-	    (this.allocations).add(copyThis.item(i));
+	//// CONSTRUCTORS ////
+
+	public AllocationDistribution () {
+		allocations = new ArrayList<Allocation>();
 	}
-    } 
 
-    //// PUBLIC METHODS ////
+	public void copy (AllocationDistribution copyThis) {
+		(this.allocations).clear();
+		for (int i = 0; i < (copyThis.allocations).size(); i++) {
+			(this.allocations).add(copyThis.item(i));
+		}
+	} 
 
-    Allocation item (int index) {
-	Allocation return_item = new Allocation();
-	return_item.copy((this.allocations).get(index));
-	return (return_item);
-    }
+	//// PUBLIC METHODS ////
 
-    void addAllocation (Allocation S) {
-	(this.allocations).add(S);
-    }
-
-    void print () {
-	for (int i = 0; i < allocations.size(); i++) {
-	    ((this.allocations).get(i)).print();
+	Allocation item (int index) {
+		Allocation return_item = new Allocation();
+		return_item.copy((this.allocations).get(index));
+		return (return_item);
 	}
-    }
 
-	Allocation getRandomAllocation() {
+	public void addAllocation (Allocation S) {
+		(this.allocations).add(S);
+	}
+
+	public void print () {
+		for (int i = 0; i < allocations.size(); i++) {
+			((this.allocations).get(i)).print();
+		}
+	}
+
+	public int size() {
+		return allocations.size();
+	}
+
+	public Allocation getRandomAllocation() {
 		Random generator = new Random();
 		double[][] ranges = new double[allocations.size()][2];
 		ranges[0][0] = 0.0;
@@ -65,14 +70,14 @@ public class AllocationDistribution {
 		}
 		return ((this.allocations).get(indexOfReturn));
 	}
-    
+
 	//Utility[from this allocation][to this user]
-	public void newtonsMethodPF(double[] y, double[][] utility, int N) {
+	public void newtonsMethodPF(double[] y, int N) {
 		int iterations = 5;
 		double r = 0.0, xSum = 0.0;
 
 		for (int t = 0; t < iterations; t++) {
-			r = r - (functionDerivativePF(y, utility, N, r) / functionSecondDerivativePF(y, utility, N, r));
+			r = r - (functionDerivativePF(y, N, r) / functionSecondDerivativePF(y, N, r));
 		}
 		for (int s = 0; s < allocations.size(); s++) {
 			(allocations.get(s)).setCacheProb((r * y[s]) + (allocations.get(s)).getCacheProb());
@@ -86,15 +91,15 @@ public class AllocationDistribution {
 		}
 	}
 
-	private double functionSecondDerivativePF(double[] y, double[][] utility,
-			int n, double r) {
-		
+	private double functionSecondDerivativePF(double[] y, int n, double r) {
+
 		double sumI = 0.0, sumNumeratorQ = 0.0, sumDenominatorQ = 0.0;
-		
+
 		for (int i = 0; i < n; i++) {
 			for (int s = 0; s < allocations.size(); s++) {
-				sumDenominatorQ = sumDenominatorQ + (((allocations.get(s)).getCacheProb() + (r * y[s])) * utility[s][i]);
-				sumNumeratorQ = sumNumeratorQ + (y[s] * utility[s][i]);
+				Allocation current = allocations.get(s);
+				sumDenominatorQ = sumDenominatorQ + ((current.getCacheProb() + (r * y[s])) * current.getPrecomputed()[i]);
+				sumNumeratorQ = sumNumeratorQ + (y[s] * current.getPrecomputed()[i]);
 			}
 			sumNumeratorQ = (-1) * Math.pow(sumNumeratorQ, 2.0);
 			sumDenominatorQ = Math.pow(sumDenominatorQ, 2.0);
@@ -109,10 +114,10 @@ public class AllocationDistribution {
 			sumI = sumI + 0.01;
 		}
 		return sumI;
-		
+
 	}
 
-	private double functionDerivativePF(double[] y, double[][] utility, int n,
+	private double functionDerivativePF(double[] y, int n,
 			double r) {
 
 		double sumQ = 0.0;
@@ -120,11 +125,12 @@ public class AllocationDistribution {
 		for (int s = 0; s < allocations.size(); s++) {
 			sumQ = sumQ + (r * y[s]);
 		}
-		
+
 		for (int i = 0; i < n; i++) {
 			for (int s = 0; s < allocations.size(); s++) {
-				sumDenominatorQ = sumDenominatorQ + (((allocations.get(s)).getCacheProb() + (r * y[s])) * utility[s][i]);
-				sumNumeratorQ = sumNumeratorQ + (y[s] * utility[s][i]);
+				Allocation current = allocations.get(s);
+				sumDenominatorQ = sumDenominatorQ + ((current.getCacheProb() + (r * y[s])) * current.getPrecomputed()[i]);
+				sumNumeratorQ = sumNumeratorQ + (y[s] * current.getPrecomputed()[i]);
 			}
 			if (Math.abs(sumDenominatorQ) <= 0.001) {
 				sumDenominatorQ = sumDenominatorQ + 0.01;
