@@ -198,14 +198,14 @@ implements SingleDSBatchAnalyzer {
 		}
 	}
 
-	private static double[][] generateRandomWeights(int numWeights, int sizeWeight) {
+	private double[][] generateRandomWeights(int numWeights, int sizeWeight) {
 		double[][] w = new double[numWeights][sizeWeight];
 		double normalization = 0.0, temp = 0.0;
 		Random generator = new Random();
 
 		for (int i = 0; i < numWeights; i++) {
 			for (int j = 0; j < sizeWeight; j++) {
-				temp =  generator.nextDouble();
+				temp =  (generator.nextDouble() / u_star[j]);
 				normalization = normalization + temp;
 				w[i][j] = temp;
 			}

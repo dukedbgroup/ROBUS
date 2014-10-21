@@ -52,6 +52,10 @@ public class AllocationDistribution {
 		return allocations.size();
 	}
 
+	public List<Allocation> getAllocations() {
+		return allocations;
+	}
+
 	public Allocation getRandomAllocation() {
 		Random generator = new Random();
 		double[][] ranges = new double[allocations.size()][2];

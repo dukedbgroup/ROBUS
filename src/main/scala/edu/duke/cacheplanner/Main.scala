@@ -35,7 +35,8 @@ object Main {
     metrics.getFractionQueriesCached.foreach(println)
     println("cache utilization per batch -> " 
         + metrics.getTotalCacheLoaded * config.getPlannerBatchTime() / config.getWorkloadTime())
-    println("core fairness index -> " + metrics.getResourceFairnessIndex)
+    println("resource fairness index -> " + metrics.getResourceFairnessIndex)
+    println("core fairness index -> " + metrics.getCoreFairnessIndex)
     println("wait time fairness -> " + metrics.getWaitTimeFairnessIndex)
 //    println("histogram on datasets loaded to cache -> ")
 //    metrics.getDatasetLoadHistogram.foreach(println)

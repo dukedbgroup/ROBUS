@@ -34,6 +34,8 @@ public class MergedAllocationDistribution extends AllocationDistribution {
 				merged.add(newAlloc);
 			}
 		}
+		System.out.println("*** before merging: " + dist.size());
+		System.out.println("*** after merging: " + merged.size());
 		return merged;
 	}
 }

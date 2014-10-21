@@ -150,6 +150,14 @@ extends Listener {
     (runningSum * runningSum) / (queues.size() * runningSumSquares)
   }
 
+  def getTotalCacheUsed(queueId: Int): Double = {
+    var totalCache = 0d
+    queryCacheSize.foreach(t => if(t._1.getQueueID == queueId) {
+      totalCache += t._2
+    })
+    totalCache    
+  }
+
   /**
    * Enumerate over all queries of the given queueId.
    * Add up cache share of each query. 
@@ -172,10 +180,21 @@ extends Listener {
     numQueriesGenerated.doubleValue * 1000 / getTimeOfWorkload.doubleValue
   }
 
+  def getResourceFairnessIndex(): Double = {
+    var runningSum = 0d;
+    var runningSumSquares = 0d;
+    for(queue <- queues) {
+      val cacheByWeight = getTotalCacheUsed(queue.getId) / queue.getWeight
+      runningSum += cacheByWeight
+      runningSumSquares += cacheByWeight * cacheByWeight
+    }
+    (runningSum * runningSum) / (queues.size() * runningSumSquares)    
+  }
+
   /**
    * compute core fairness index.
    */
-  def getResourceFairnessIndex(): Double = {
+  def getCoreFairnessIndex(): Double = {
     var runningSum = 0d;
     var runningSumSquares = 0d;
     for(queue <- queues) {
