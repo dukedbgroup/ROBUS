@@ -52,7 +52,13 @@ public class Column {
 		System.out.println(this.size);
 		System.out.println();
 	}
-	//// PRIVATE METHODS ////
 
+	public boolean equals(Object obj) {
+		if(obj == null || !Column.class.equals(obj.getClass())) {
+			return false;
+		}
+		Column other = (Column) obj;
+		return this.ID == other.getID() && this.size == other.getSize();
+	}
 
 }

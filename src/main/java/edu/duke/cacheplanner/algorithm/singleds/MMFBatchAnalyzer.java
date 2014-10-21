@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import scpsolver.lpsolver.SolverFactory;
 import scpsolver.problems.LPSolution;
 import scpsolver.problems.LPWizard;
 import scpsolver.problems.LPWizardConstraint;
@@ -144,7 +145,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		addToNormConstraint(constraint);
 
 		//get max result
-		LPSolution solution = lpw.solve();
+		LPSolution solution = lpw.solve(SolverFactory.newDefault());
 		double value = solution.getDouble("M" + level);
 
 		//update x

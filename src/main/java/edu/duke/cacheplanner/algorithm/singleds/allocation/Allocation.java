@@ -120,6 +120,7 @@ public class Allocation {
 		for (int i = 0; i < columns.size(); i++) {
 			(this.columns.get(i)).print();
 		}
+		System.out.println("Probability: " + cacheProb);
 	}
 
 	void addColumn(Column new_column) {

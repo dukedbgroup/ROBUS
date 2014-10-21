@@ -133,7 +133,7 @@ implements SingleDSBatchAnalyzer {
 
 		columns = new Column[num_columns];
 		utility_table = new double [N][num_columns];
-		
+
 		//Construction of internal utility table
 		for(SingleDatasetQuery query: queries) {
 			(columns[datasetSeen.indexOf(query.getDataset().getName())]) = new Column();
