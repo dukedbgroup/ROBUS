@@ -120,6 +120,12 @@ extends Listener {
     return totalTime
   }
 
+  // return (queueID, queryID, queryString, execTime)
+  def getFormattedQueryExecTimes: List[(Int, Int, String, Long)] = {
+    queryExecTimes.toList.map {t => (t._1.getQueueID, t._1.getQueryID, 
+        t._1.toHiveQL(false), t._2)} sortBy {t => (t._1, t._2)}
+  }
+
   def getMeanExecTimePerQueue: List[(Int, Long)] = {
     var totalExecTimes = scala.collection.mutable.Map[Int, Long]()
     queryExecTimes.foreach(q => {

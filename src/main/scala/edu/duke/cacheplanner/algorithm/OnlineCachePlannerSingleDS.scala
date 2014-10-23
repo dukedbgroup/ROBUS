@@ -439,7 +439,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             	e.printStackTrace();
             	// wait for all executor threads to finish
             	pool.shutdown;
-            	pool.awaitTermination(2, java.util.concurrent.TimeUnit.MINUTES);
+            	pool.awaitTermination(3, java.util.concurrent.TimeUnit.MINUTES);
             	return
             }}
           } else {

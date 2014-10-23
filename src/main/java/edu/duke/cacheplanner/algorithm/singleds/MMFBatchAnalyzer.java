@@ -63,13 +63,20 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 				new HashMap<Integer, List<Integer>>();
 		while(true) {
 			// LP for current level
-			double maxValue = solveLP(level, maxValuePerLevel, 
-					saturatedUsersPerLevel, true);
-			maxValuePerLevel.put(level, maxValue);
-			// find users who have got best possible utility
-			List<Integer> newSaturated = getSaturatedUsers(level, 
-					maxValuePerLevel, saturatedUsersPerLevel);
-			saturatedUsersPerLevel.put(level, newSaturated);
+			try {
+				double maxValue = solveLP(level, maxValuePerLevel, 
+						saturatedUsersPerLevel, true);
+				maxValuePerLevel.put(level, maxValue);
+				// find users who have got best possible utility
+				List<Integer> newSaturated = getSaturatedUsers(level, 
+						maxValuePerLevel, saturatedUsersPerLevel);
+				saturatedUsersPerLevel.put(level, newSaturated);
+			} catch(Exception e) {
+				// problem might have unbounded solution and we will get an exception if so
+				e.printStackTrace();
+				// just returning the allocation of previous level that worked
+				return;
+			}
 			// breaking the loop
 			if(flattenMap(saturatedUsersPerLevel).size() == N) {
 				return;
@@ -119,7 +126,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		}
 		LPWizard lpw = new LPWizard();
 		lpw.plus("M" + level, "-1.0");	//maximize M_level
-System.out.println("total users: " + N + ", saturated: " + saturatedUsers.size());
+		System.out.println("total users: " + N + ", saturated: " + saturatedUsers.size());
 		//unsaturated user constraints
 		for(int i=0; i<N; i++) {
 			if(!saturatedUsers.contains(i)) {
@@ -145,6 +152,9 @@ System.out.println("total users: " + N + ", saturated: " + saturatedUsers.size()
 		LPWizardConstraint constraint = lpw.addConstraint("norm", 1, "=");
 		addToNormConstraint(lpw, constraint);
 
+		//>0 constraint
+		addPositiveConstraints(lpw);
+
 		//get max result
 		LPSolution solution = lpw.solve(SOLVER);
 		double value = solution.getDouble("M" + level);
@@ -162,6 +172,15 @@ System.out.println("total users: " + N + ", saturated: " + saturatedUsers.size()
 
 		return value;
 
+	}
+
+	private void addPositiveConstraints(LPWizard lpw) {
+		int j = 0;
+		for(Allocation S: Q.getAllocations()) {
+			lpw.addConstraint("pos:x" + j, 0, ">=").plus("x" + j, 1.0);
+			System.out.println("Added x" + j + " to positive");
+			j++;
+		}		
 	}
 
 	private void addToNormConstraint(LPWizard lpw, 

@@ -58,6 +58,10 @@
 		</description>
 	</property>
 	<property>
+		<name>cacheplanner.log.dir</name>
+		<value>logs</value>
+		<description>Directory to store logs and summary of metrics</description></property>
+	<property>
 		<name>cacheplanner.cachesize</name>
 		<value>1000</value>
 		<description>size of cache in MB</description></property>

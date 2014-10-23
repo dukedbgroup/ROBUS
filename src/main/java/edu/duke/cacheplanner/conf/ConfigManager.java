@@ -44,6 +44,10 @@ public class ConfigManager {
 		return config.get("cacheplanner.generator.replayfile");
 	}
 
+	public String getLogDirPath() {
+		return config.get("cacheplanner.log.dir");
+	}
+
 	public Long getPlannerBatchTime() {
 		return Long.parseLong(config.get("cacheplanner.algorithm.batchtime"));
 	}
