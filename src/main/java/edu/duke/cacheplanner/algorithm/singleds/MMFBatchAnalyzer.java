@@ -15,7 +15,6 @@ import scpsolver.problems.LPWizard;
 import scpsolver.problems.LPWizardConstraint;
 import edu.duke.cacheplanner.algorithm.singleds.allocation.Allocation;
 import edu.duke.cacheplanner.algorithm.singleds.allocation.AllocationDistribution;
-import edu.duke.cacheplanner.algorithm.singleds.allocation.MergedAllocationDistribution;
 import edu.duke.cacheplanner.data.Dataset;
 import edu.duke.cacheplanner.query.SingleDatasetQuery;
 
@@ -105,7 +104,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 			// solve LP to see if the user can get more value
 			double improvedValue = solveLP(level+1, maxValuePerLevel, 
 					satUsersPerLevel, false);
-			if(improvedValue == maxValuePerLevel.get(level)) {
+			if(Math.abs(improvedValue - maxValuePerLevel.get(level)) < 0.001) {
 				result.add(user);
 			}
 		}

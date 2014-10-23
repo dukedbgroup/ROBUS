@@ -24,7 +24,7 @@ extends Listener {
   // map of query to amount of cache it used
   var queryCacheSize = scala.collection.mutable.Map[AbstractQuery, Double]()
   // map of dataset to number of queries requesting it
-  var queriesPerDataset = scala.collection.mutable.Map[Dataset, Long]()
+  var queriesPerDataset = scala.collection.mutable.Map[String, Long]()
   // count of number of queries generated
   var numQueriesGenerated: Long = 0L
   // count of number of queries fetched from queues
@@ -39,11 +39,11 @@ extends Listener {
   var numQueriesCachedPerQueue = scala.collection.mutable.Map[Int, Long]()
 
   // map of dataset to number of times it was cached
-  var datasetLoaded = scala.collection.mutable.Map[Dataset, Long]()
+  var datasetLoaded = scala.collection.mutable.Map[String, Long]()
   // map of dataset to number of times it was retained
-  var datasetRetained = scala.collection.mutable.Map[Dataset, Long]()
+  var datasetRetained = scala.collection.mutable.Map[String, Long]()
   // map of dataset to number of times it was uncached
-  var datasetUnloaded = scala.collection.mutable.Map[Dataset, Long]()
+  var datasetUnloaded = scala.collection.mutable.Map[String, Long]()
   // sum total cache use, added when a dataset is loaded or retained.
   var totalCacheLoaded: Double = 0d
 
@@ -86,8 +86,8 @@ extends Listener {
 
     // HACK: assuming singledatasetquery in order to fetch dataset
     val query = event.query.asInstanceOf[SingleDatasetQuery]
-    val count = queriesPerDataset.getOrElse(query.getDataset, 0L)
-    queriesPerDataset(query.getDataset) = count + 1
+    val count = queriesPerDataset.getOrElse(query.getDataset.getName, 0L)
+    queriesPerDataset(query.getDataset.getName) = count + 1
   }
 
   override def onQueryFinished(event: QueryFinished) {
@@ -98,20 +98,20 @@ extends Listener {
   }
 
   override def onDatasetLoadedToCache(event: DatasetLoadedToCache) {
-    val count = datasetLoaded.getOrElse(event.dataset, 0L)
-    datasetLoaded(event.dataset) = count + 1
+    val count = datasetLoaded.getOrElse(event.dataset.getName, 0L)
+    datasetLoaded(event.dataset.getName) = count + 1
     totalCacheLoaded = totalCacheLoaded + event.dataset.getEstimatedSize()
   }
 
   override def onDatasetRetainedInCache(event: DatasetRetainedInCache) {
-    val count = datasetRetained.getOrElse(event.dataset, 0L)
-    datasetRetained(event.dataset) = count + 1
+    val count = datasetRetained.getOrElse(event.dataset.getName, 0L)
+    datasetRetained(event.dataset.getName) = count + 1
     totalCacheLoaded = totalCacheLoaded + event.dataset.getEstimatedSize()
   }
 
   override def onDatasetUnloadedFromCache(event: DatasetUnloadedFromCache) {
-    val count = datasetUnloaded.getOrElse(event.dataset, 0L)
-    datasetUnloaded(event.dataset) = count + 1
+    val count = datasetUnloaded.getOrElse(event.dataset.getName, 0L)
+    datasetUnloaded(event.dataset.getName) = count + 1
   }
 
   def getTotalWaitTime(): Long = {
@@ -170,7 +170,7 @@ extends Listener {
     var totalCacheShare = 0d
     queryCacheSize.foreach(t => if(t._1.getQueueID == queueId) {
       totalCacheShare += t._2 / queriesPerDataset(
-          t._1.asInstanceOf[SingleDatasetQuery].getDataset)	// HACK: assuming singledatasetquery
+          t._1.asInstanceOf[SingleDatasetQuery].getDataset.getName)	// HACK: assuming singledatasetquery
     })
     totalCacheShare
   }
@@ -209,15 +209,15 @@ extends Listener {
   }
 
   def getDatasetLoadHistogram(): List[(String, Long)] = {
-    datasetLoaded.toList map {t => (t._1.getName(), t._2)} sortBy {-_._2}
+    datasetLoaded.toList sortBy {-_._2}
   }
 
   def getDatasetRetainHistogram(): List[(String, Long)] = {
-    datasetRetained.toList map {t => (t._1.getName(), t._2)} sortBy {-_._2}
+    datasetRetained.toList sortBy {-_._2}
   }
 
   def getDatasetUnloadHistogram(): List[(String, Long)] = {
-    datasetUnloaded.toList map {t => (t._1.getName(), t._2)} sortBy {-_._2}
+    datasetUnloaded.toList sortBy {-_._2}
   }
 
   def getNumQueriesGenerated(): Long = {

@@ -3,10 +3,13 @@
  */
 package edu.duke.cacheplanner.algorithm
 
+import java.util.concurrent.Executors
+import java.util.concurrent.ExecutorService
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
+import scala.collection.mutable.ListBuffer
 import edu.duke.cacheplanner.algorithm.singleds.MMFBatchAnalyzer
 import edu.duke.cacheplanner.algorithm.singleds.PFBatchAnalyzer
 import edu.duke.cacheplanner.conf.ConfigManager
@@ -17,7 +20,6 @@ import edu.duke.cacheplanner.listener._
 import edu.duke.cacheplanner.query.QueryUtil
 import edu.duke.cacheplanner.query.SingleDatasetQuery
 import edu.duke.cacheplanner.queue.ExternalQueue
-import scala.collection.mutable.ListBuffer
 import edu.duke.cacheplanner.algorithm.singleds.AbstractSingleDSBatchAnalyzer
 
 /**
@@ -97,16 +99,16 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
           val rnd = Math.random 
           var cumulative = 0d
           var luckyQueue = 1
-	  val loop = new scala.util.control.Breaks
-	  loop.breakable {
+          val loop = new scala.util.control.Breaks
+          loop.breakable {
             for (t <- queueProbability.toList) {
               cumulative += t._2 
               if(rnd < cumulative) {
 	        luckyQueue = t._1
 	        loop.break
-	      }
+              }
             }
-	  }
+          }
 
           // run algo only on queries from luckyQueue, but schedule all queries
           val batch = fetchNextBatch
@@ -118,11 +120,11 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
           batch.foreach(t => if(t.getQueueID == luckyQueue) {
             filteredBatch.add(t)
           })
-	  // HACK: if luckyQueue has no queries, maintain the cache state
-	  // Ideally, luckyQueue should be picked only from queues having queries.
-	  val datasetsToCache = if(filteredBatch.size > 0) {
+          // HACK: if luckyQueue has no queries, maintain the cache state
+          // Ideally, luckyQueue should be picked only from queues having queries.
+          val datasetsToCache = if(filteredBatch.size > 0) {
             runAlgorithm(filteredBatch.toList, cachedDatasets, cacheSize)
-	  } else { cachedDatasets }
+          } else { cachedDatasets }
           scheduleBatch(batch, cachedDatasets, datasetsToCache)
           cachedDatasets = datasetsToCache
         }
@@ -248,6 +250,11 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
       val setup = buildSetup
       setup.init()
+
+      /**
+       * thread pool for query execution threads
+       */
+      val pool:ExecutorService = Executors.newCachedThreadPool();
 
       def buildAlgo(): AbstractSingleDSBatchAnalyzer = {
         if(config.getAlgorithmName().equals("MMF")) {
@@ -406,9 +413,8 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
               println("query fired: " + queryString)
 
               // submit query to spark through a thread
-              // TODO: use a thread pool
-              new ExecutorThread(query.getQueueID().toString, queryString, query)
-              .start()
+              pool.execute(new ExecutorThread(query.getQueueID().toString, 
+                  queryString, query))
 
               manager.postEvent(new QueryPushedToSparkScheduler(query, cacheUsed))
             }
@@ -429,7 +435,11 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             try {
             	setup.run()
             } catch { case e: Exception => {
-            	e.printStackTrace()
+                // now there are no more queries
+            	e.printStackTrace();
+            	// wait for all executor threads to finish
+            	pool.shutdown;
+            	pool.awaitTermination(2, java.util.concurrent.TimeUnit.MINUTES);
             	return
             }}
           } else {
@@ -442,6 +452,9 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
         }
       }
 
+      /**
+       * Not being used
+       */
       class CacheThread(ds: Dataset) extends java.lang.Thread {
 
         override def run() {
@@ -470,7 +483,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
       }
 
       class ExecutorThread(queueString: String, queryString: String, 
-          query: SingleDatasetQuery) extends java.lang.Thread {
+          query: SingleDatasetQuery) extends java.lang.Runnable {
         
         override def run() {
               sc.setJobGroup(queueString, queryString)

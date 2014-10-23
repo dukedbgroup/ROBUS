@@ -113,6 +113,7 @@ implements SingleDSBatchAnalyzer {
 	protected void initDataStructures(List<SingleDatasetQuery> queries,
 			List<Dataset> cachedDatasets) {
 		num_columns = 0;
+		N = 0;
 		datasetSeen = new ArrayList<String>();
 		List<Integer> queueSeen = new ArrayList<Integer>();
 
@@ -185,9 +186,6 @@ implements SingleDSBatchAnalyzer {
 				}
 			}
 			Allocation S = new Allocation();
-			System.out.println("**Calculating U* for " + i);
-			System.out.println("num_columns: " + num_columns);
-			System.out.println("lookup_table size: " + lookup_table.length);
 			S.Oracle(w, lookup_table, lookup_table_column_indices, columns, 
 					num_columns, N, lookup_table.length, cache_size);
 			// case of single tenant
