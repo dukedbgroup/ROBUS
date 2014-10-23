@@ -125,13 +125,13 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 			return -1;
 		}
 		LPWizard lpw = new LPWizard();
-		lpw.plus("M" + level, "-1.0");	//maximize M_level
+		lpw.plus("M" + level, -1.0);	//maximize M_level
 		System.out.println("total users: " + N + ", saturated: " + saturatedUsers.size());
 		//unsaturated user constraints
 		for(int i=0; i<N; i++) {
 			if(!saturatedUsers.contains(i)) {
 				LPWizardConstraint constraint = lpw.addConstraint(
-						"unsat" + i, 0, ">=");
+						"unsat" + i, 0, "<=");
 				addToUtilConstraint(constraint, i);
 				constraint.plus("M" + level, -u_star[i]);
 				System.out.println("adding: M" + level + " * " + -u_star[i]);
@@ -143,7 +143,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 			List<Integer> users = saturatedUsersPerLevel.get(key);
 			for(Integer user: users) {
 				LPWizardConstraint constraint = lpw.addConstraint("sat" + user, 
-						maxValuePerLevel.get(key) * u_star[user], ">="); 
+						maxValuePerLevel.get(key) * u_star[user], "<="); 
 				addToUtilConstraint(constraint, user);
 			}
 		}
@@ -154,7 +154,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 
 		//>0 constraint
 		addPositiveConstraints(lpw);
-
+//System.out.println("cplex: " + lpw.getLP().convertToCPLEX().toString());	// good for debugging
 		//get max result
 		LPSolution solution = lpw.solve(SOLVER);
 		double value = solution.getDouble("M" + level);
@@ -177,7 +177,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 	private void addPositiveConstraints(LPWizard lpw) {
 		int j = 0;
 		for(Allocation S: Q.getAllocations()) {
-			lpw.addConstraint("pos:x" + j, 0, ">=").plus("x" + j, 1.0);
+			lpw.addConstraint("pos:x" + j, 0, "<=").plus("x" + j, 1.0);
 			System.out.println("Added x" + j + " to positive");
 			j++;
 		}		

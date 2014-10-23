@@ -50,7 +50,7 @@ object Main {
 
     // write execution times
     val writer2 = new PrintWriter(new File(config.getLogDirPath + "/runtimes"))
-    writer2.println("queueID, queryID, queryString, time(s)")
+    writer2.println("queueID, queryID, queryString, time(ms)")
     metrics.getFormattedQueryExecTimes.foreach(t => writer2.println(
         t._1 + "," + t._2 + "," + t._3 + "," + t._4))
     writer2.close()
