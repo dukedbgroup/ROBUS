@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import scpsolver.lpsolver.LinearProgramSolver;
 import scpsolver.lpsolver.SolverFactory;
 import scpsolver.problems.LPSolution;
 import scpsolver.problems.LPWizard;
@@ -27,6 +28,7 @@ import edu.duke.cacheplanner.query.SingleDatasetQuery;
 public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 
 	AllocationDistribution Q;
+	static LinearProgramSolver SOLVER = SolverFactory.newDefault();
 
 	public MMFBatchAnalyzer(List<Dataset> datasets) {
 		super(datasets);
@@ -43,8 +45,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 
 		buildUStars(cacheSize);
 
-		Q = new MergedAllocationDistribution(
-				generateQ(cacheSize));
+		Q = generateQ(cacheSize);
 
 		solveRecursively();
 
@@ -118,15 +119,16 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 			return -1;
 		}
 		LPWizard lpw = new LPWizard();
-		lpw.plus("M" + level, "1.0");	//maximize M_level
-
+		lpw.plus("M" + level, "-1.0");	//maximize M_level
+System.out.println("total users: " + N + ", saturated: " + saturatedUsers.size());
 		//unsaturated user constraints
 		for(int i=0; i<N; i++) {
 			if(!saturatedUsers.contains(i)) {
 				LPWizardConstraint constraint = lpw.addConstraint(
-						"unsat" + i, 0, "<=");
+						"unsat" + i, 0, ">=");
 				addToUtilConstraint(constraint, i);
 				constraint.plus("M" + level, -u_star[i]);
+				System.out.println("adding: M" + level + " * " + -u_star[i]);
 			}
 		}
 
@@ -135,17 +137,17 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 			List<Integer> users = saturatedUsersPerLevel.get(key);
 			for(Integer user: users) {
 				LPWizardConstraint constraint = lpw.addConstraint("sat" + user, 
-						maxValuePerLevel.get(key) * u_star[user], "<="); 
+						maxValuePerLevel.get(key) * u_star[user], ">="); 
 				addToUtilConstraint(constraint, user);
 			}
 		}
 
 		//norm constraint
 		LPWizardConstraint constraint = lpw.addConstraint("norm", 1, "=");
-		addToNormConstraint(constraint);
+		addToNormConstraint(lpw, constraint);
 
 		//get max result
-		LPSolution solution = lpw.solve(SolverFactory.newDefault());
+		LPSolution solution = lpw.solve(SOLVER);
 		double value = solution.getDouble("M" + level);
 
 		//update x
@@ -163,10 +165,13 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 
 	}
 
-	private void addToNormConstraint(LPWizardConstraint constraint) {
+	private void addToNormConstraint(LPWizard lpw, 
+			LPWizardConstraint constraint) {
 		int j = 0;
 		for(Allocation S: Q.getAllocations()) {
+			lpw.plus("x" + j, 0);	// need this in objective
 			constraint.plus("x" + j, 1.0);
+			System.out.println("Added x" + j + " to norm");
 			j++;
 		}		
 	}
@@ -175,6 +180,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		int j = 0;
 		for(Allocation S: Q.getAllocations()) {
 			constraint.plus("x" + j, S.getPrecomputed()[user]);
+			System.out.println("Added x" + j + " * " + S.getPrecomputed()[user]);
 			j++;
 		}
 	}

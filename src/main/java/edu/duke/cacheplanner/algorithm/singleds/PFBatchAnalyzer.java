@@ -37,14 +37,13 @@ public class PFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 
 		buildUStars(cacheSize);
 
-		AllocationDistribution Q = new MergedAllocationDistribution(
-				generateQ(cacheSize));
+		AllocationDistribution Q = generateQ(cacheSize);
 
 		//Algorithm 2 Iteration 
 		int M = Q.size();
+		double[] y = new double[M];
 		for (int i = 0; i < M; i++) {
-			double[] y = new double[M];
-			y = generateRandomDirection(M);
+			y = Q.generateGradientDirection();
 			Q.newtonsMethodPF(y, N);
 		}
 
@@ -57,31 +56,31 @@ public class PFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 
 	/*______________NEW FUNCTIONS FOR PFBatchAnalyzer______________*/
 
-	private static double[] generateRandomDirection(int size) {
-		Random generator = new Random();
-		double negativeSum = 0.0, positiveSum = 0.0;
-		double[] direction = new double[size];
-		for (int i = 0; i < size; i++) {
-			if(generator.nextBoolean()) {
-				direction[i] = generator.nextDouble();
-				positiveSum = positiveSum + direction[i];
-			}
-			else {
-				direction[i] = (-1) * generator.nextDouble();
-				negativeSum = negativeSum - direction[i];
-			}
-		}
-		for (int i = 0; i < size; i++) {
-			if (direction[i] > 0.0) {
-				direction[i] = direction[i] / positiveSum;
-			}
-			else {
-				direction[i] = direction[i] / negativeSum;
-			}
-
-		}
-		return direction;
-	}
+//	private static double[] generateRandomDirection(int size) {
+//		Random generator = new Random();
+//		double negativeSum = 0.0, positiveSum = 0.0;
+//		double[] direction = new double[size];
+//		for (int i = 0; i < size; i++) {
+//			if(generator.nextBoolean()) {
+//				direction[i] = generator.nextDouble();
+//				positiveSum = positiveSum + direction[i];
+//			}
+//			else {
+//				direction[i] = (-1) * generator.nextDouble();
+//				negativeSum = negativeSum - direction[i];
+//			}
+//		}
+//		for (int i = 0; i < size; i++) {
+//			if (direction[i] > 0.0) {
+//				direction[i] = direction[i] / positiveSum;
+//			}
+//			else {
+//				direction[i] = direction[i] / negativeSum;
+//			}
+//
+//		}
+//		return direction;
+//	}
 
 }
 

@@ -12,6 +12,7 @@ import java.util.Random;
 import edu.duke.cacheplanner.algorithm.singleds.allocation.Allocation;
 import edu.duke.cacheplanner.algorithm.singleds.allocation.AllocationDistribution;
 import edu.duke.cacheplanner.algorithm.singleds.allocation.Column;
+import edu.duke.cacheplanner.algorithm.singleds.allocation.MergedAllocationDistribution;
 import edu.duke.cacheplanner.data.Dataset;
 import edu.duke.cacheplanner.query.SingleDatasetQuery;
 
@@ -111,6 +112,7 @@ implements SingleDSBatchAnalyzer {
 	 */
 	protected void initDataStructures(List<SingleDatasetQuery> queries,
 			List<Dataset> cachedDatasets) {
+		datasetSeen = new ArrayList<String>();
 		List<Integer> queueSeen = new ArrayList<Integer>();
 
 		//API forward conversion
@@ -182,6 +184,9 @@ implements SingleDSBatchAnalyzer {
 				}
 			}
 			Allocation S = new Allocation();
+			System.out.println("**Calculating U* for " + i);
+			System.out.println("num_columns: " + num_columns);
+			System.out.println("lookup_table size: " + lookup_table.length);
 			S.Oracle(w, lookup_table, lookup_table_column_indices, columns, 
 					num_columns, N, lookup_table.length, cache_size);
 			// case of single tenant
@@ -219,7 +224,7 @@ implements SingleDSBatchAnalyzer {
 
 	private void addRandomAllocations(double cacheSize,
 			AllocationDistribution Q) {
-		int M = N * num_columns * 4;	// TODO: Tune this setting, need a large number
+		int M = N * num_columns * 10;	// TODO: Tune this setting, need a large number
 		double[][] weights = new double[M][N];
 		Allocation S = new Allocation();
 		weights = generateRandomWeights(M,N);
@@ -277,7 +282,7 @@ implements SingleDSBatchAnalyzer {
 		AllocationDistribution Q = new AllocationDistribution();
 		addSimpleMMFAllocations(cacheSize, Q);
 		addRandomAllocations(cacheSize, Q);
-		return Q;
+		return new MergedAllocationDistribution(Q);
 	}
 
 	/**

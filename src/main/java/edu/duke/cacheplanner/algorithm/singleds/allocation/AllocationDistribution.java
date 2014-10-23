@@ -146,5 +146,25 @@ public class AllocationDistribution {
 		return sumI;
 	}
 
+	public double[] generateGradientDirection() {
+		double[] x_new = new double[allocations.size()];
+		double normalization = 0.0, L = 0.0;
+		for (int i = 0; i < allocations.size(); i++) {
+			if(Math.abs((allocations.get(i)).getCacheProb()) > 0.001) {
+				x_new[i] = (1.0 / (allocations.get(i)).getCacheProb()); 
+				normalization = normalization + x_new[i];
+			}
+			else {
+				x_new[i] = 1.0;
+				normalization = normalization + x_new[i];
+			}
+		}
+		L = (normalization / allocations.size());
+		for (int i = 0; i < allocations.size(); i++) {
+			x_new[i] = x_new[i] - L;
+		}
+		return x_new;
+	}
+
 
 }
