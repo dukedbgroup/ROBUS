@@ -112,6 +112,7 @@ implements SingleDSBatchAnalyzer {
 	 */
 	protected void initDataStructures(List<SingleDatasetQuery> queries,
 			List<Dataset> cachedDatasets) {
+		num_columns = 0;
 		datasetSeen = new ArrayList<String>();
 		List<Integer> queueSeen = new ArrayList<Integer>();
 

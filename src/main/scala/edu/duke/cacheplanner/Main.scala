@@ -27,6 +27,7 @@ object Main {
     println("num queries generated -> " + metrics.getNumQueriesGenerated)
     println("num queries fetched -> " + metrics.getNumQueriesFetched)
     println("num queries submitted -> " + metrics.getNumQueriesSubmitted)
+    println("num queries finished -> " + metrics.getNumQueriesFinished)
     println("mean query exec times -> ")
     metrics.getMeanExecTimePerQueue.foreach(println)
     println("num queries that used cache -> ")

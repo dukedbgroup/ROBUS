@@ -31,6 +31,8 @@ extends Listener {
   var numQueriesFetched: Long = 0L
   // count of number of queries submitted to Spark
   var numQueriesSubmitted: Long = 0L
+  // count of number of queries finished
+  var numQueriesFinished: Long = 0L
   // count of number of queries submitted to Spark per queue
   var numQueriesSubmittedPerQueue = scala.collection.mutable.Map[Int, Long]()
   // count of number of queries that used cached data per queue
@@ -84,14 +86,15 @@ extends Listener {
 
     // HACK: assuming singledatasetquery in order to fetch dataset
     val query = event.query.asInstanceOf[SingleDatasetQuery]
-    val count = queriesPerDataset.getOrElse(query.getDataset(), 0L)
-    queriesPerDataset(query.getDataset()) = count + 1
+    val count = queriesPerDataset.getOrElse(query.getDataset, 0L)
+    queriesPerDataset(query.getDataset) = count + 1
   }
 
   override def onQueryFinished(event: QueryFinished) {
     timeLastQueryFinished = System.currentTimeMillis()
-	val startTime = queryExecTimes(event.query)
+    val startTime = queryExecTimes(event.query)
     queryExecTimes(event.query) = System.currentTimeMillis() - startTime    
+    numQueriesFinished = numQueriesFinished + 1
   }
 
   override def onDatasetLoadedToCache(event: DatasetLoadedToCache) {
@@ -227,6 +230,10 @@ extends Listener {
 
   def getNumQueriesSubmitted(): Long = {
     numQueriesSubmitted
+  }
+
+  def getNumQueriesFinished(): Long = {
+    numQueriesFinished
   }
 
   def getNumQueriesCached(): List[(Int, Long)] = {

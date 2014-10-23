@@ -94,8 +94,6 @@ public class Allocation {
 			if (weighted_sums[i] > best_weighted_sum) {
 				for (int j = 0; j < num_columns; j++) {
 					if (table_indices[i][j]) {
-						System.out.println("**debug: (" + i + "," + j + ") " + table_indices[i][j] + "; " + columns[j]);
-						columns[j].print();
 						size = size + (columns[j]).getSize();
 					}
 				}
