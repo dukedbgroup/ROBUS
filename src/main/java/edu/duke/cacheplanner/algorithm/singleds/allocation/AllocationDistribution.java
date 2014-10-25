@@ -77,21 +77,19 @@ public class AllocationDistribution {
 
 	//Utility[from this allocation][to this user]
 	public void newtonsMethodPF(double[] y, int N) {
-		int iterations = 5;
-		double r = 0.0, xSum = 0.0;
+		int maxIterations = N*10;
+		double r = 0.0, convergeConstant = 0.001;
 
-		for (int t = 0; t < iterations; t++) {
-			r = r - (functionDerivativePF(y, N, r) / functionSecondDerivativePF(y, N, r));
+		for (int t = 0; t < maxIterations; t++) {
+			double rprime = r - (functionDerivativePF(y, N, r) / functionSecondDerivativePF(y, N, r));
+			if (Math.abs(rprime - r) < convergeConstant) {
+				r = rprime;
+				break;
+			}
+			r = rprime;
 		}
 		for (int s = 0; s < allocations.size(); s++) {
 			(allocations.get(s)).setCacheProb((r * y[s]) + (allocations.get(s)).getCacheProb());
-			if ((allocations.get(s)).getCacheProb() < 0.0) {
-				(allocations.get(s)).setCacheProb(0.0);
-			}
-			xSum = xSum + (allocations.get(s)).getCacheProb();
-		}
-		for (int s = 0; s < allocations.size(); s++) {
-			(allocations.get(s)).setCacheProb((allocations.get(s)).getCacheProb() / xSum);
 		}
 	}
 
@@ -107,15 +105,25 @@ public class AllocationDistribution {
 			}
 			sumNumeratorQ = (-1) * Math.pow(sumNumeratorQ, 2.0);
 			sumDenominatorQ = Math.pow(sumDenominatorQ, 2.0);
-			if (Math.abs(sumDenominatorQ) <= 0.001) {
-				sumDenominatorQ = sumDenominatorQ + 0.01;
+			if (Math.abs(sumDenominatorQ) <= 0.0001) {
+				if (sumDenominatorQ > 0) {
+					sumDenominatorQ = sumDenominatorQ + 0.0001;
+				}
+				else {
+					sumDenominatorQ = sumDenominatorQ - 0.0001;
+				}
 			}
 			sumI = sumI + (sumNumeratorQ / sumDenominatorQ);
 			sumDenominatorQ = 0.0;
 			sumNumeratorQ = 0.0;
 		}
-		if (Math.abs(sumI) <= 0.001) {
-			sumI = sumI + 0.01;
+		if (Math.abs(sumI) <= 0.0001) {
+			if (sumI > 0) {
+				sumI = sumI + 0.0001;
+			}
+			else {
+				sumI = sumI + 0.0001;
+			}
 		}
 		return sumI;
 
@@ -124,10 +132,10 @@ public class AllocationDistribution {
 	private double functionDerivativePF(double[] y, int n,
 			double r) {
 
-		double sumQ = 0.0;
+		double sumY = 0.0, result = 0.0;
 		double sumI = 0.0, sumNumeratorQ = 0.0, sumDenominatorQ = 0.0;
 		for (int s = 0; s < allocations.size(); s++) {
-			sumQ = sumQ + (r * y[s]);
+			sumY = sumY + y[s];
 		}
 
 		for (int i = 0; i < n; i++) {
@@ -136,35 +144,79 @@ public class AllocationDistribution {
 				sumDenominatorQ = sumDenominatorQ + ((current.getCacheProb() + (r * y[s])) * current.getPrecomputed()[i]);
 				sumNumeratorQ = sumNumeratorQ + (y[s] * current.getPrecomputed()[i]);
 			}
-			if (Math.abs(sumDenominatorQ) <= 0.001) {
-				sumDenominatorQ = sumDenominatorQ + 0.01;
+			if (Math.abs(sumDenominatorQ) <= 0.0001) {
+				if (sumDenominatorQ > 0) {
+					sumDenominatorQ = sumDenominatorQ + 0.0001;
+				}
+				else {
+					sumDenominatorQ = sumDenominatorQ - 0.0001;
+				}
 			}
 			sumI = sumI + (sumNumeratorQ / sumDenominatorQ);
+			result = sumI - (n * sumY); 
 			sumDenominatorQ = 0.0;
 			sumNumeratorQ = 0.0;
 		}
-		return sumI;
+		return result;
 	}
 
-	public double[] generateGradientDirection() {
+	public double[] generateGradientDirection(int N) {
 		double[] x_new = new double[allocations.size()];
-		double normalization = 0.0, L = 0.0;
+		double L = N;
 		for (int i = 0; i < allocations.size(); i++) {
-			if(Math.abs((allocations.get(i)).getCacheProb()) > 0.001) {
+			if(Math.abs((allocations.get(i)).getCacheProb()) > 0.0001) {
 				x_new[i] = (1.0 / (allocations.get(i)).getCacheProb()); 
-				normalization = normalization + x_new[i];
 			}
 			else {
-				x_new[i] = 1.0;
-				normalization = normalization + x_new[i];
+				if ((allocations.get(i)).getCacheProb() > 0.0) {
+					x_new[i] = (1.0 / (0.0001 + (allocations.get(i)).getCacheProb()));
+				}
+				else {
+					x_new[i] = (1.0 / (-0.0001 + (allocations.get(i)).getCacheProb()));
+				}
+				
 			}
 		}
-		L = (normalization / allocations.size());
 		for (int i = 0; i < allocations.size(); i++) {
 			x_new[i] = x_new[i] - L;
 		}
 		return x_new;
 	}
 
+	public void normalize() {
+		double normalization = 0.0;
+		for (int i = 0; i < allocations.size(); i++) {
+			normalization = normalization + (allocations.get(i)).getCacheProb();
+		}
+		for (int i = 0; i < allocations.size(); i++) {
+			(allocations.get(i)).setCacheProb((allocations.get(i)).getCacheProb() / normalization);
+		}
+	}
+
+	public void projectNonNegative() {
+		for (int s = 0; s < allocations.size(); s++) {
+			if ((allocations.get(s)).getCacheProb() < 0.0) {
+				(allocations.get(s)).setCacheProb(0.0);
+			}
+		}
+	}
+
+	public boolean convergedFrom(AllocationDistribution Q) {
+		boolean flag = true;
+		int index = -1;
+		double convergeConstant = 0.001;
+		for (int s = 0; s < allocations.size(); s++) {
+			index = Q.getAllocations().indexOf(allocations.get(s));
+			if (index >= 0) {
+				if (Math.abs((allocations.get(s)).getCacheProb() - (Q.item(index)).getCacheProb()) > convergeConstant) {
+					flag = false;
+				}
+			}
+			else {
+				flag = false;
+			}
+		}
+		return flag;
+	}
 
 }
