@@ -37,6 +37,10 @@ public class Allocation {
 			(this.columns).add(copyThis.item(i));
 		}
 		this.cacheProb = copyThis.getCacheProb();
+		precomputed = new double[copyThis.precomputed.length];
+		for (int i = 0; i < precomputed.length; i++) {
+			this.precomputed[i] = copyThis.precomputed[i];
+		}
 	}
 
 	// // PUBLIC METHODS ////

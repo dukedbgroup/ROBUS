@@ -47,18 +47,18 @@ public class PFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		for (int i = 0; i < maxIterations; i++) {
 			AllocationDistribution Qprime = new AllocationDistribution();
 			Qprime.copy(Q);
-			
+
 			y = Qprime.generateGradientDirection(N);
 			Qprime.newtonsMethodPF(y, N);
 			Qprime.projectNonNegative();
-			
+
 			if(Qprime.convergedFrom(Q)) {
 				Q.copy(Qprime);
 				break;
 			}
 			Q.copy(Qprime);
 		}
-		
+
 		Q.normalize();
 
 //		for (int i = 0; i < M; i++) {
