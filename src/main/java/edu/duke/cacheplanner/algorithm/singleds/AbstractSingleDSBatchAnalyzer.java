@@ -202,6 +202,25 @@ implements SingleDSBatchAnalyzer {
 		}
 	}
 
+	// generate weights on a binary hypercube
+	private double[][] generateHypercubeWeights(int sizeWeight) {
+		double[][] w = new double[(1 << sizeWeight)-1][sizeWeight];
+		double sumWeights = 0;
+		for(int i = 0; i < w.length; i++) {
+			sumWeights = 0;
+			for(int j = 0; j < sizeWeight; j++) {
+				if((1 << j & (i+1)) != 0) {	//skipping 0
+					w[i][j] = 1.0 / u_star[j];
+					sumWeights += w[i][j];
+				}
+			}
+			for(int j = 0; j < sizeWeight; j++) {
+				w[i][j] /= sumWeights;
+			}
+		}
+		return w;
+	}
+
 	private double[][] generateRandomWeights(int numWeights, int sizeWeight) {
 		double[][] w = new double[numWeights][sizeWeight];
 		double normalization = 0.0, temp = 0.0;
@@ -219,6 +238,19 @@ implements SingleDSBatchAnalyzer {
 			normalization = 0.0;
 		}
 		return w;
+	}
+
+	private void addHypercubeAllocations(double cacheSize, 
+			AllocationDistribution Q) {
+		double[][] weights = generateHypercubeWeights(N);
+		Allocation S = new Allocation();
+		for(int i=0; i<weights.length; i++) {
+			S = new Allocation();
+			S.Oracle(weights[i], lookup_table, lookup_table_column_indices, columns,
+					num_columns, N, lookup_table.length, cacheSize);
+			S.setCacheProb(1.0 / weights.length);
+			Q.addAllocation(S);
+		}
 	}
 
 	private void addRandomAllocations(double cacheSize,
@@ -241,7 +273,7 @@ implements SingleDSBatchAnalyzer {
 		//Algorithm 1 Initialization
 		double [] w = new double [N];
 		double epsilon = 0.1;
-		double T = (4.0) * (N) * ((Math.log(N/(epsilon * epsilon))) / (Math.log(2.0)));
+		double T = (4.0) * (N * N) * ((Math.log(N/(epsilon * epsilon))) / (Math.log(2.0)));
 		for (int i = 0; i < N; i++) {
 			w[i] = (1.0 / (double) N);
 		}
@@ -280,7 +312,7 @@ implements SingleDSBatchAnalyzer {
 	protected AllocationDistribution generateQ(double cacheSize) {
 		AllocationDistribution Q = new AllocationDistribution();
 		addSimpleMMFAllocations(cacheSize, Q);
-		addRandomAllocations(cacheSize, Q);
+		addHypercubeAllocations(cacheSize, Q);
 		return new MergedAllocationDistribution(Q);
 	}
 
