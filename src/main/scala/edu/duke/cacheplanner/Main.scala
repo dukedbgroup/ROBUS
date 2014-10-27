@@ -43,9 +43,9 @@ object Main {
     writer.println("histogram on datasets loaded to cache -> ")
     metrics.getDatasetLoadHistogram.foreach(writer.println)
     writer.println("histogram on datasets retained in cache -> ")
-    metrics.getDatasetLoadHistogram.foreach(writer.println)
+    metrics.getDatasetRetainHistogram.foreach(writer.println)
     writer.println("histogram on datasets unloaded from cache -> ")
-    metrics.getDatasetLoadHistogram.foreach(writer.println)
+    metrics.getDatasetUnloadHistogram.foreach(writer.println)
     writer.close()
 
     // write execution times

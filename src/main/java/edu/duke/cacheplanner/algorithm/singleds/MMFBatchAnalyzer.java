@@ -45,7 +45,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		buildUStars(cacheSize);
 
 		Q = generateQ(cacheSize);
-		Q.print();
+//		Q.print();
 
 		solveRecursively();
 
@@ -127,7 +127,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		}
 		LPWizard lpw = new LPWizard();
 		lpw.plus("M" + level, -1.0);	//maximize M_level
-		System.out.println("total users: " + N + ", saturated: " + saturatedUsers.size());
+//		System.out.println("total users: " + N + ", saturated: " + saturatedUsers.size());
 		//unsaturated user constraints
 		for(int i=0; i<N; i++) {
 			if(!saturatedUsers.contains(i)) {
@@ -135,7 +135,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 						"unsat" + i, 0, "<=");
 				addToUtilConstraint(constraint, i);
 				constraint.plus("M" + level, -u_star[i]);
-				System.out.println("adding: M" + level + " * " + -u_star[i]);
+//				System.out.println("adding: M" + level + " * " + -u_star[i]);
 			}
 		}
 
@@ -163,10 +163,10 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		//update x
 		if(updateQ) {
 			int j=0;
-			System.out.println("***Allocation at level " + level + " = " + value);
+//			System.out.println("***Allocation at level " + level + " = " + value);
 			for(Allocation S: Q.getAllocations()) {
 				S.setCacheProb(solution.getDouble("x" + j));
-				System.out.println(j + ": " + S.getCacheProb());
+//				System.out.println(j + ": " + S.getCacheProb());
 				j++;
 			}
 		}
