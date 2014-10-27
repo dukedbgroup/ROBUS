@@ -38,6 +38,7 @@ public class PFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		buildUStars(cacheSize);
 
 		AllocationDistribution Q = generateQ(cacheSize);
+		Q.print();
 
 		//Algorithm 2 Iteration 
 		int M = Q.size();

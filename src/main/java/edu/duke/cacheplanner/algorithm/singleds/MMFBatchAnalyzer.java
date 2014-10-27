@@ -45,6 +45,7 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		buildUStars(cacheSize);
 
 		Q = generateQ(cacheSize);
+		Q.print();
 
 		solveRecursively();
 
@@ -178,7 +179,6 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		int j = 0;
 		for(Allocation S: Q.getAllocations()) {
 			lpw.addConstraint("pos:x" + j, 0, "<=").plus("x" + j, 1.0);
-			System.out.println("Added x" + j + " to positive");
 			j++;
 		}		
 	}
@@ -189,7 +189,6 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		for(Allocation S: Q.getAllocations()) {
 			lpw.plus("x" + j, 0);	// need this in objective
 			constraint.plus("x" + j, 1.0);
-			System.out.println("Added x" + j + " to norm");
 			j++;
 		}		
 	}
@@ -198,7 +197,6 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 		int j = 0;
 		for(Allocation S: Q.getAllocations()) {
 			constraint.plus("x" + j, S.getPrecomputed()[user]);
-			System.out.println("Added x" + j + " * " + S.getPrecomputed()[user]);
 			j++;
 		}
 	}
