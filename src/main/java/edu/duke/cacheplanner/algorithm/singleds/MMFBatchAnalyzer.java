@@ -46,6 +46,9 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 
 		Q = generateQ(cacheSize);
 //		Q.print();
+		if(Q.size() == 0) {
+			return new ArrayList<Dataset>();
+		}
 
 		solveRecursively();
 

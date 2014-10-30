@@ -188,10 +188,6 @@ implements SingleDSBatchAnalyzer {
 			Allocation S = new Allocation();
 			S.Oracle(w, lookup_table, lookup_table_column_indices, columns, 
 					num_columns, N, lookup_table.length, cache_size);
-			// case of single tenant
-//			if(N==1) {
-//				return getCacheAllocation(queries, datasetSeen, columns, S);
-//			}
 			double utility = 0.0;
 			for (int l = 0; l < num_columns; l++) {
 				if (S.contains(columns[l])) {
@@ -255,7 +251,10 @@ implements SingleDSBatchAnalyzer {
 
 	private void addRandomAllocations(double cacheSize,
 			AllocationDistribution Q) {
-		int M = N * num_columns * 10;	// TODO: Tune this setting, need a large number
+		int M = 1;
+		if(N > 1) {
+			M = (int) (4 * N * N * Math.log(N) / Math.log(2.0));	// TODO: Tune this setting, need a large number
+		}
 		double[][] weights = new double[M][N];
 		Allocation S = new Allocation();
 		weights = generateRandomWeights(M,N);
@@ -273,7 +272,10 @@ implements SingleDSBatchAnalyzer {
 		//Algorithm 1 Initialization
 		double [] w = new double [N];
 		double epsilon = 0.1;
-		double T = (4.0) * (N * N) * ((Math.log(N/(epsilon * epsilon))) / (Math.log(2.0)));
+		double T = 1.0;
+		if(N > 1) {
+			T = (4.0) * (N * N) * Math.log(N) / Math.log(2.0) / (epsilon * epsilon);
+		}
 		for (int i = 0; i < N; i++) {
 			w[i] = (1.0 / (double) N);
 		}
@@ -312,7 +314,8 @@ implements SingleDSBatchAnalyzer {
 	protected AllocationDistribution generateQ(double cacheSize) {
 		AllocationDistribution Q = new AllocationDistribution();
 		addSimpleMMFAllocations(cacheSize, Q);
-		addHypercubeAllocations(cacheSize, Q);
+//		addHypercubeAllocations(cacheSize, Q);
+		addRandomAllocations(cacheSize, Q);
 		return new MergedAllocationDistribution(Q);
 	}
 

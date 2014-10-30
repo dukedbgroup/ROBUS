@@ -3,12 +3,11 @@
  */
 package edu.duke.cacheplanner.algorithm.singleds;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import edu.duke.cacheplanner.algorithm.singleds.allocation.Allocation;
 import edu.duke.cacheplanner.algorithm.singleds.allocation.AllocationDistribution;
-import edu.duke.cacheplanner.algorithm.singleds.allocation.MergedAllocationDistribution;
 import edu.duke.cacheplanner.data.Dataset;
 import edu.duke.cacheplanner.query.SingleDatasetQuery;
 
@@ -39,6 +38,9 @@ public class PFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 
 		AllocationDistribution Q = generateQ(cacheSize);
 //		Q.print();
+		if(Q.size() == 0) {
+			return new ArrayList<Dataset>();
+		}
 
 		//Algorithm 2 Iteration 
 		int M = Q.size();

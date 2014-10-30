@@ -86,7 +86,7 @@ public class Allocation {
 
 		double size = 0.0;
 		double best_weighted_sum = 0.0;
-		int best_allocation_index = 0;
+		int best_allocation_index = -1;
 		double[] weighted_sums = new double[table_size];
 		double[] unweighted_sums = new double[table_size];
 		for (int i = 0; i < table_size; i++) {
@@ -110,12 +110,14 @@ public class Allocation {
 		}
 
 		precomputed = new double[num_users];
-		for (int j = 0; j < num_users; j++) {
-			precomputed[j] = lookup_table[best_allocation_index][j];
-		}
-		for (int i = 0; i < num_columns; i++) {
-			if (table_indices[best_allocation_index][i]) {
-				(this.columns).add(columns[i]);
+		if(best_allocation_index >= 0) {
+			for (int j = 0; j < num_users; j++) {
+				precomputed[j] = lookup_table[best_allocation_index][j];
+			}
+			for (int i = 0; i < num_columns; i++) {
+				if (table_indices[best_allocation_index][i]) {
+					(this.columns).add(columns[i]);
+				}
 			}
 		}
 	}
