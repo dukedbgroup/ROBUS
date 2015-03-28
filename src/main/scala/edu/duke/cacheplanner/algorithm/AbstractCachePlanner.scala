@@ -35,7 +35,7 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
    * TODO: read all the hardcoded parameters from a config file
    */
   def initSparkContext: SparkContext = {
-    val conf = new SparkConf().setAppName("cacheplanner").setMaster("spark://yahoo047:7077")
+    val conf = new SparkConf().setAppName("cacheplanner").setMaster(System.getenv("MASTER"))
     conf.setSparkHome(System.getenv("SPARK_HOME"))
     conf.setJars(Seq("target/scala-2.10/CachePlanner-assembly-0.1.jar"))
     conf.set("spark.scheduler.mode", "FAIR")
