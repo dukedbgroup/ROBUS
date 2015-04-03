@@ -43,15 +43,17 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
     // Also assuming weights and min shares match. 
     // Ideally there should be a single config file
     conf.set("spark.scheduler.allocation.file", "conf/internal.xml")
-    conf.set("spark.executor.memory", "4096m")	// 4GB per node
+    conf.set("spark.executor.memory", "8192m")	// 8GB per node
     // this fraction makes cache space about 2GB, but we are going to use only 1GB for algorithms
-    conf.set("spark.storage.memoryFraction", "0.0356")
+    conf.set("spark.storage.memoryFraction", "0.1")
     conf.set("spark.akka.frameSize", "512")
 
-    conf.set("spark.eventLog.enabled", "true")
-	conf.set("spark.eventLog.dir", "spark_event_log")
+    conf.set("spark.io.compression.codec", "org.apache.spark.io.LZ4CompressionCodec")
 
-	val sc = new SparkContext(conf)
+    conf.set("spark.eventLog.enabled", "true")
+    conf.set("spark.eventLog.dir", "spark_event_log")
+
+    val sc = new SparkContext(conf)
     sc
   }
 
