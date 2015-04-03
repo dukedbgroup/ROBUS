@@ -5,9 +5,9 @@ import AssemblyKeys._
 
 object CachePlannerBuild extends Build {
 
-  val SPARK_VERSION = "1.0.1"
+  val SPARK_VERSION = "1.1.1"
 
-  val SCALA_VERSION = "2.10.4"
+  val SCALA_VERSION = "2.10.3"
 
   val HADOOP_VERSION = "1.2.1"
 

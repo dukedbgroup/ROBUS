@@ -120,6 +120,12 @@ extends Listener {
     return totalTime
   }
 
+  def getTotalExecTime(): Long = {
+    var totalTime = 0L
+    queryExecTimes.foreach(t => totalTime += t._2)
+    return totalTime
+  }
+
   // return (queueID, queryID, queryString, execTime)
   def getFormattedQueryExecTimes: List[(Int, Int, String, Long)] = {
     queryExecTimes.toList.map {t => (t._1.getQueueID, t._1.getQueryID, 
