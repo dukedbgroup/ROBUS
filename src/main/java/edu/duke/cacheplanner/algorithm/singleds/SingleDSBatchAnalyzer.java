@@ -6,7 +6,7 @@ package edu.duke.cacheplanner.algorithm.singleds;
 import java.util.List;
 
 import edu.duke.cacheplanner.data.Dataset;
-import edu.duke.cacheplanner.query.SingleDatasetQuery;
+import edu.duke.cacheplanner.query.AbstractQuery;
 
 /**
  * @author mayuresh
@@ -22,7 +22,7 @@ public interface SingleDSBatchAnalyzer {
 	 * Returns:
 	 * List of datasets recommended for caching for the batch
 	 */
-	public List<Dataset> analyzeBatch(List<SingleDatasetQuery> queries, 
+	public List<Dataset> analyzeBatch(List<AbstractQuery> queries, 
 	    List<Dataset> cachedDatasets, 
 	    double cacheSize);
 }

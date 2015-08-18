@@ -18,7 +18,9 @@ import edu.duke.cacheplanner.data.Dataset
 import edu.duke.cacheplanner.data.QueryDistribution
 import edu.duke.cacheplanner.listener._
 import edu.duke.cacheplanner.query.QueryUtil
+import edu.duke.cacheplanner.query.AbstractQuery
 import edu.duke.cacheplanner.query.SingleDatasetQuery
+import edu.duke.cacheplanner.query.TPCHQuery
 import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.algorithm.singleds.AbstractSingleDSBatchAnalyzer
 
@@ -28,6 +30,7 @@ import edu.duke.cacheplanner.algorithm.singleds.AbstractSingleDSBatchAnalyzer
  */
 class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager, 
     queues: java.util.List[ExternalQueue], data: java.util.List[Dataset], 
+    tpchData: java.util.List[Dataset], 
     distribution: QueryDistribution, config: ConfigManager) extends 
     AbstractCachePlanner(setup, manager, queues, data, config) {
 
@@ -116,7 +119,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             throw new Exception("No more queries remained to process.")
           }
           var filteredBatch = 
-            scala.collection.mutable.ListBuffer[SingleDatasetQuery]()
+            scala.collection.mutable.ListBuffer[AbstractQuery]()
           batch.foreach(t => if(t.getQueueID == luckyQueue) {
             filteredBatch.add(t)
           })
@@ -153,11 +156,11 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             throw new Exception("No more queries remained to process.")
           }
           var batchPerQueue = 
-            scala.collection.mutable.Map[Int, scala.collection.mutable.ListBuffer[SingleDatasetQuery]]()
+            scala.collection.mutable.Map[Int, scala.collection.mutable.ListBuffer[AbstractQuery]]()
           batch.foreach(q => {
             val queue = q.getQueueID;
             val current = batchPerQueue.getOrElse(queue,
-                scala.collection.mutable.ListBuffer[SingleDatasetQuery]());
+                scala.collection.mutable.ListBuffer[AbstractQuery]());
             current.add(q)
             batchPerQueue(queue) = current
           })
@@ -258,9 +261,9 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
       def buildAlgo(): AbstractSingleDSBatchAnalyzer = {
         if(config.getAlgorithmName().equals("MMF")) {
-          return new MMFBatchAnalyzer(data)
+          return new MMFBatchAnalyzer(data, tpchData)
         } else {
-          return new PFBatchAnalyzer(data)
+          return new PFBatchAnalyzer(data, tpchData)
         }
       }
 
@@ -292,13 +295,13 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
       /**
        * Returns next batch compiled from all queues
        */
-      def fetchNextBatch(): List[SingleDatasetQuery] = {
+      def fetchNextBatch(): List[AbstractQuery] = {
             var batch = 
-              scala.collection.mutable.ListBuffer[SingleDatasetQuery]()
+              scala.collection.mutable.ListBuffer[AbstractQuery]()
             for (queue <- externalQueues.toList) {
               queue.fetchABatch().toList.foreach(
                   q =>  {
-                    batch += q.asInstanceOf[SingleDatasetQuery]
+                    batch += q
                   })
             }
             return batch.toList
@@ -309,9 +312,9 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
        * and a given cache size.
        * Returns new allocation i.e. a list of datasets to be cached
        */
-      def runAlgorithm(batch: List[SingleDatasetQuery], 
+      def runAlgorithm(batch: List[AbstractQuery], 
           cachedDatasets: List[Dataset], cacheSize: Double): List[Dataset] = {
-            val javaBatch: java.util.List[SingleDatasetQuery] = batch
+            val javaBatch: java.util.List[AbstractQuery] = batch
             val javaCachedDatasets: java.util.List[Dataset] = cachedDatasets
             val datasetsToCache : List[Dataset] = algo.analyzeBatch(
                 javaBatch, javaCachedDatasets, cacheSize).toList      
@@ -323,7 +326,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
        * a list of datasets that should be in cache is given. 
        * It first changes the state of cache and then runs the queries. 
        */
-      def scheduleBatch(batch: List[SingleDatasetQuery], 
+      def scheduleBatch(batch: List[AbstractQuery], 
           cachedDatasets: List[Dataset], datasetsToCache: List[Dataset]) = {
             println("cached from previous")
             cachedDatasets.foreach(c => println(c.getName()))
@@ -402,13 +405,27 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             for(query <- batch) {
               var queryString: String = ""
               var cacheUsed: Double = 0
-              if(datasetsToCache.contains(query.getDataset())) {	//datasetsToCache are already cached at this time
-                println("use cache table: " + query.getDataset())
-                queryString = query.toHiveQL(true)
-                cacheUsed = query.getScanBenefit()
+              if(query.isInstanceOf[TPCHQuery]) {
+                if(datasetsToCache.contains(tpchData.get(0))) {
+                  queryString = query.toHiveQL(true)
+                  for(i <- 0 to tpchData.size()-1) {
+                    println("use cache table: " + tpchData.get(i))
+                    cacheUsed += tpchData.get(i).getEstimatedSize()
+                  }
+                } else {
+                  queryString = query.toHiveQL(false)
+                  println("use external table: tpch")
+                }
               } else {
-                println("use external table: " + query.getDataset())
-                queryString = query.toHiveQL(false)
+                val q = query.asInstanceOf[SingleDatasetQuery]
+                if(datasetsToCache.contains(q.getDataset())) {	//datasetsToCache are already cached at this time
+                  println("use cache table: " + q.getDataset())
+                  queryString = q.toHiveQL(true)
+                  cacheUsed = q.getScanBenefit()
+                } else {
+                  println("use external table: " + q.getDataset())
+                  queryString = q.toHiveQL(false)
+                }
               }
               println("query fired: " + queryString)
 
@@ -483,7 +500,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
       }
 
       class ExecutorThread(queueString: String, queryString: String, 
-          query: SingleDatasetQuery) extends java.lang.Runnable {
+          query: AbstractQuery) extends java.lang.Runnable {
         
         override def run() {
               sc.setJobGroup(queueString, queryString)

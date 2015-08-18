@@ -9,6 +9,7 @@ import edu.duke.cacheplanner.generator.AbstractQueryGenerator
 import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.Context
 import edu.duke.cacheplanner.generator.SingleTableQueryGenerator
+import edu.duke.cacheplanner.generator.TPCHQueryGenerator
 import edu.duke.cacheplanner.algorithm._
 import scala.reflect.internal.util
 import edu.duke.cacheplanner.query.AbstractQuery
@@ -17,6 +18,7 @@ import scala.collection.mutable.Map
 import edu.duke.cacheplanner.generator.ReplayQueryGenerator
 import edu.duke.cacheplanner.data.QueueDistribution
 import edu.duke.cacheplanner.data.DatasetDistribution
+import edu.duke.cacheplanner.data.TPCHQueueDistribution
 
 object Factory {
   val configManager = initConfigManager
@@ -30,6 +32,8 @@ object Factory {
   val queries = initQueries
   val generators = initGenerators
   val cachePlanner = initCachePlanner
+
+  val tpchDatasets = initTPCHDatasets
   
   def initConfigManager : ConfigManager = {
     new ConfigManager(Parser.parseConfig("conf/config.xml"))
@@ -47,11 +51,20 @@ object Factory {
   def initDatasets: java.util.List[Dataset] = {
     Parser.parseDataSets("conf/dataset.xml")
   }
-  
+
+  def initTPCHDatasets: java.util.List[Dataset] = {
+    Parser.parseDataSets("conf/TPCHDataset.xml")
+  }
+
   def initDistribution: QueryDistribution = {
     val queryDistribution = new java.util.HashMap[Integer, QueueDistribution]()
+    val tpchQueryDistribution = new java.util.HashMap[Integer, TPCHQueueDistribution]()
+    val tpchQueueDistribution = Parser.parseTPCHDistribution("conf/TPCHQueries.xml")
     for(queue <- externalQueues) {
       val rankFileName = queue.getRankFile
+      if(rankFileName == "tpch") {
+        tpchQueryDistribution.put(queue.getId(), tpchQueueDistribution);
+      } else {
       val ranks = Parser.parseZipfRank("conf/" + rankFileName + ".xml")
       val queueDistribution = new java.util.HashMap[String, DatasetDistribution]()
       var rankSum = 0d
@@ -73,8 +86,11 @@ object Factory {
       queueDistribution.foreach(t => rankSum += t._2.getDataProb)
       print(rankSum)
       queryDistribution.put(queue.getId(), new QueueDistribution(queueDistribution))
+      }
     }
-    return new QueryDistribution(queryDistribution)
+    val distribution = new QueryDistribution(queryDistribution)
+    distribution.setTPCHQueryDistribution(tpchQueryDistribution)
+    return distribution
   }
   
   def initQueries: Map[Int, java.util.Queue[AbstractQuery]] = {
@@ -116,8 +132,13 @@ object Factory {
       AbstractQueryGenerator = {
     val mode = configManager.getGeneratorMode()
     mode match {
-        case "singleTable" => return new SingleTableQueryGenerator(lambda, 
-            queueId, name, meanColNum, stdColNum, grouping)
+        case "singleTable" =>  
+		if(distribution.getQueueDistribution(queueId) == None) {
+			return new TPCHQueryGenerator(lambda, queueId, name)
+		} else {
+			return new SingleTableQueryGenerator(lambda, queueId, name, meanColNum, stdColNum, grouping)
+		}
+	
         case "replay" => return new ReplayQueryGenerator(lambda, queueId, name, 
             queries(queueId))
     }
@@ -133,12 +154,16 @@ object Factory {
 //      case "offline" => return new OfflineCachePlannerColumn(true, listenerManager, 
 //          externalQueues, datasets, distribution, configManager)
       case _ => return new OnlineCachePlannerSingleDS(true, listenerManager, 
-          externalQueues, datasets, distribution, configManager)
+          externalQueues, datasets, tpchDatasets, distribution, configManager)
     }
   }
 
   def getDatasets() : java.util.List[Dataset] = {
     return datasets
+  }
+
+  def getTPCHDatasets() : java.util.List[Dataset] = {
+    return tpchDatasets
   }
 
   def getQueues(): java.util.List[ExternalQueue] = {

@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class QueryDistribution {
   private Map<Integer, QueueDistribution> queryDistribution;
+  private Map<Integer, TPCHQueueDistribution> tpchQueryDistribution;
   
   public QueryDistribution(Map<Integer, QueueDistribution> map) {
 	  queryDistribution = map;
@@ -25,7 +26,19 @@ public class QueryDistribution {
   public Map<String, Double> getColDistributionMap(int queueId, String dataName) {
 	  return queryDistribution.get(queueId).getQueueDistributionMap().get(dataName).getColumnDistribution();
   }
+
+  public TPCHQueueDistribution getTPCHQueueDistribution(int queueId) {
+	return tpchQueryDistribution.get(queueId);
+  }
+
+  public void setTPCHQueryDistribution(Map<Integer, TPCHQueueDistribution> distribution) {
+	tpchQueryDistribution = distribution;
+  }
   
+  public QueueDistribution getQueueDistribution(int queueId) {
+	return queryDistribution.get(queueId);
+  }
+
   public Map<String, DatasetDistribution> getQueueDistributionMap(int queueId) {
 	  return queryDistribution.get(queueId).getQueueDistributionMap();
   }

@@ -63,4 +63,11 @@ public class ConfigManager {
 	public Long getWorkloadTime() {
 		return Long.parseLong(config.get("cacheplanner.workloadtime"));
 	}
+
+	public boolean getUseTPCH() {
+		if(config.get("cacheplanner.usetpch").equals("true")) {
+			return true;
+		}
+		return false;
+	}
 }

@@ -16,7 +16,7 @@ import scpsolver.problems.LPWizardConstraint;
 import edu.duke.cacheplanner.algorithm.singleds.allocation.Allocation;
 import edu.duke.cacheplanner.algorithm.singleds.allocation.AllocationDistribution;
 import edu.duke.cacheplanner.data.Dataset;
-import edu.duke.cacheplanner.query.SingleDatasetQuery;
+import edu.duke.cacheplanner.query.AbstractQuery;
 
 /**
  * Heuristic algorithm to find an allocation that is max-min fair in terms of 
@@ -29,15 +29,15 @@ public class MMFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 	AllocationDistribution Q;
 	static LinearProgramSolver SOLVER = SolverFactory.newDefault();
 
-	public MMFBatchAnalyzer(List<Dataset> datasets) {
-		super(datasets);
+	public MMFBatchAnalyzer(List<Dataset> datasets, List<Dataset> tpchDatasets) {
+		super(datasets, tpchDatasets);
 	}
 
 	/* (non-Javadoc)
 	 * @see edu.duke.cacheplanner.algorithm.singleds.SingleDSBatchAnalyzer#analyzeBatch(java.util.List, java.util.List, double)
 	 */
 	@Override
-	public List<Dataset> analyzeBatch(List<SingleDatasetQuery> queries,
+	public List<Dataset> analyzeBatch(List<AbstractQuery> queries,
 			List<Dataset> cachedDatasets, double cacheSize) {
 
 		initDataStructures(queries, cachedDatasets);

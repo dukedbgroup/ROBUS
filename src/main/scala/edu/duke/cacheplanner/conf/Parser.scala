@@ -21,6 +21,8 @@ import scala.io.Source
 import edu.duke.cacheplanner.query.AbstractQuery
 import edu.duke.cacheplanner.query.GroupingQuery
 import edu.duke.cacheplanner.query.SingleDatasetQuery
+import edu.duke.cacheplanner.query.TPCHQuery
+import edu.duke.cacheplanner.data.TPCHQueueDistribution
 
 
 object Parser {  
@@ -121,6 +123,19 @@ object Parser {
     }
     return queryDistribution
   }
+
+  def parseTPCHDistribution(path: String) : TPCHQueueDistribution = {
+    val queueDistribution = new HashMap[TPCHQuery, java.lang.Double]
+    val query = scala.xml.XML.loadFile(path)
+    for(n <- query \ Constants.TPCH_QUERY) {
+        val path = (n \ Constants.TPCH_PATH).text
+        val cachedPath = (n \ Constants.TPCH_CACHED_PATH).text
+        val benefit = (n \ Constants.TPCH_BENEFIT).text.toDouble
+        val prob = (n \ Constants.TPCH_PROBABILITY).text.toDouble
+        queueDistribution.put(new TPCHQuery(path, cachedPath, benefit), prob)
+    }
+    return new TPCHQueueDistribution(queueDistribution)
+  }
   
   def parseQueries(path: String) : 
   scala.collection.mutable.Map[Int, java.util.Queue[AbstractQuery]] = {
@@ -132,6 +147,10 @@ object Parser {
 	      if (line.contains("groupingColumn")) {
 	        query = gson.fromJson(line, classOf[GroupingQuery])
 	        println(query.toHiveQL(false))
+	      } 
+	      else if (line.contains("path")) {
+                query = gson.fromJson(line, classOf[TPCHQuery])
+                println(query.toHiveQL(false))
 	      }
 	      else {
 	        query = gson.fromJson(line, classOf[SingleDatasetQuery])

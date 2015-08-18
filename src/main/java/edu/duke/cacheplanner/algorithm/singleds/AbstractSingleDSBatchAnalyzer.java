@@ -14,7 +14,9 @@ import edu.duke.cacheplanner.algorithm.singleds.allocation.AllocationDistributio
 import edu.duke.cacheplanner.algorithm.singleds.allocation.Column;
 import edu.duke.cacheplanner.algorithm.singleds.allocation.MergedAllocationDistribution;
 import edu.duke.cacheplanner.data.Dataset;
+import edu.duke.cacheplanner.query.AbstractQuery;
 import edu.duke.cacheplanner.query.SingleDatasetQuery;
+import edu.duke.cacheplanner.query.TPCHQuery;
 
 
 /**
@@ -28,6 +30,7 @@ implements SingleDSBatchAnalyzer {
 	 *  set of all datasets
 	 */
 	List<Dataset> allDatasets;
+	List<Dataset> tpchDatasets;
 
 	/**
 	 * Map of benefit per dataset
@@ -47,11 +50,13 @@ implements SingleDSBatchAnalyzer {
 	 */
 	boolean warmCache = false;
 
-	public AbstractSingleDSBatchAnalyzer(List<Dataset> datasets) {
+	public AbstractSingleDSBatchAnalyzer(List<Dataset> datasets, List<Dataset>
+tpchDatasets) {
 		if(datasets == null) {
 			throw new IllegalArgumentException("datasets can't be null");
 		}
 		allDatasets = datasets;
+		this.tpchDatasets = tpchDatasets;
 		buildBenefitMap();
 	}
 
@@ -65,6 +70,11 @@ implements SingleDSBatchAnalyzer {
 			benefits.put(ds.getName(), ds.getEstimatedSize());
 			System.out.println(" " + ds.getName() + " -> " + ds.getEstimatedSize());
 		}
+		double totalBenefit = 0;
+                for(Dataset ds: tpchDatasets) {
+                        totalBenefit += ds.getEstimatedSize();
+                }
+		benefits.put(tpchDatasets.get(0).getName(), totalBenefit);
 	}
 
 	/**
@@ -110,7 +120,7 @@ implements SingleDSBatchAnalyzer {
 	 * @param queries
 	 * @param cachedDatasets
 	 */
-	protected void initDataStructures(List<SingleDatasetQuery> queries,
+	protected void initDataStructures(List<AbstractQuery> queries,
 			List<Dataset> cachedDatasets) {
 		num_columns = 0;
 		N = 0;
@@ -124,14 +134,23 @@ implements SingleDSBatchAnalyzer {
 			singleTenantQueue = queries.get(0).getQueueID(); // just setting to first queueID seen
 			queueSeen.add(singleTenantQueue);
 		}
-		for(SingleDatasetQuery query: queries) {
+		for(AbstractQuery query: queries) {
 			if(!singleTenant && !(queueSeen.contains(query.getQueueID()))) {
 				N++;
 				queueSeen.add(query.getQueueID());
 			}
-			if(!(datasetSeen.contains(query.getDataset().getName()))) {
+			if(query instanceof TPCHQuery) {
+				if(!(datasetSeen.contains(tpchDatasets.get(0)))) {
+					num_columns++;
+					datasetSeen.add(tpchDatasets.get(0).getName());
+				}
+			}
+			else {
+			SingleDatasetQuery q = (SingleDatasetQuery) query;
+			if(!(datasetSeen.contains(q.getDataset().getName()))) {
 				num_columns++;
-				datasetSeen.add(query.getDataset().getName());
+				datasetSeen.add(q.getDataset().getName());
+			}
 			}
 		}
 
@@ -139,25 +158,56 @@ implements SingleDSBatchAnalyzer {
 		utility_table = new double [N][num_columns];
 
 		//Construction of internal utility table
-		for(SingleDatasetQuery query: queries) {
-			(columns[datasetSeen.indexOf(query.getDataset().getName())]) = new Column();
-			(columns[datasetSeen.indexOf(query.getDataset().getName())]).setID(datasetSeen.indexOf(query.getDataset().getName()));
-			(columns[datasetSeen.indexOf(query.getDataset().getName())]).setSize(query.getDataset().getEstimatedSize());
-			int queueIndex = singleTenantQueue;
-			if(!singleTenant) {
-				queueIndex = query.getQueueID();
-			}
+		for(AbstractQuery query: queries) {
+                        int queueIndex = singleTenantQueue;
+                        if(!singleTenant) {
+                                queueIndex = query.getQueueID();
+                        }
+			if(query instanceof SingleDatasetQuery) {
+			SingleDatasetQuery q = (SingleDatasetQuery) query;
+			(columns[datasetSeen.indexOf(q.getDataset().getName())]) = new Column();
+			(columns[datasetSeen.indexOf(q.getDataset().getName())]).setID(datasetSeen.indexOf(q.getDataset().getName()));
+			(columns[datasetSeen.indexOf(q.getDataset().getName())]).setSize(q.getDataset().getEstimatedSize());
 			if (warmCache) {
-				if (cachedDatasets.contains(query.getDataset())) {
-					utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(query.getDataset().getName())] += ((warmCacheConstant) * benefits.get(query.getDataset().getName()));
+				if (cachedDatasets.contains(q.getDataset())) {
+					utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(q.getDataset().getName())] += ((warmCacheConstant) * benefits.get(q.getDataset().getName()));
 				}
 				else {
-					utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(query.getDataset().getName())] += benefits.get(query.getDataset().getName());
+					utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(q.getDataset().getName())] += benefits.get(q.getDataset().getName());
 				}
 			}
 			else {
-				utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(query.getDataset().getName())] += benefits.get(query.getDataset().getName());
-			}		
+				utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(q.getDataset().getName())] += benefits.get(q.getDataset().getName());
+			}
+			}
+			else {
+				Dataset d = tpchDatasets.get(0);
+				columns[datasetSeen.indexOf(d.getName())] = new
+Column();
+				(columns[datasetSeen.indexOf(d.getName())]).setID(datasetSeen.indexOf(d.getName()));
+				(columns[datasetSeen.indexOf(d.getName())]).setSize(benefits.get(d.getName()));
+				if(warmCache) {
+					if(cachedDatasets.contains(d)) {
+						utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(d.getName())] += ((warmCacheConstant) * benefits.get(d.getName()));
+					} 
+					else {
+						utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(d.getName())] += benefits.get(d.getName());
+					}
+				}
+				else {
+					utility_table[queueSeen.indexOf(queueIndex)][datasetSeen.indexOf(d.getName())] += benefits.get(d.getName());
+				}
+			}
+		}
+
+		// reduce benefit by one scan
+		for(int i=0; i<N; i++) {
+			for(int j=0; j<num_columns; j++) {
+				double scanPenalty = benefits.get(datasetSeen.get(j));
+				if(utility_table[i][j] > 0) {
+					utility_table[i][j] -= scanPenalty;
+				}
+			}
 		}
 
 		//Creation of lookup table
@@ -325,7 +375,7 @@ implements SingleDSBatchAnalyzer {
 	 * @param output
 	 * @return datasets to cache, picked from the allocation output
 	 */
-	protected List<Dataset> getCacheAllocation(List<SingleDatasetQuery> queries,
+	protected List<Dataset> getCacheAllocation(List<AbstractQuery> queries,
 			Allocation output) {
 		//Backward API conversion
 		List<Dataset> cacheThese = new ArrayList<Dataset>();
@@ -333,15 +383,26 @@ implements SingleDSBatchAnalyzer {
 			if (output.contains(current)) {
 				String datasetName = new String();
 				datasetName = datasetSeen.get(current.getID());
-				int queriesIndex = -1;
-				for (SingleDatasetQuery query: queries) {
-					if ((query.getDataset().getName()).equals(datasetName)) {
-						queriesIndex = queries.indexOf(query);
-						break;
+				if(tpchDatasets.get(0).getName().equals(datasetName)) {
+					// add all tpch datasets
+					cacheThese.addAll(tpchDatasets);
+				} else {
+					int queriesIndex = -1;
+					for (AbstractQuery query: queries) {
+						if(query instanceof TPCHQuery) {
+							continue;
+						} else {
+						SingleDatasetQuery q = (SingleDatasetQuery)
+query;
+						if ((q.getDataset().getName()).equals(datasetName)) {
+							queriesIndex = queries.indexOf(query);
+							break;
+						}
+						}
 					}
-				}
-				if(queriesIndex >= 0) {
-					cacheThese.add(queries.get(queriesIndex).getDataset());
+					if(queriesIndex >= 0) {
+						cacheThese.add(((SingleDatasetQuery)queries.get(queriesIndex)).getDataset());
+					}
 				}
 			}
 		}

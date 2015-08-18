@@ -9,7 +9,7 @@ import java.util.List;
 import edu.duke.cacheplanner.algorithm.singleds.allocation.Allocation;
 import edu.duke.cacheplanner.algorithm.singleds.allocation.AllocationDistribution;
 import edu.duke.cacheplanner.data.Dataset;
-import edu.duke.cacheplanner.query.SingleDatasetQuery;
+import edu.duke.cacheplanner.query.AbstractQuery;
 
 /**
  * Heuristic algorithm to find an allocation that is proportionally fair in 
@@ -19,15 +19,15 @@ import edu.duke.cacheplanner.query.SingleDatasetQuery;
  */
 public class PFBatchAnalyzer extends AbstractSingleDSBatchAnalyzer {
 
-	public PFBatchAnalyzer(List<Dataset> datasets) {
-		super(datasets);
+	public PFBatchAnalyzer(List<Dataset> datasets, List<Dataset> tpchDatasets) {
+		super(datasets, tpchDatasets);
 	}
 
 	/* (non-Javadoc)
 	 * @see edu.duke.cacheplanner.algorithm.singleds.SingleDSBatchAnalyzer#analyzeBatch(java.util.List, java.util.List, double)
 	 */
 	@Override
-	public List<Dataset> analyzeBatch(List<SingleDatasetQuery> queries,
+	public List<Dataset> analyzeBatch(List<AbstractQuery> queries,
 			List<Dataset> cachedDatasets, double cacheSize) {
 
 		/*___________________COPIED FROM MMFBatchAnalyzer.java_________*/

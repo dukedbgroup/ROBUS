@@ -44,6 +44,13 @@ object Constants {
   final val MEAN_COLUMN = "meanColNum"
   final val STD_COLUMN = "stdColNum"
 
+  //tpch queries xml
+  final val TPCH_QUERY = "query"
+  final val TPCH_PATH = "path"
+  final val TPCH_CACHED_PATH = "cachedPath"
+  final val TPCH_BENEFIT = "benefit"
+  final val TPCH_PROBABILITY = "prob"
+
   final val TYPE = "type"
   final val GROUPING_PROBABILITY = "groupingQueryProb"
 }
