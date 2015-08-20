@@ -200,12 +200,12 @@ Column();
 			}
 		}
 
-		// reduce benefit by one scan
+		// reduce benefit by half scan cost, just a heuristic
 		for(int i=0; i<N; i++) {
 			for(int j=0; j<num_columns; j++) {
 				double scanPenalty = benefits.get(datasetSeen.get(j));
 				if(utility_table[i][j] > 0) {
-					utility_table[i][j] -= scanPenalty;
+					utility_table[i][j] -= 0.5*scanPenalty;
 				}
 			}
 		}

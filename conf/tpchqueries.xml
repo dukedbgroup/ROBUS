@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<queries>
+	<query>
+		<name>1</name>
+		<path>/home/home2/mayuresh/backup_bigframe/CachePlanner/conf/tpch/q1.sql</path>
+		<cachedPath>/home/home2/mayuresh/backup_bigframe/CachePlanner/conf/tpch/q1cached.sql</cachedPath>
+		<benefit>1000</benefit>
+		<probability>0.2</probability>
+	</query>
+        <query>
+                <name>6</name>
+                <path>/home/home2/mayuresh/backup_bigframe/CachePlanner/conf/tpch/q6.sql</path>
+                <cachedPath>/home/home2/mayuresh/backup_bigframe/CachePlanner/conf/tpch/q6cached.sql</cachedPath>
+                <benefit>1000</benefit>
+                <probability>0.2</probability>
+        </query>
+        <query>
+                <name>14</name>
+                <path>/home/home2/mayuresh/backup_bigframe/CachePlanner/conf/tpch/q14.sql</path>
+                <cachedPath>/home/home2/mayuresh/backup_bigframe/CachePlanner/conf/tpch/q14cached.sql</cachedPath>
+                <benefit>1000</benefit>
+                <probability>0.2</probability>
+        </query>
+        <query>
+                <name>17</name>
+                <path>/home/home2/mayuresh/backup_bigframe/CachePlanner/conf/tpch/q17.sql</path>
+                <cachedPath>/home/home2/mayuresh/backup_bigframe/CachePlanner/conf/tpch/q17cached.sql</cachedPath>
+                <benefit>1000</benefit>
+                <probability>0.2</probability>
+        </query>
+        <query>
+                <name>19</name>
+                <path>/home/home2/mayuresh/backup_bigframe/CachePlanner/conf/tpch/q19.sql</path>
+                <cachedPath>/home/home2/mayuresh/backup_bigframe/CachePlanner/conf/tpch/q19cached.sql</cachedPath>
+                <benefit>1000</benefit>
+                <probability>0.2</probability>
+        </query>
+
+</queries>
