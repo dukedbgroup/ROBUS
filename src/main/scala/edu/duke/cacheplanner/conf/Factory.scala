@@ -53,13 +53,13 @@ object Factory {
   }
 
   def initTPCHDatasets: java.util.List[Dataset] = {
-    Parser.parseDataSets("conf/TPCHDataset.xml")
+    Parser.parseDataSets("conf/tpchdataset.xml")
   }
 
   def initDistribution: QueryDistribution = {
     val queryDistribution = new java.util.HashMap[Integer, QueueDistribution]()
     val tpchQueryDistribution = new java.util.HashMap[Integer, TPCHQueueDistribution]()
-    val tpchQueueDistribution = Parser.parseTPCHDistribution("conf/TPCHQueries.xml")
+    val tpchQueueDistribution = Parser.parseTPCHDistribution("conf/tpchqueries.xml")
     for(queue <- externalQueues) {
       val rankFileName = queue.getRankFile
       if(rankFileName == "tpch") {
