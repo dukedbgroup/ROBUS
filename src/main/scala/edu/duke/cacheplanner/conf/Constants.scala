@@ -49,7 +49,7 @@ object Constants {
   final val TPCH_PATH = "path"
   final val TPCH_CACHED_PATH = "cachedPath"
   final val TPCH_BENEFIT = "benefit"
-  final val TPCH_PROBABILITY = "prob"
+  final val TPCH_PROBABILITY = "probability"
 
   final val TYPE = "type"
   final val GROUPING_PROBABILITY = "groupingQueryProb"
