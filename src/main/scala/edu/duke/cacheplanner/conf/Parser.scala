@@ -132,7 +132,7 @@ object Parser {
         val cachedPath = (n \ Constants.TPCH_CACHED_PATH).text
         val benefit = (n \ Constants.TPCH_BENEFIT).text.toDouble
         val prob = (n \ Constants.TPCH_PROBABILITY).text.toDouble
-        queueDistribution.put(new TPCHQuery(path, cachedPath, benefit), prob)
+        queueDistribution.put(new TPCHQuery(0, 0, path, cachedPath, benefit), prob)
     }
     return new TPCHQueueDistribution(queueDistribution)
   }

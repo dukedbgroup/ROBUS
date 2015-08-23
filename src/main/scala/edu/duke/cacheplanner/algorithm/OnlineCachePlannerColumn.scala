@@ -20,7 +20,7 @@ import scala.collection.mutable.ListBuffer
 class OnlineCachePlannerColumn(setup: Boolean, manager: ListenerManager, 
     queues: java.util.List[ExternalQueue], data: java.util.List[Dataset], 
     config: ConfigManager) extends AbstractCachePlanner(
-        setup, manager, queues, data, config) {
+        setup, manager, queues, data, data, config) {
 
   val batchTime = config.getPlannerBatchTime();
   var cachedCols = new scala.collection.mutable.ListBuffer[Column]()

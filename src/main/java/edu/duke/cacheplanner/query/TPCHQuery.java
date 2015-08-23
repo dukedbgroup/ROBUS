@@ -21,7 +21,9 @@ public class TPCHQuery extends AbstractQuery implements Serializable {
 	protected String cachedPath;
 	protected double benefit;
 
-	public TPCHQuery(String path, String cachedPath, double benefit) {
+	public TPCHQuery(int queryId, int queueId, String path, String cachedPath, double benefit) {
+		this.queryID = queryId;
+		this.queueID = queueId;
 		this.path = path;
 		this.cachedPath = cachedPath;
 		this.benefit = benefit;
@@ -44,15 +46,15 @@ public class TPCHQuery extends AbstractQuery implements Serializable {
 	/**
 	 * @param path the path to set
 	 */
-	protected void setPath(String path) {
+	public void setPath(String path) {
 		this.path = path;
 	}
 
 	/**
 	 * @param cachedPath the cachedPath to set
 	 */
-	protected void setCachedPath(String path) {
-		this.cachedPath = cachedPath;
+	public void setCachedPath(String path) {
+		this.cachedPath = path;
 	}
 
 	/**

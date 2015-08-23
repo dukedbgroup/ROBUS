@@ -25,6 +25,7 @@ object Factory {
   val listenerManager = initListener
   // datasets have to be initialized before queues
   val datasets = initDatasets
+  val tpchDatasets = initTPCHDatasets
   // queues have to be initialized before distribution
   val externalQueues = initExternalQueue
   val distribution = initDistribution
@@ -33,8 +34,6 @@ object Factory {
   val generators = initGenerators
   val cachePlanner = initCachePlanner
 
-  val tpchDatasets = initTPCHDatasets
-  
   def initConfigManager : ConfigManager = {
     new ConfigManager(Parser.parseConfig("conf/config.xml"))
   }
@@ -81,10 +80,8 @@ object Factory {
             new DatasetDistribution(prob, colDistribution))
         count = count + 1
       }
-      println("Distribution on queue " + queue.getId() + " = sum ")
       rankSum = 0d
       queueDistribution.foreach(t => rankSum += t._2.getDataProb)
-      print(rankSum)
       queryDistribution.put(queue.getId(), new QueueDistribution(queueDistribution))
       }
     }
@@ -132,11 +129,11 @@ object Factory {
       AbstractQueryGenerator = {
     val mode = configManager.getGeneratorMode()
     mode match {
-        case "singleTable" =>  
-		if(distribution.getQueueDistribution(queueId) == None) {
-			return new TPCHQueryGenerator(lambda, queueId, name)
-		} else {
+        case "singleTable" =>
+		if(distribution.getQueueDistribution(queueId) != null){
 			return new SingleTableQueryGenerator(lambda, queueId, name, meanColNum, stdColNum, grouping)
+		} else { 
+			return new TPCHQueryGenerator(lambda, queueId, name)
 		}
 	
         case "replay" => return new ReplayQueryGenerator(lambda, queueId, name, 

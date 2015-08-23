@@ -11,7 +11,7 @@ import edu.duke.cacheplanner.listener.QuerySerialize;
 import edu.duke.cacheplanner.query.AbstractQuery;
 
 public class TPCHQueryGenerator extends AbstractQueryGenerator {
-
+  private int count = 0;
   protected double waitingTime;
 
   public TPCHQueryGenerator(double lamb, int id, String name) {
@@ -25,7 +25,8 @@ public class TPCHQueryGenerator extends AbstractQueryGenerator {
    * return the id of the chosen queue
    */
   public AbstractQuery generateQuery() {
-    AbstractQuery query = new TPCHQuery("", "", 0);
+    int queryId = count++;
+    TPCHQuery query = new TPCHQuery(queryId, queueId, "", "", 0);
 
     Random rand = new Random();
     double p = rand.nextDouble();
@@ -35,7 +36,10 @@ public class TPCHQueryGenerator extends AbstractQueryGenerator {
     for(TPCHQuery q : distributionMap.keySet()) {
       cumulativeProb = cumulativeProb + distributionMap.get(q);
       if(p <= cumulativeProb) {
-        query = q;
+        query.setPath(q.getPath());
+	query.setCachedPath(q.getCachedPath());
+	query.setBenefit(q.getBenefit());
+	break;
       }
     }
 

@@ -1,4 +1,4 @@
-select sum(l_extendedprice * (1 - l_discount) ) as revenue from lineitem_cached l join part_cached p on
+select sum(l_extendedprice * (1 - l_discount) ) as revenue from lineitem_cache l join part_cache p on
 p.p_partkey = l.l_partkey where ( p_brand = 'Brand#12' and p_container REGEXP 'SM CASE||SM BOX||SM
 PACK||SM PKG' and l_quantity >= 1 and l_quantity <= 11 and p_size >= 1 and p_size <= 5 and l_shipmode
 REGEXP 'AIR||AIR REG' and l_shipinstruct = 'DELIVER IN PERSON') or ( p_brand = 'Brand#23' and p_container

@@ -8,6 +8,7 @@ import scala.collection.JavaConversions._
 import edu.duke.cacheplanner.data.Dataset
 import edu.duke.cacheplanner.query.AbstractQuery
 import edu.duke.cacheplanner.query.SingleDatasetQuery
+import edu.duke.cacheplanner.query.TPCHQuery
 import edu.duke.cacheplanner.queue.ExternalQueue
 
 /**
@@ -84,10 +85,14 @@ extends Listener {
 		numQueriesCachedPerQueue(event.query.getQueueID()) = currentNum + 1
 	}
 
-    // HACK: assuming singledatasetquery in order to fetch dataset
-    val query = event.query.asInstanceOf[SingleDatasetQuery]
-    val count = queriesPerDataset.getOrElse(query.getDataset.getName, 0L)
-    queriesPerDataset(query.getDataset.getName) = count + 1
+    if (event.query.isInstanceOf[SingleDatasetQuery]) {
+      val query = event.query.asInstanceOf[SingleDatasetQuery]
+      val count = queriesPerDataset.getOrElse(query.getDataset.getName, 0L)
+      queriesPerDataset(query.getDataset.getName) = count + 1
+    } else {
+      val count = queriesPerDataset.getOrElse("tpch", 0L)
+      queriesPerDataset("tpch") = count + 1
+    }
   }
 
   override def onQueryFinished(event: QueryFinished) {
@@ -181,8 +186,12 @@ extends Listener {
   def getTotalCacheShareUsed(queueId: Int): Double = {
     var totalCacheShare = 0d
     queryCacheSize.foreach(t => if(t._1.getQueueID == queueId) {
-      totalCacheShare += t._2 / queriesPerDataset(
-          t._1.asInstanceOf[SingleDatasetQuery].getDataset.getName)	// HACK: assuming singledatasetquery
+      if(t._1.isInstanceOf[SingleDatasetQuery]) {
+        totalCacheShare += t._2 / queriesPerDataset(
+          t._1.asInstanceOf[SingleDatasetQuery].getDataset.getName)
+      } else {
+        totalCacheShare += t._2 / queriesPerDataset("tpch")
+      }
     })
     totalCacheShare
   }

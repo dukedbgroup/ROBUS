@@ -32,7 +32,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
     queues: java.util.List[ExternalQueue], data: java.util.List[Dataset], 
     tpchData: java.util.List[Dataset], 
     distribution: QueryDistribution, config: ConfigManager) extends 
-    AbstractCachePlanner(setup, manager, queues, data, config) {
+    AbstractCachePlanner(setup, manager, queues, data, tpchData, config) {
 
   val batchTime = config.getPlannerBatchTime()
 

@@ -16,7 +16,7 @@ import org.apache.spark.sql.SchemaRDD
  */
 abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager, 
     queues: util.List[ExternalQueue], datasets: java.util.List[Dataset], 
-    config: ConfigManager) {
+    tpchDatasets: java.util.List[Dataset], config: ConfigManager) {
   val listenerManager: ListenerManager = manager
   val isMultipleSetup = setup // true = multi app setup, false = single app setup
   var started = false
@@ -27,8 +27,9 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
 //  @volatile var schemaRDDs: scala.collection.mutable.Map[String, SchemaRDD] = 
 //    new scala.collection.mutable.HashMap[String, SchemaRDD]()
 
-  // Following statement could be committed if hive warehouse has already loaded all the tables to save time
-  initTables
+  // Following statements could be committed if hive warehouse has already loaded all the tables to save time
+  //initTables(datasets)
+  //initTables(tpchDatasets)
 
 
   /**
@@ -63,7 +64,7 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
     hiveContext
   }
 
-  def initTables() {
+  def initTables(datasets: java.util.List[Dataset]) {
     for(data <- datasets) {
       println(QueryUtil.getTableCreateSQL(data))
       hiveContext.hql(QueryUtil.getDropTableSQL(data.getName()))

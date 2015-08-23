@@ -11,7 +11,7 @@ import edu.duke.cacheplanner.data.Dataset
 class OfflineCachePlannerColumn(setup: Boolean, manager: ListenerManager, 
     queues: util.List[ExternalQueue], data: java.util.List[Dataset], 
     config: ConfigManager) extends AbstractCachePlanner(
-        setup, manager, queues, data, config) {
+        setup, manager, queues, data, data, config) {
   
   //change this to config
   val threshold:Double = 1

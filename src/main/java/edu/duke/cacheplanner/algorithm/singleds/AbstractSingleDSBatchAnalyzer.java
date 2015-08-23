@@ -140,7 +140,7 @@ tpchDatasets) {
 				queueSeen.add(query.getQueueID());
 			}
 			if(query instanceof TPCHQuery) {
-				if(!(datasetSeen.contains(tpchDatasets.get(0)))) {
+				if(!(datasetSeen.contains(tpchDatasets.get(0).getName()))) {
 					num_columns++;
 					datasetSeen.add(tpchDatasets.get(0).getName());
 				}
