@@ -88,7 +88,6 @@
     </columns>
     <cachesize>1253</cachesize></dataset>
   <dataset>
-  <dataset>
     <name>part</name>
     <path>hdfs://yahoo047:9000/cacheplanner/part</path>
     <columns>
@@ -140,5 +139,4 @@
       </col>
     </columns>
     <cachesize>1253</cachesize></dataset>
-  </dataset>
 </datasets>
