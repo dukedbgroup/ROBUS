@@ -26,6 +26,17 @@ import edu.duke.cacheplanner.data.TPCHQueueDistribution
 
 
 object Parser {  
+  // percent error in utility
+  val ERROR = 0;
+
+  /**
+   * perturb cost estimation value within the error bound
+   */
+  def perturb(value: Double) : Double = {
+    val direction = 2 * (scala.util.Random.nextDouble - 0.5)
+    value + direction * ERROR
+  }
+
   /**
    * parse the external.xml file for external queue
    */
@@ -85,7 +96,7 @@ object Parser {
         col_list.add(new Column(col_size, col_name, getColumnType(col_type), name))
       }
       val cacheSize = (n \ Constants.CACHE_SIZE).text.toDouble
-      dataset.setEstimatedSize(cacheSize)
+      dataset.setEstimatedSize(perturb(cacheSize))
       dataset.setColumns(col_list)
       dataset_list.add(dataset)
     }
