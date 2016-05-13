@@ -139,11 +139,12 @@ object Parser {
     val queueDistribution = new HashMap[TPCHQuery, java.lang.Double]
     val query = scala.xml.XML.loadFile(path)
     for(n <- query \ Constants.TPCH_QUERY) {
+        val name = (n \ Constants.TPCH_NAME).text
         val path = (n \ Constants.TPCH_PATH).text
         val cachedPath = (n \ Constants.TPCH_CACHED_PATH).text
         val benefit = (n \ Constants.TPCH_BENEFIT).text.toDouble
         val prob = (n \ Constants.TPCH_PROBABILITY).text.toDouble
-        queueDistribution.put(new TPCHQuery(0, 0, path, cachedPath, benefit), prob)
+        queueDistribution.put(new TPCHQuery(0, 0, name, path, cachedPath, benefit), prob)
     }
     return new TPCHQueueDistribution(queueDistribution)
   }

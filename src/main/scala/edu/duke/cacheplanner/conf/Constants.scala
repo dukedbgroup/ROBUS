@@ -46,6 +46,7 @@ object Constants {
 
   //tpch queries xml
   final val TPCH_QUERY = "query"
+  final val TPCH_NAME = "name"
   final val TPCH_PATH = "path"
   final val TPCH_CACHED_PATH = "cachedPath"
   final val TPCH_BENEFIT = "benefit"

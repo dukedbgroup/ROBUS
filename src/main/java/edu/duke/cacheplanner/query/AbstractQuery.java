@@ -11,6 +11,8 @@ public abstract class AbstractQuery implements Serializable {
 	// weight of the queue
 	protected double weight;
 
+	protected String name;
+
 	/**
 	 * @return the weight
 	 */
@@ -30,6 +32,10 @@ public abstract class AbstractQuery implements Serializable {
 		return timeDelay;
 	}
 
+	public String getName() {
+		return name;
+	}
+
 	/**
 	 * @param weight the weight to set
 	 */
@@ -47,6 +53,10 @@ public abstract class AbstractQuery implements Serializable {
 
 	public void setQueueID(int id) {
 		queueID = id;
+	}
+
+	public void setName(String val) {
+		name = val;
 	}
 	/**
 	 * @param cached true if the query is on cached table in Shark, false otherwise

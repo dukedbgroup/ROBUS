@@ -5,11 +5,11 @@ import AssemblyKeys._
 
 object CachePlannerBuild extends Build {
 
-  val SPARK_VERSION = "1.1.1"
+  val SPARK_VERSION = "1.5.1"
 
   val SCALA_VERSION = "2.10.3"
 
-  val HADOOP_VERSION = "1.2.1"
+  val HADOOP_VERSION = "2.6.0"
 
   lazy val root = Project(
     id = "root",
@@ -42,7 +42,7 @@ object CachePlannerBuild extends Build {
 
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core" % SPARK_VERSION,
-      "com.typesafe.akka" %% "akka-actor" % "2.2.3",
+//      "com.typesafe.akka" %% "akka-actor" % "2.2.3",
 //      "org.apache.hadoop" % "hadoop-client" % HADOOP_VERSION,
       "org.apache.commons" % "commons-math3" % "3.2",
       "org.apache.spark" %% "spark-hive" % SPARK_VERSION,

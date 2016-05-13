@@ -35,7 +35,7 @@ class Context(manager: ListenerManager,
       gen.asInstanceOf[AbstractQueryGenerator].stop()
     }
     // cache planner won't stop before finishing running all generated queries
-    cachePlanner.stop()
+    cachePlanner.stop
     // listener manager will have to wait as well to listen to all planner events
     listenerManager.stop()
   }

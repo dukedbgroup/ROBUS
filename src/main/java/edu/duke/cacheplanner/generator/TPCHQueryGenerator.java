@@ -26,7 +26,7 @@ public class TPCHQueryGenerator extends AbstractQueryGenerator {
    */
   public AbstractQuery generateQuery() {
     int queryId = count++;
-    TPCHQuery query = new TPCHQuery(queryId, queueId, "", "", 0);
+    TPCHQuery query = new TPCHQuery(queryId, queueId, "", "", "", 0);
 
     Random rand = new Random();
     double p = rand.nextDouble();
@@ -36,6 +36,7 @@ public class TPCHQueryGenerator extends AbstractQueryGenerator {
     for(TPCHQuery q : distributionMap.keySet()) {
       cumulativeProb = cumulativeProb + distributionMap.get(q);
       if(p <= cumulativeProb) {
+	query.setName(q.getName());
         query.setPath(q.getPath());
 	query.setCachedPath(q.getCachedPath());
 	query.setBenefit(q.getBenefit());

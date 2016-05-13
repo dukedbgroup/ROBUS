@@ -23,7 +23,7 @@ fi
 # Hive related section.
 if [ "x$HIVE_HOME" == "x" ] ; then
     echo "No HIVE_HOME specified. Please set HIVE_HOME."
-    exit 1
+#    exit 1
 fi
 
 CLASSPATH="$PROJECTDIR/conf"
@@ -72,13 +72,13 @@ done
 #CLASSPATH+=:$HIVE_HOME/conf
 
 #export CLASSPATH
-#export SPARK_CLASSPATH="$CLASSPATH"
+export SPARK_CLASSPATH="$CLASSPATH"
 
 
 # Set JAVA_OPTS to be able to load native libraries and to set heap size
 #JAVA_OPTS+="$SPARK_JAVA_OPTS"
 #JAVA_OPTS+=" -Djava.library.path=$SPARK_LIBRARY_PATH"
-JAVA_OPTS+=" -Xms2g -Xmx2g -XX:MaxPermSize=256m "
+JAVA_OPTS+=" -Xms4g -Xmx4g -XX:MaxPermSize=256m "
 export JAVA_OPTS
 
 SCALA=${SCALA_HOME}/bin/scala

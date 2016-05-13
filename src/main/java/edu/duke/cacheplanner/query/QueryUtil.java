@@ -35,7 +35,7 @@ public class QueryUtil {
 	}
 
 	public static String getCreateTableAsCachedSQL(Dataset ds) {
-		String result = "CREATE TABLE " + ds.getCachedName();
+		String result = "CREATE TABLE IF NOT EXISTS " + ds.getCachedName();
 		result += " AS SELECT * FROM " + ds.getName();
 		return result;
 	}

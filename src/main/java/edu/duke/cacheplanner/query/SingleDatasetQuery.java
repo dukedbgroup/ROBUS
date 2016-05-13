@@ -29,6 +29,7 @@ public class SingleDatasetQuery extends AbstractQuery implements Serializable {
 		setDataset(dataset);
 		setProjections(projections);
 		setSelections(selections);
+		setName(Constants.SALES_QUERY);
 	}
 
 

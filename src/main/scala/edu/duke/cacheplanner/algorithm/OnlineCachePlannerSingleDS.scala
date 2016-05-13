@@ -3,6 +3,7 @@
  */
 package edu.duke.cacheplanner.algorithm
 
+import com.google.gson.Gson
 import java.util.concurrent.Executors
 import java.util.concurrent.ExecutorService
 import scala.collection.JavaConversions._
@@ -10,6 +11,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
 import scala.collection.mutable.ListBuffer
+import edu.duke.cacheplanner.Submit
 import edu.duke.cacheplanner.algorithm.singleds.MMFBatchAnalyzer
 import edu.duke.cacheplanner.algorithm.singleds.PFBatchAnalyzer
 import edu.duke.cacheplanner.conf.ConfigManager
@@ -19,6 +21,7 @@ import edu.duke.cacheplanner.data.QueryDistribution
 import edu.duke.cacheplanner.listener._
 import edu.duke.cacheplanner.query.QueryUtil
 import edu.duke.cacheplanner.query.AbstractQuery
+import edu.duke.cacheplanner.query.Constants
 import edu.duke.cacheplanner.query.SingleDatasetQuery
 import edu.duke.cacheplanner.query.TPCHQuery
 import edu.duke.cacheplanner.queue.ExternalQueue
@@ -364,74 +367,79 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             dropCandidate.foreach(c=> println(c.getName()))
             
             // fire queries to drop the cache
+            if(dropCandidate.length > 0) {
+              uncacheData(dropCandidate)
+            }
             for(ds <- dropCandidate) {
+/*
               try {
-                hiveContext.hql("UNCACHE TABLE " + ds.getCachedName())
+//                hiveContext.hql("UNCACHE TABLE " + ds.getCachedName())
+               for((i, ctx) <- hiveContexts) {
+                  ctx.table(ds.getCachedName()).unpersist()
+               }
               } catch {
                 case e: Exception => println("If is is physical partitioning case, someone else may have uncached already!"); 
                 e.printStackTrace()
               }
 //              hiveContext.hql(QueryUtil.getDropTableSQL(ds.getCachedName()))
-
+*/
               manager.postEvent(new DatasetUnloadedFromCache(ds))
             }
 
             // fire queries to cache columns
+            if(cacheCandidate.length > 0) {
+            //  cacheData(cacheCandidate)
+            }
             for(ds <- cacheCandidate) {
-//              var drop_cache_table = QueryUtil.getDropTableSQL(
-//                  ds.getCachedName())
-//              hiveContext.hql(drop_cache_table)
-//
-//              val queryString = QueryUtil.getCreateTableAsCachedSQL(ds)
-//              try {
-//           	    hiveContext.hql(queryString)
-//              } catch{
-//                case e: Exception => 
-//                 println("not able to create table. "); e.printStackTrace()
-//              }
-
+/*
               try {
-                hiveContext.hql("CACHE TABLE " + ds.getCachedName())	// not cached at this stage since spark evaluates lazily
+//                hiveContext.hql("CACHE TABLE " + ds.getCachedName())	// not cached at this stage since spark evaluates lazily
+               for((i, ctx) <- hiveContexts) {
+                  println("Caching in Tachyon: " + ds.getCachedName())
+                  ctx.table(ds.getCachedName()).persist(org.apache.spark.storage.StorageLevel.OFF_HEAP)
+               }
               } catch {
                 case e: Exception => println("If is is physical partitioning case, someone else may have cached already!"); 
                 e.printStackTrace()
               }
 //              new CacheThread(ds).start()
+*/
                 manager.postEvent(new DatasetLoadedToCache(ds))
 
             }
-            
+
             // fire sql queries
             for(query <- batch) {
-              var queryString: String = ""
+//              val queryString: String = query.getName() 
               var cacheUsed: Double = 0
+              val toCacheForQuery = new java.util.ArrayList[Dataset]()
               if(query.isInstanceOf[TPCHQuery]) {
                 if(datasetsToCache.contains(tpchData.get(0))) {
-                  queryString = query.toHiveQL(true)
                   for(i <- 0 to tpchData.size()-1) {
+                    toCacheForQuery.add(tpchData.get(i))
                     println("use cache table: " + tpchData.get(i))
                     cacheUsed += tpchData.get(i).getEstimatedSize()
                   }
                 } else {
-                  queryString = query.toHiveQL(false)
                   println("use external table: tpch")
                 }
               } else {
                 val q = query.asInstanceOf[SingleDatasetQuery]
                 if(datasetsToCache.contains(q.getDataset())) {	//datasetsToCache are already cached at this time
+                  toCacheForQuery.add(q.getDataset())
                   println("use cache table: " + q.getDataset())
-                  queryString = q.toHiveQL(true)
+//                  queryString = q.toHiveQL(true)
                   cacheUsed = q.getScanBenefit()
                 } else {
                   println("use external table: " + q.getDataset())
-                  queryString = q.toHiveQL(false)
+//                  queryString = q.toHiveQL(false)
                 }
               }
-              println("query fired: " + queryString)
+              println("query fired: " + query.getQueueID + ": " + query.toHiveQL(false))
 
               // submit query to spark through a thread
-              pool.execute(new ExecutorThread(query.getQueueID().toString, 
-                  queryString, query))
+              pool.execute(new ExecutorThread(query, memoryExecutor,
+                  coresMax, toCacheForQuery))
 
               manager.postEvent(new QueryPushedToSparkScheduler(query, cacheUsed))
             }
@@ -469,45 +477,53 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
         }
       }
 
-      /**
-       * Not being used
-       */
-      class CacheThread(ds: Dataset) extends java.lang.Thread {
-
-        override def run() {
-          // pick a queue at random
-          // TODO: use weights of queues
-/*          val queueString = queues.get(
-              (Math.random() * queues.size()).intValue).getId().toString
-*/
-          // scraping above as it leads to concurrent modification exception in hive metastore
-          val queueString = "default"
-
-          val queryString = QueryUtil.getCreateTableAsCachedSQL(ds)
-          sc.setJobGroup(queueString, queryString)
-          sc.setLocalProperty("spark.scheduler.pool", queueString)
-
-          try {
-           	  hiveContext.hql(queryString)
-          } catch{
-              case e: Exception => 
-              println("not able to create table. "); e.printStackTrace()
-          }
-          hiveContext.hql("CACHE TABLE " + ds.getCachedName())	// not cached at this stage since spark evaluates lazily
-          
-        }
-
+      def uncacheData(toCache: java.util.List[Dataset]) {
+        cacheData(toCache, true)
       }
 
-      class ExecutorThread(queueString: String, queryString: String, 
-          query: AbstractQuery) extends java.lang.Runnable {
+      def cacheData(toCache: java.util.List[Dataset], uncache: Boolean = false) {
+             try {
+               val name = { if(uncache) Constants.UNCACHE_QUERY else Constants.CACHE_QUERY }
+               val separator = System.getProperty("file.separator")
+               val classpath = System.getenv("SPARK_CLASSPATH") //System.getProperty("java.class.path")
+               val path = System.getProperty("java.home") + separator + "bin" + separator + "java"
+               val processBuilder = new ProcessBuilder(path, "-cp",
+                   classpath,
+                   Submit.getClass.getCanonicalName().dropRight(1), name, memoryWorker, totalMaxCores, name, new Gson().toJson(toCache))
+               processBuilder.redirectErrorStream(true)
+               processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+               //println("Submitting app: " + processBuilder.command.toString)
+               val process = processBuilder.start()
+               process.waitFor()
+
+             } catch {
+                case e: Exception =>
+             } finally{
+                // hopefully, this is called after query is finished
+                // manager.postEvent(new QueryFinished(query))
+             }
+      }
+
+      class ExecutorThread(query: AbstractQuery, memory: String, maxCores: String, 
+           toCache: java.util.List[Dataset]) extends java.lang.Runnable {
         
         override def run() {
-              sc.setJobGroup(queueString, queryString)
-              sc.setLocalProperty("spark.scheduler.pool", queueString)
               try {
-                val result = hiveContext.hql(queryString)
-                result.collect()
+
+               val separator = System.getProperty("file.separator")
+               val classpath = System.getenv("SPARK_CLASSPATH") //System.getProperty("java.class.path")
+               val path = System.getProperty("java.home") + separator + "bin" + separator + "java"
+               val processBuilder = new ProcessBuilder(path, "-cp", 
+                   classpath, 
+                   Submit.getClass.getCanonicalName().dropRight(1), query.getQueueID + ":" + query.getQueryID + ":" + query.getName, memory, maxCores, query.getName, new Gson().toJson(toCache))
+               processBuilder.redirectErrorStream(true)
+               processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+               //println("Submitting app: " + processBuilder.command.toString)
+               val process = processBuilder.start()
+               process.waitFor()
+
+                //val result = hiveContexts.get(query.getQueueID).sql(queryString)
+                //result.collect()
               } catch {
                 case e: Exception => 
               } finally{
