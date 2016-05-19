@@ -43,6 +43,7 @@ public abstract class AbstractQueryGenerator {
 
   public void start() {
     started = true;
+    generatorThread.setDaemon(true);
     generatorThread.start();
   }
 

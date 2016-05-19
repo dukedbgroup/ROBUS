@@ -17,7 +17,7 @@ object Main {
     context.start()
     
     Thread.sleep(config.getWorkloadTime * 1000)	// total time of batch
-    println("Stopping the contexts!")
+    println("Stopping the context!")
     context.stop()
 
     // compute final metrics

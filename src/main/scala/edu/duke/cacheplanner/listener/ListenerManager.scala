@@ -87,6 +87,7 @@ class ListenerManager {
     if (started) {
       throw new IllegalStateException("Listener bus already started!")
     }
+    listenerThread.setDaemon(true)
     listenerThread.start()
     started = true
   }

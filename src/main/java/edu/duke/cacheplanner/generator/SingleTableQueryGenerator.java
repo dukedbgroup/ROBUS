@@ -265,7 +265,7 @@ public class SingleTableQueryGenerator extends AbstractQueryGenerator {
     }
     //grouping column
     else {
-      int selectionNum = rand.nextInt(columns.size()+1);
+      int selectionNum = rand.nextInt(columns.size()); // restricting num of selections to one less than the toal columns
       List<Column> selectionCandidate = uniformSampleColumns(columns, selectionNum);
 
       Column groupingCol = uniformSampleColumns(columns, 1).get(0);

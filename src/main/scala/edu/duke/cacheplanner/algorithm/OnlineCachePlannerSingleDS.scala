@@ -260,7 +260,9 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
       /**
        * thread pool for query execution threads
        */
-      val pool:ExecutorService = Executors.newCachedThreadPool();
+      val pool:ExecutorService = Executors.newFixedThreadPool(externalQueues.length);
+      var numExecutors: Int = 0
+      val s = new java.util.concurrent.Semaphore(0)
 
       def buildAlgo(): AbstractSingleDSBatchAnalyzer = {
         if(config.getAlgorithmName().equals("MMF")) {
@@ -307,7 +309,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                     batch += q
                   })
             }
-            return batch.toList
+            return batch.toList 
       }
 
       /**
@@ -367,57 +369,64 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             dropCandidate.foreach(c=> println(c.getName()))
             
             // fire queries to drop the cache
-            if(dropCandidate.length > 0) {
-              uncacheData(dropCandidate)
-            }
+//            if(dropCandidate.length > 0) {
+//              uncacheData(dropCandidate)
+//            }
             for(ds <- dropCandidate) {
-/*
-              try {
-//                hiveContext.hql("UNCACHE TABLE " + ds.getCachedName())
-               for((i, ctx) <- hiveContexts) {
-                  ctx.table(ds.getCachedName()).unpersist()
-               }
-              } catch {
-                case e: Exception => println("If is is physical partitioning case, someone else may have uncached already!"); 
-                e.printStackTrace()
-              }
-//              hiveContext.hql(QueryUtil.getDropTableSQL(ds.getCachedName()))
-*/
               manager.postEvent(new DatasetUnloadedFromCache(ds))
             }
 
             // fire queries to cache columns
-            if(cacheCandidate.length > 0) {
-            //  cacheData(cacheCandidate)
-            }
+//            if(cacheCandidate.length > 0) {
+//              cacheData(cacheCandidate)
+//            }
             for(ds <- cacheCandidate) {
-/*
-              try {
-//                hiveContext.hql("CACHE TABLE " + ds.getCachedName())	// not cached at this stage since spark evaluates lazily
-               for((i, ctx) <- hiveContexts) {
-                  println("Caching in Tachyon: " + ds.getCachedName())
-                  ctx.table(ds.getCachedName()).persist(org.apache.spark.storage.StorageLevel.OFF_HEAP)
-               }
-              } catch {
-                case e: Exception => println("If is is physical partitioning case, someone else may have cached already!"); 
-                e.printStackTrace()
-              }
-//              new CacheThread(ds).start()
-*/
                 manager.postEvent(new DatasetLoadedToCache(ds))
-
             }
+
+            // reorder queries in the batch
+            // TODO: make it efficient. It's O(n^2) right now.
+            val newBatch = new java.util.ArrayList[AbstractQuery]
+/*            val count = batch.size
+            val numQ = externalQueues.length
+            var i = 0
+            var nextQueue = 1
+            var flag = false
+            while (i < count) {
+              flag = false
+              for(query <- batch) {
+                if(!flag && query.getQueueID == nextQueue && !newBatch.contains(query)) {
+                  newBatch.add(query)
+                  // batch.remove(query) // remove not supported
+                  nextQueue = (nextQueue % numQ) + 1
+                  flag = true
+                  i = i + 1
+                }
+              }
+              if(!flag) // the queue is exhausted
+              {
+                nextQueue = (nextQueue % numQ) + 1
+                i = i - 1
+              }
+            }*/
+
+            // reordering queries efficiently using a comparator based on query ID
+            newBatch.addAll(batch)
+            java.util.Collections.sort(newBatch, new java.util.Comparator[AbstractQuery]() {
+              @Override
+              def compare(o1: AbstractQuery, o2: AbstractQuery): Int = {
+                o1.getQueryID.compareTo(o2.getQueryID)
+              }
+            })
 
             // fire sql queries
-            for(query <- batch) {
-//              val queryString: String = query.getName() 
+            for(query <- newBatch) {
               var cacheUsed: Double = 0
               val toCacheForQuery = new java.util.ArrayList[Dataset]()
               if(query.isInstanceOf[TPCHQuery]) {
                 if(datasetsToCache.contains(tpchData.get(0))) {
                   for(i <- 0 to tpchData.size()-1) {
                     toCacheForQuery.add(tpchData.get(i))
-                    println("use cache table: " + tpchData.get(i))
                     cacheUsed += tpchData.get(i).getEstimatedSize()
                   }
                 } else {
@@ -428,20 +437,20 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 if(datasetsToCache.contains(q.getDataset())) {	//datasetsToCache are already cached at this time
                   toCacheForQuery.add(q.getDataset())
                   println("use cache table: " + q.getDataset())
-//                  queryString = q.toHiveQL(true)
                   cacheUsed = q.getScanBenefit()
                 } else {
                   println("use external table: " + q.getDataset())
-//                  queryString = q.toHiveQL(false)
                 }
               }
               println("query fired: " + query.getQueueID + ": " + query.toHiveQL(false))
 
               // submit query to spark through a thread
-              pool.execute(new ExecutorThread(query, memoryExecutor,
-                  coresMax, toCacheForQuery))
+              try {
+                pool.execute(new ExecutorThread(query, memoryExecutor,
+                  coresMax, toCacheForQuery, cacheUsed))
+                numExecutors = numExecutors + 1
+              } catch{case e: Exception => e.printStackTrace}
 
-              manager.postEvent(new QueryPushedToSparkScheduler(query, cacheUsed))
             }
 
       }
@@ -463,8 +472,11 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 // now there are no more queries
             	e.printStackTrace();
             	// wait for all executor threads to finish
-            	pool.shutdown;
-            	pool.awaitTermination(60, java.util.concurrent.TimeUnit.MINUTES);
+            	// pool.shutdown;
+            	//pool.awaitTermination(60, java.util.concurrent.TimeUnit.MINUTES);
+                try { s.acquire(numExecutors) } catch { case e:Exception => e.printStackTrace() }
+                pool.shutdownNow
+                pool.awaitTermination(5, java.util.concurrent.TimeUnit.MINUTES)
             	return
             }}
           } else {
@@ -472,7 +484,6 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
         	  setup.run()
             } catch { case e: Exception => {
               e.printStackTrace()
-               println("not returning")
           }}}
         }
       }
@@ -481,7 +492,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
         cacheData(toCache, true)
       }
 
-      def cacheData(toCache: java.util.List[Dataset], uncache: Boolean = false) {
+      def cacheData(toCache: java.util.List[Dataset], uncache: Boolean = false)       {
              try {
                val name = { if(uncache) Constants.UNCACHE_QUERY else Constants.CACHE_QUERY }
                val separator = System.getProperty("file.separator")
@@ -489,10 +500,9 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                val path = System.getProperty("java.home") + separator + "bin" + separator + "java"
                val processBuilder = new ProcessBuilder(path, "-cp",
                    classpath,
-                   Submit.getClass.getCanonicalName().dropRight(1), name, memoryWorker, totalMaxCores, name, new Gson().toJson(toCache))
+                   Submit.getClass.getCanonicalName().dropRight(1), name, memoryWorker, totalMaxCores, new Gson().toJson(toCache))
                processBuilder.redirectErrorStream(true)
                processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-               //println("Submitting app: " + processBuilder.command.toString)
                val process = processBuilder.start()
                process.waitFor()
 
@@ -505,7 +515,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
       }
 
       class ExecutorThread(query: AbstractQuery, memory: String, maxCores: String, 
-           toCache: java.util.List[Dataset]) extends java.lang.Runnable {
+           toCache: java.util.List[Dataset], cacheUsed: Double) extends java.lang.Runnable {
         
         override def run() {
               try {
@@ -515,11 +525,11 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                val path = System.getProperty("java.home") + separator + "bin" + separator + "java"
                val processBuilder = new ProcessBuilder(path, "-cp", 
                    classpath, 
-                   Submit.getClass.getCanonicalName().dropRight(1), query.getQueueID + ":" + query.getQueryID + ":" + query.getName, memory, maxCores, query.getName, new Gson().toJson(toCache))
+                   Submit.getClass.getCanonicalName().dropRight(1), new Gson().toJson(query), memory, maxCores, new Gson().toJson(toCache))
                processBuilder.redirectErrorStream(true)
                processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-               //println("Submitting app: " + processBuilder.command.toString)
                val process = processBuilder.start()
+               lockFile("Queue:" + query.getQueueID + ",Query:" + query.getQueryID + "," + query.getName)
                process.waitFor()
 
                 //val result = hiveContexts.get(query.getQueueID).sql(queryString)
@@ -528,8 +538,33 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 case e: Exception => 
               } finally{
                 // hopefully, this is called after query is finished
-                manager.postEvent(new QueryFinished(query))                
+                manager.postEvent(new QueryFinished(query))
+                s.release                
               }
+        }
+
+        def lockFile(name: String) {
+                try {
+                    val file = new java.io.File("/tmp/" + name);
+                    while(!file.exists) {
+                      Thread.sleep(1000);
+                    }
+
+                    // Creates a random access file stream to read from, and optionally to write to
+                    // val channel = new java.io.RandomAccessFile(file, "rw").getChannel();
+
+                    // Acquire an exclusive lock on this channel's file (blocks until lock can be retrieved)
+                    // val lock = channel.lock();
+
+		    manager.postEvent(new QueryPushedToSparkScheduler(query, cacheUsed))
+
+		    // lock.release()
+		    // channel.close()
+		    file.delete()
+                } catch { case e: Exception =>
+                        println("I/O Error: "); e.printStackTrace();
+                }
+
         }
 
       }

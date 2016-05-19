@@ -20,7 +20,8 @@ public class GroupingQuery extends SingleDatasetQuery implements Serializable {
                           Column grouping) {
 	  super(queryID, queueId, dataset, projections, selections);
 	  groupingColumn = grouping;
-	}
+          setName(Constants.SALES_GROUP_QUERY);
+ 	}
 
 	/**
 	 * @return the groupingColumn
@@ -38,10 +39,10 @@ public class GroupingQuery extends SingleDatasetQuery implements Serializable {
 
 	@Override
 	public String toHiveQL(Boolean cached) {
-    String result = super.toHiveQL(cached);
-    result = result + " GROUP BY " + groupingColumn.getColName();
-    return result;
-  }
+	    String result = super.toHiveQL(cached);
+ 	    result = result + " GROUP BY " + groupingColumn.getColName();
+	    return result;
+	}
 
 }
 

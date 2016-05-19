@@ -5,7 +5,7 @@ import org.apache.spark.sql.functions.first
 import org.apache.spark.sql.functions.sum
 import org.apache.spark.sql.functions.udf
 
-class TPCHQ19(appName: String, memory: String, cores: String, datasetsCached: java.util.List[Dataset]) 
+class TPCHQ19(appName: String, query: AbstractQuery, memory: String, cores: String, datasetsCached: java.util.List[Dataset]) 
 	extends AbstractTPCHQuery(appName, memory, cores, datasetsCached) {
 
   import sqlContext.implicits._

@@ -4,7 +4,7 @@ import edu.duke.cacheplanner.data.Dataset
 import org.apache.spark.sql.functions.sum
 import org.apache.spark.sql.functions.udf
 
-class TPCHQ14(appName: String, memory: String, cores: String, datasetsCached: java.util.List[Dataset]) 
+class TPCHQ14(appName: String, query: AbstractQuery, memory: String, cores: String, datasetsCached: java.util.List[Dataset]) 
 	extends AbstractTPCHQuery(appName, memory, cores, datasetsCached) {
 
   import sqlContext.implicits._

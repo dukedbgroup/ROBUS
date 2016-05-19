@@ -117,7 +117,8 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
   }
 
   def start() {
-    started = true    
+    started = true 
+    plannerThread.setDaemon(true)   
     plannerThread.start()
   }
   

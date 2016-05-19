@@ -66,21 +66,21 @@ object Factory {
       } else {
       val ranks = Parser.parseZipfRank("conf/" + rankFileName + ".xml")
       val queueDistribution = new java.util.HashMap[String, DatasetDistribution]()
-      var rankSum = 0d
-      (1 to ranks.size).foreach(t => rankSum += 1d/t)	// harmonic sum
+      var rankSum = 0.0
+      (1 to ranks.size).foreach(t => rankSum += 1.0/t)	// harmonic sum
       var count = 0
       for(dataset <- datasets) {
         val colDistribution = new java.util.HashMap[String, java.lang.Double]()
         val numCols = dataset.getColumns().size
         for(column <- dataset.getColumns()) {
-          colDistribution.put(column.getColName(), (1d/numCols))	// FIXME: creating a uniform distribution over columns
+          colDistribution.put(column.getColName(), (1.0/numCols))	// FIXME: creating a uniform distribution over columns
         }
-        val prob = 1d / (ranks(count).toInt * rankSum)	// zipf probability is inversely proportional to rank
+        val prob = 1.0 / (ranks(count).toInt * rankSum)	// zipf probability is inversely proportional to rank
         queueDistribution.put(dataset.getName(), 
             new DatasetDistribution(prob, colDistribution))
         count = count + 1
       }
-      rankSum = 0d
+      rankSum = 0.0
       queueDistribution.foreach(t => rankSum += t._2.getDataProb)
       queryDistribution.put(queue.getId(), new QueueDistribution(queueDistribution))
       }

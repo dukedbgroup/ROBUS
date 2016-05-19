@@ -6,7 +6,7 @@ import tachyon.TachyonURI
 import tachyon.client.TachyonFS
 import tachyon.conf.TachyonConf
 
-class UncacheQ (appName: String, memory: String, cores: String, datasets: java.util.List[Dataset]) 
+class UncacheQ (appName: String, query: AbstractQuery, memory: String, cores: String, datasets: java.util.List[Dataset]) 
 	extends SubmitQuery(appName, memory, cores) {
 
   import sqlContext.implicits._

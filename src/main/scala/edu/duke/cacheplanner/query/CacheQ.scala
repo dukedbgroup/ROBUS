@@ -3,7 +3,7 @@ package edu.duke.cacheplanner.query
 import scala.collection.JavaConversions._
 import edu.duke.cacheplanner.data.Dataset
 
-class CacheQ (appName: String, memory: String, cores: String, datasets: java.util.List[Dataset]) 
+class CacheQ (appName: String, query: AbstractQuery, memory: String, cores: String, datasets: java.util.List[Dataset]) 
 	extends SubmitQuery(appName, memory, cores) {
 
   import sqlContext.implicits._
