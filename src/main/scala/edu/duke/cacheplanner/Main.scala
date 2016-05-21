@@ -22,7 +22,7 @@ object Main {
 
     // compute final metrics
     val writer = new PrintWriter(new File(config.getLogDirPath + "/metrics"))
-//    println("------------- metrics ---------------")
+    println("------------- metrics ---------------" + config.getLogDirPath + "/metrics")
     writer.println("sum wait time -> " + metrics.getTotalWaitTime)
     writer.println("sum execution time -> " + metrics.getTotalExecTime)
     writer.println("workload time -> " + metrics.getTimeOfWorkload)
@@ -54,6 +54,7 @@ object Main {
 
     // write execution times
     val writer2 = new PrintWriter(new File(config.getLogDirPath + "/runtimes"))
+    println("------------- runtimes ---------------" + config.getLogDirPath + "/metrics")
     writer2.println("queueID\tqueryID\tqueryString\ttime(ms)")
     metrics.getFormattedQueryExecTimes.foreach(t => writer2.println(
         t._1 + "\t" + t._2 + "\t\"" + t._3 + "\"\t" + t._4))

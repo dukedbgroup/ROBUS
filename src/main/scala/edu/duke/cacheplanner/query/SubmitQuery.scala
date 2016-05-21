@@ -45,7 +45,6 @@ abstract class SubmitQuery(name: String, memory: String, cores: String) {
       override def onTaskStart(taskStart: SparkListenerTaskStart) {
         if(!firstTaskSeen) {
           firstTaskSeen = true
-          println("First task seen: " + taskStart.stageId);
           val (lock, channel) = lockFile
           unlockFile(lock, channel)
         }
@@ -66,7 +65,6 @@ abstract class SubmitQuery(name: String, memory: String, cores: String) {
 
 		    // Acquire an exclusive lock on this channel's file (blocks until lock can be retrieved)
 		    val lock = channel.lock();
-println("Acquired lock: " + name)
 		    (lock, channel)
 		    
 		} catch { case e: Exception =>
@@ -82,7 +80,6 @@ println("Acquired lock: " + name)
 
                     // close the channel
                     channel.close();
-println("Released lock: " + name)
                 } catch { case e: Exception =>
                         println("I/O Error: "); e.printStackTrace();
                 }

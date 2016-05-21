@@ -36,6 +36,7 @@ class Context(manager: ListenerManager,
     }
     // cache planner won't stop before finishing running all generated queries
     cachePlanner.stop
+    println("All queries have finished execution")
     // listener manager will have to wait as well to listen to all planner events
     listenerManager.stop()
   }

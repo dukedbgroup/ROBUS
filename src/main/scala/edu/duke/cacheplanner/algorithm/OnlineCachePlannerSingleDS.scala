@@ -449,7 +449,13 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 pool.execute(new ExecutorThread(query, memoryExecutor,
                   coresMax, toCacheForQuery, cacheUsed))
                 numExecutors = numExecutors + 1
-              } catch{case e: Exception => e.printStackTrace}
+              } catch {
+                case e: Exception => e.printStackTrace
+              } finally {
+                // TODO: marking query as finished even when it has failed due to concurrent thread being rejected
+                manager.postEvent(new QueryFinished(query))
+                s.release
+              }
 
             }
 
@@ -472,7 +478,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 // now there are no more queries
             	e.printStackTrace();
             	// wait for all executor threads to finish
-            	// pool.shutdown;
+            	//pool.shutdown;
             	//pool.awaitTermination(60, java.util.concurrent.TimeUnit.MINUTES);
                 try { s.acquire(numExecutors) } catch { case e:Exception => e.printStackTrace() }
                 pool.shutdownNow
@@ -535,12 +541,8 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 //val result = hiveContexts.get(query.getQueueID).sql(queryString)
                 //result.collect()
               } catch {
-                case e: Exception => 
-              } finally{
-                // hopefully, this is called after query is finished
-                manager.postEvent(new QueryFinished(query))
-                s.release                
-              }
+                case e: Exception => e.printStackTrace
+              } 
         }
 
         def lockFile(name: String) {

@@ -69,7 +69,6 @@ class SalesQ(appName: String, query: AbstractQuery, memory: String, cores: Strin
         filterString += s.getOperator.toString
         filterString += " " + s.getValue
       }
-println("Filter expression: " + filterString) 
       scan.filter(filterString)
     } else {
       scan
