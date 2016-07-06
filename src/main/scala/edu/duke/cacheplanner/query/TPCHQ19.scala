@@ -4,9 +4,10 @@ import edu.duke.cacheplanner.data.Dataset
 import org.apache.spark.sql.functions.first
 import org.apache.spark.sql.functions.sum
 import org.apache.spark.sql.functions.udf
+import org.apache.spark.{SparkConf, SparkContext}
 
-class TPCHQ19(appName: String, query: AbstractQuery, memory: String, cores: String, datasetsCached: java.util.List[Dataset]) 
-	extends AbstractTPCHQuery(appName, memory, cores, datasetsCached) {
+class TPCHQ19(appName: String, query: AbstractQuery, sc: SparkContext, datasetsCached: java.util.List[Dataset]) 
+	extends AbstractTPCHQuery(appName, sc, datasetsCached) {
 
   import sqlContext.implicits._
 
@@ -37,7 +38,7 @@ class TPCHQ19(appName: String, query: AbstractQuery, memory: String, cores: Stri
       .select(decrease($"l_extendedprice", $"l_discount").as("volume"))
       .agg(sum("volume"))
 
-     res.collect
+     try { res.collect } catch { case e: Exception => e.printStackTrace }
   }
 
 }

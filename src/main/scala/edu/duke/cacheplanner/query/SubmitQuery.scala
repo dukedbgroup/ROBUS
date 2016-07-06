@@ -3,18 +3,14 @@ package edu.duke.cacheplanner.query
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.scheduler._
 
-abstract class SubmitQuery(name: String, memory: String, cores: String) {
-
-  val tachyonURL = "tachyon://xeno-62:19998"
-
-  val tachyonHOME = tachyonURL + "/cacheplanner"
+abstract class SubmitQuery(name: String, sc: SparkContext) {
 
   val hdfsHOME = "hdfs://xeno-62:9000/cacheplanner"
 
-  val sc = initSparkContext(name, memory, cores)
+//  val sc = initSparkContext(name, memory, cores)
   val sqlContext = new org.apache.spark.sql.SQLContext(sc)
 
-  def initSparkContext(name: String, memory: String, cores: String): SparkContext = {
+/*  def initSparkContext(name: String, memory: String, cores: String): SparkContext = {
     val conf = new SparkConf().setAppName(name).setMaster(System.getenv("MASTER"))
     conf.setSparkHome(System.getenv("SPARK_HOME"))
     conf.setJars(Seq("target/scala-2.10/CachePlanner-assembly-0.1.jar"))
@@ -54,6 +50,7 @@ abstract class SubmitQuery(name: String, memory: String, cores: String) {
 
     sc
   }
+*/
 
   def lockFile(): (java.nio.channels.FileLock, java.nio.channels.FileChannel) = {
 		try {

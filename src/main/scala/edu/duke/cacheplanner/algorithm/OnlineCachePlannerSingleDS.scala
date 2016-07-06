@@ -4,8 +4,7 @@
 package edu.duke.cacheplanner.algorithm
 
 import com.google.gson.Gson
-import java.util.concurrent.Executors
-import java.util.concurrent.ExecutorService
+import java.util.concurrent._
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
@@ -21,11 +20,15 @@ import edu.duke.cacheplanner.data.QueryDistribution
 import edu.duke.cacheplanner.listener._
 import edu.duke.cacheplanner.query.QueryUtil
 import edu.duke.cacheplanner.query.AbstractQuery
+import edu.duke.cacheplanner.query.CacheQ
 import edu.duke.cacheplanner.query.Constants
 import edu.duke.cacheplanner.query.SingleDatasetQuery
+import edu.duke.cacheplanner.query.SubmitQuery
 import edu.duke.cacheplanner.query.TPCHQuery
 import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.algorithm.singleds.AbstractSingleDSBatchAnalyzer
+import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.scheduler._
 
 /**
  * @author mayuresh
@@ -260,7 +263,18 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
       /**
        * thread pool for query execution threads
        */
-      val pool:ExecutorService = Executors.newFixedThreadPool(externalQueues.length);
+      val pool = new ThreadPoolExecutor(externalQueues.length, externalQueues.length, 0L, TimeUnit.MILLISECONDS,
+                                        new LinkedBlockingQueue[Runnable](), 
+        new RejectedExecutionHandler() {
+            @Override
+            def rejectedExecution(r: Runnable, executor: ThreadPoolExecutor) {
+                // TODO: marking query as finished even when it has failed due to concurrent thread being rejected
+                println("Caught rejected execution exception")
+                val thread = r.asInstanceOf[ExecutorThread]
+                manager.postEvent(new QueryFinished(thread.getQuery));
+                s.release
+            }
+        })
       var numExecutors: Int = 0
       val s = new java.util.concurrent.Semaphore(0)
 
@@ -373,6 +387,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 //              uncacheData(dropCandidate)
 //            }
             for(ds <- dropCandidate) {
+              CacheQ.getUncacheDataframe(ds) // probably won't have any effect
               manager.postEvent(new DatasetUnloadedFromCache(ds))
             }
 
@@ -385,30 +400,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             }
 
             // reorder queries in the batch
-            // TODO: make it efficient. It's O(n^2) right now.
             val newBatch = new java.util.ArrayList[AbstractQuery]
-/*            val count = batch.size
-            val numQ = externalQueues.length
-            var i = 0
-            var nextQueue = 1
-            var flag = false
-            while (i < count) {
-              flag = false
-              for(query <- batch) {
-                if(!flag && query.getQueueID == nextQueue && !newBatch.contains(query)) {
-                  newBatch.add(query)
-                  // batch.remove(query) // remove not supported
-                  nextQueue = (nextQueue % numQ) + 1
-                  flag = true
-                  i = i + 1
-                }
-              }
-              if(!flag) // the queue is exhausted
-              {
-                nextQueue = (nextQueue % numQ) + 1
-                i = i - 1
-              }
-            }*/
 
             // reordering queries efficiently using a comparator based on query ID
             newBatch.addAll(batch)
@@ -443,17 +435,19 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 }
               }
               println("query fired: " + query.getQueueID + ": " + query.toHiveQL(false))
+              numExecutors = numExecutors + 1
 
               // submit query to spark through a thread
+              val appName = "Queue:" + query.getQueueID + ",Query:" + query.getQueryID + "," + query.getName
+              val c = Class.forName(f"edu.duke.cacheplanner.query.${query.getName}").getConstructor(classOf[String], classOf[AbstractQuery], classOf[SparkContext], classOf[java.util.List[Dataset]])
+              val submitQuery = c.newInstance(appName, query, sparkContext, toCacheForQuery).asInstanceOf[{ def submit }]
+
               try {
-                pool.execute(new ExecutorThread(query, memoryExecutor,
-                  coresMax, toCacheForQuery, cacheUsed))
-                numExecutors = numExecutors + 1
+                pool.execute(new ExecutorThread(query, submitQuery.asInstanceOf[SubmitQuery], sparkContext, toCacheForQuery, cacheUsed))
               } catch {
-                case e: Exception => e.printStackTrace
-              } finally {
+                case e: Exception => e.printStackTrace;
                 // TODO: marking query as finished even when it has failed due to concurrent thread being rejected
-                manager.postEvent(new QueryFinished(query))
+                manager.postEvent(new QueryFinished(query));
                 s.release
               }
 
@@ -520,12 +514,39 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
              }
       }
 
-      class ExecutorThread(query: AbstractQuery, memory: String, maxCores: String, 
+      class ExecutorThread(query: AbstractQuery, submitQuery: SubmitQuery, sc: SparkContext, 
            toCache: java.util.List[Dataset], cacheUsed: Double) extends java.lang.Runnable {
+
+        def getQuery(): AbstractQuery = query
         
         override def run() {
+
+              val jobPool = query.getQueueID.toString
+              sc.setJobGroup(jobPool, query.getName)
+              sc.setLocalProperty("spark.scheduler.pool", jobPool)
+
+              val qID = query.getQueryID.toString
+              sc.setLocalProperty("query.id", qID)
+
+              val listener = new SparkListener() {
+                override def onJobStart(jobObject: SparkListenerJobStart) {
+                  var started = false
+
+                  try {
+                    if(!started && qID == jobObject.properties.getProperty("query.id") && jobPool == jobObject.properties.getProperty("spark.scheduler.pool")) {
+                      started = true
+                      manager.postEvent(new QueryPushedToSparkScheduler(query, cacheUsed))
+                    }
+                  } catch {
+                    case e: Exception => 
+                  }
+                }
+              }
+              sc.addSparkListener(listener)
+
               try {
 
+/*
                val separator = System.getProperty("file.separator")
                val classpath = System.getenv("SPARK_CLASSPATH") //System.getProperty("java.class.path")
                val path = System.getProperty("java.home") + separator + "bin" + separator + "java"
@@ -537,11 +558,17 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                val process = processBuilder.start()
                lockFile("Queue:" + query.getQueueID + ",Query:" + query.getQueryID + "," + query.getName)
                process.waitFor()
+*/
 
-                //val result = hiveContexts.get(query.getQueueID).sql(queryString)
-                //result.collect()
+               submitQuery.submit
+
               } catch {
                 case e: Exception => e.printStackTrace
+              } finally {
+                // query has finished 
+                manager.postEvent(new QueryFinished(query))
+                sc.removeSparkListener(listener)
+                s.release
               } 
         }
 

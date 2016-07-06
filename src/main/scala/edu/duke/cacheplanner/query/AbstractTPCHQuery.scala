@@ -7,6 +7,7 @@ import org.apache.spark.sql.functions.min
 import scala.reflect.runtime.universe
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkConf, SparkContext}
 import java.io.File
 
 case class Customer(
@@ -86,8 +87,8 @@ case class Supplier(
   s_acctbal: Double,
   s_comment: String)
 
-abstract class AbstractTPCHQuery(appName: String, memory: String, coresMax: String, datasetsCached: java.util.List[Dataset]) 
-	extends SubmitQuery(appName, memory, coresMax) {
+abstract class AbstractTPCHQuery(appName: String, sc: SparkContext, datasetsCached: java.util.List[Dataset]) 
+	extends SubmitQuery(appName, sc) {
 
   import sqlContext.implicits._
   import org.apache.spark.sql.functions._
@@ -95,7 +96,7 @@ abstract class AbstractTPCHQuery(appName: String, memory: String, coresMax: Stri
   def getPaths: (String, String) = {
    var lineitem_path: String = hdfsHOME + "/lineitem"
    var part_path: String = hdfsHOME + "/part"
-   for (ds <- datasetsCached) {
+/*   for (ds <- datasetsCached) {
     if(ds.getName == "lineitem")
     {
       lineitem_path = tachyonHOME + "/lineitem";
@@ -104,15 +105,26 @@ abstract class AbstractTPCHQuery(appName: String, memory: String, coresMax: Stri
     {
       part_path = tachyonHOME + "/part";
     }
-   }
+   }*/
    (lineitem_path, part_path)
   }
 
   val (lineitem_path, part_path) = getPaths
   
-  val lineitem = sc.textFile(lineitem_path).map(_.split('|')).map(p => Lineitem(p(0).trim.toInt, p(1).trim.toInt, p(2).trim.toInt, p(3).trim.toInt, p(4).trim.toDouble, p(5).trim.toDouble, p(6).trim.toDouble, p(7).trim.toDouble, p(8).trim, p(9).trim, p(10).trim, p(11).trim, p(12).trim, p(13).trim, p(14).trim, p(15).trim)).toDF()
+  var lineitem = sc.textFile(lineitem_path).map(_.split('|')).map(p => Lineitem(p(0).trim.toInt, p(1).trim.toInt, p(2).trim.toInt, p(3).trim.toInt, p(4).trim.toDouble, p(5).trim.toDouble, p(6).trim.toDouble, p(7).trim.toDouble, p(8).trim, p(9).trim, p(10).trim, p(11).trim, p(12).trim, p(13).trim, p(14).trim, p(15).trim)).toDF()
 
-  val part = sc.textFile(part_path).map(_.split('|')).map(p => Part(p(0).trim.toInt, p(1).trim, p(2).trim, p(3).trim, p(4).trim, p(5).trim.toInt, p(6).trim, p(7).trim.toDouble, p(8).trim)).toDF()
+  var part = sc.textFile(part_path).map(_.split('|')).map(p => Part(p(0).trim.toInt, p(1).trim, p(2).trim, p(3).trim, p(4).trim, p(5).trim.toInt, p(6).trim, p(7).trim.toDouble, p(8).trim)).toDF()
+
+  for (ds <- datasetsCached) {
+    if(ds.getName == "lineitem")
+    {
+      lineitem = CacheQ.getCachedDataframe(ds)
+    }
+    if(ds.getName == "part")
+    {
+      part = CacheQ.getCachedDataframe(ds)
+    }
+  }
 
   def submit(): Unit
 

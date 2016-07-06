@@ -2,6 +2,7 @@ package edu.duke.cacheplanner.query
 
 import scala.collection.JavaConversions._
 import edu.duke.cacheplanner.data.Dataset
+import org.apache.spark.{SparkConf, SparkContext}
 
 case class Sales(
               ss_sold_date_sk: Int,
@@ -29,8 +30,8 @@ case class Sales(
 //              ss_net_profit: Double // case classcan't have more than 22 parameters
 )
 
-class SalesQ(appName: String, query: AbstractQuery, memory: String, cores: String, datasetsCached: java.util.List[Dataset]) 
-	extends SubmitQuery(appName, memory, cores) {
+class SalesQ(appName: String, query: AbstractQuery, sc: SparkContext, datasetsCached: java.util.List[Dataset]) 
+	extends SubmitQuery(appName, sc) {
 
   import sqlContext.implicits._
   import org.apache.spark.sql.functions._
@@ -44,17 +45,16 @@ class SalesQ(appName: String, query: AbstractQuery, memory: String, cores: Strin
 
     // dataset path
     val ds = q.getDataset()
-    val path = {
-      if( datasetsCached.contains(ds) ) {
-        tachyonHOME + "/" + ds.getName
-      } else {
-        hdfsHOME + "/" + ds.getName
-      }
-    }
+    val path = hdfsHOME + "/" + ds.getName
 
     // read input dataset
-    // HACK: only mapping two columns
-    val scan = sc.textFile(path).map(_.split('|')).map(s => Sales( try {s(0).trim.toInt} catch { case e: Exception => 0 }, try {s(1).trim.toInt} catch { case e: Exception => 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)).toDF()
+    val scan = {
+      if(datasetsCached.contains(ds)) {
+        CacheQ.getCachedDataframe(ds)
+      } else {
+        sc.textFile(path).map(_.split('|')).map(s => Sales( try {s(0).trim.toInt} catch { case e: Exception => 0 }, try {s(1).trim.toInt} catch { case e: Exception => 0 }, try {s(2).trim.toInt} catch { case e: Exception => 0 }, try {s(3).trim.toInt} catch { case e: Exception => 0 }, try {s(4).trim.toInt} catch { case e: Exception => 0 }, try {s(5).trim.toInt} catch { case e: Exception => 0 }, try {s(6).trim.toInt} catch { case e: Exception => 0 }, try {s(7).trim.toInt} catch { case e: Exception => 0 }, try {s(8).trim.toInt} catch { case e: Exception => 0 }, try {s(9).trim.toInt} catch { case e: Exception => 0 }, try {s(10).trim.toInt} catch { case e: Exception => 0 }, try {s(11).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(12).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(13).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(14).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(15).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(16).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(17).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(18).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(19).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(20).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(21).trim.toDouble} catch { case e: Exception => 0.0 })).toDF()
+      }
+    }
 
     // apply filter
     if(sel != null && sel.length > 0) {
@@ -77,7 +77,7 @@ class SalesQ(appName: String, query: AbstractQuery, memory: String, cores: Strin
   }
 
   def submit() {
-    expression.collect
+    try { expression.collect } catch { case e: Exception => e.printStackTrace }
   }
 
 }

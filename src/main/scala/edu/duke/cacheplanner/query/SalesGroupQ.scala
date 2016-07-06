@@ -1,9 +1,10 @@
 package edu.duke.cacheplanner.query
 
 import edu.duke.cacheplanner.data.Dataset
+import org.apache.spark.{SparkConf, SparkContext}
 
-class SalesGroupQ(appName: String, query: AbstractQuery, memory: String, cores: String, datasetsCached: java.util.List[Dataset]) 
-	extends SalesQ(appName, query, memory, cores, datasetsCached) {
+class SalesGroupQ(appName: String, query: AbstractQuery, sc: SparkContext, datasetsCached: java.util.List[Dataset]) 
+	extends SalesQ(appName, query, sc, datasetsCached) {
 
   val groupExpression = {
     // extract query
@@ -15,7 +16,7 @@ class SalesGroupQ(appName: String, query: AbstractQuery, memory: String, cores: 
   }
 
   override def submit() {
-    groupExpression.collect
+    try { groupExpression.collect } catch { case e: Exception => e.printStackTrace }
   }
 
 }

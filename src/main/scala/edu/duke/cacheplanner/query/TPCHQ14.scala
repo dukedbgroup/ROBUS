@@ -3,9 +3,10 @@ package edu.duke.cacheplanner.query
 import edu.duke.cacheplanner.data.Dataset
 import org.apache.spark.sql.functions.sum
 import org.apache.spark.sql.functions.udf
+import org.apache.spark.{SparkConf, SparkContext}
 
-class TPCHQ14(appName: String, query: AbstractQuery, memory: String, cores: String, datasetsCached: java.util.List[Dataset]) 
-	extends AbstractTPCHQuery(appName, memory, cores, datasetsCached) {
+class TPCHQ14(appName: String, query: AbstractQuery, sc: SparkContext, datasetsCached: java.util.List[Dataset]) 
+	extends AbstractTPCHQuery(appName, sc, datasetsCached) {
 
   import sqlContext.implicits._
 
@@ -18,7 +19,7 @@ class TPCHQ14(appName: String, query: AbstractQuery, memory: String, cores: Stri
       .select($"p_type", reduce($"l_extendedprice", $"l_discount").as("value"))
       .agg(sum(promo($"p_type", $"value")) * 100 / sum($"value"))
 
-    res.collect
+    try { res.collect } catch { case e: Exception => e.printStackTrace }
   }
 
 }

@@ -9,6 +9,7 @@ import edu.duke.cacheplanner.conf.ConfigManager
 import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.data.Dataset
+import edu.duke.cacheplanner.query.CacheQ
 import edu.duke.cacheplanner.query.QueryUtil
 import org.apache.spark.sql.SchemaRDD
 
@@ -27,15 +28,15 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
   // container configuration for executors
   val memoryWorker = "10g"
   val totalMaxCores = "80"
-  val memoryExecutor = 10240/externalQueues.length + "m"   // FIXME: assuming 10GB reserved for spark on each worker
-  val coresMax = 10*8/externalQueues.length + ""  // FIXME: assuming 8 cores per worker
+  // val memoryExecutor = 10240/externalQueues.length + "m"   // FIXME: assuming 10GB reserved for spark on each worker
+  // val coresMax = 10*8/externalQueues.length + ""  // FIXME: assuming 8 cores per worker
 
   // Following statements could be committed if hive warehouse has already loaded all the tables to save time
   // use this context to initialize tables 
-  // val sparkContext = initSparkContext
-  // val hiveContext = new HiveContext(sparkContext)
-  // initTables(hiveContext, datasets)
-  // initTables(hiveContext, tpchDatasets)
+  val sparkContext = initSparkContext("SingleContext")
+  // create cache dataframe expressions for all datasets
+  CacheQ.createDataframes(sparkContext, datasets)
+  CacheQ.createDataframes(sparkContext, tpchDatasets)
 
 /*
   def initSparkContexts: java.util.Map[Integer, SparkContext] = {
@@ -71,19 +72,30 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
     conf.setSparkHome(System.getenv("SPARK_HOME"))
     conf.setJars(Seq("target/scala-2.10/CachePlanner-assembly-0.1.jar"))
     conf.set("spark.scheduler.mode", "FAIR")
-    conf.set("spark.executor.memory", memoryExecutor)
-    conf.set("spark.cores.max", coresMax)    
-    // this fraction makes cache space about 2GB, but we are going to use only 1GB for algorithms
+    // HACK: assuming that internal file has same pool names as corresponding queue id
+    // Also assuming weights and min shares match. 
+    // Ideally there should be a single config file
+    conf.set("spark.scheduler.allocation.file", "conf/internal.xml")
+
+    conf.set("spark.executor.memory", memoryWorker)
+    conf.set("spark.cores.max", totalMaxCores)    
+    // this fraction makes cache space about 10GB, but we are going to use only 5GB for algorithms
+    conf.set("spark.memory.useLegacyMode", "true")
     conf.set("spark.storage.memoryFraction", "0.1")
 
     conf.set("spark.eventLog.enabled", "true")
     conf.set("spark.eventLog.dir", "hdfs://xeno-62:9000/sparkEventLog")
 
-    conf.set("spark.externalBlockStore.url", "tachyon//xeno-62:19998")
+//    conf.set("spark.externalBlockStore.url", "tachyon//xeno-62:19998")
+
+    // speculative
+    conf.set("spark.speculation", "true")
+    conf.set("spark.speculation.multiplier", "2")
+    conf.set("spark.speculation.interval", "1s")
 
     val sc = new SparkContext(conf)
     // tachyon configuration
-    sc.hadoopConfiguration.set("fs.tachyon.impl", "tachyon.hadoop.TFS")
+//    sc.hadoopConfiguration.set("fs.tachyon.impl", "tachyon.hadoop.TFS")
 
     sc
   }

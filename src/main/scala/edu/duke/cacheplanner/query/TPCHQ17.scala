@@ -4,9 +4,10 @@ import edu.duke.cacheplanner.data.Dataset
 import org.apache.spark.sql.functions.avg
 import org.apache.spark.sql.functions.sum
 import org.apache.spark.sql.functions.udf
+import org.apache.spark.{SparkConf, SparkContext}
 
-class TPCHQ17(appName: String, query: AbstractQuery, memory: String, cores: String, datasetsCached: java.util.List[Dataset]) 
-	extends AbstractTPCHQuery(appName, memory, cores, datasetsCached) {
+class TPCHQ17(appName: String, query: AbstractQuery, sc: SparkContext, datasetsCached: java.util.List[Dataset]) 
+	extends AbstractTPCHQuery(appName, sc, datasetsCached) {
 
   import sqlContext.implicits._
 
@@ -26,7 +27,7 @@ class TPCHQ17(appName: String, query: AbstractQuery, memory: String, cores: Stri
       .filter($"l_quantity" < $"avg_quantity")
       .agg(sum($"l_extendedprice") / 7.0)
 
-    res.collect
+    try { res.collect } catch { case e: Exception => e.printStackTrace }
   }
 
 }
