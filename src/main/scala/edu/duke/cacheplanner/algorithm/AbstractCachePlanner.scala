@@ -2,7 +2,6 @@ package edu.duke.cacheplanner.algorithm
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.hive.HiveContext
 import scala.collection.JavaConversions._
 import java.util
 import edu.duke.cacheplanner.conf.ConfigManager
@@ -104,7 +103,7 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
     val hiveContext = new org.apache.spark.sql.hive.HiveContext(sc)
     import hiveContext._
     hiveContext
-  }*/
+  }
 
   def initTables(hiveContext: HiveContext, datasets: java.util.List[Dataset]) {
 //    for((i, hiveContext) <- hiveContexts) {
@@ -127,6 +126,7 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
      }
 //    }
   }
+*/
 
   def start() {
     started = true 

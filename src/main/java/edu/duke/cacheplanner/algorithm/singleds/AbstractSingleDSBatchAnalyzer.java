@@ -200,13 +200,28 @@ Column();
 			}
 		}
 
-		// reduce benefit by half scan cost, just a heuristic
+		// reduce benefit by one scan cost but in case a queue has zero utility, give it a half utility for the smallest dataset. Just a heuristic!
 		for(int i=0; i<N; i++) {
+			int leastBenefitCol = 0;
+			double leastBenefit = Double.MAX_VALUE;
+			int zeros = 0;
 			for(int j=0; j<num_columns; j++) {
 				double scanPenalty = benefits.get(datasetSeen.get(j));
-				if(utility_table[i][j] > 0) {
-					utility_table[i][j] -= 0.5*scanPenalty;
+				//System.out.println("**Scan penalty for " + datasetSeen.get(j) + " reduced from utitity for " + i + " which is " + utility_table[i][j]);
+				if(scanPenalty < leastBenefit && utility_table[i][j] > 0) {
+					leastBenefit = scanPenalty; 
+					leastBenefitCol = j;
 				}
+				if(utility_table[i][j] > 0) {
+					utility_table[i][j] -= scanPenalty;
+				}
+				if(utility_table[i][j] == 0) {
+					zeros++;
+				}
+			}
+			if(zeros == num_columns) {
+				utility_table[i][leastBenefitCol] = 0.5*leastBenefit;
+				//System.out.println("**Scan penalty restored for " + datasetSeen.get(leastBenefitCol));
 			}
 		}
 

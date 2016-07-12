@@ -9,7 +9,7 @@ object CachePlannerBuild extends Build {
 
   val SCALA_VERSION = "2.10.3"
 
-  val HADOOP_VERSION = "2.6.0"
+  val HADOOP_VERSION = "2.7.2"
 
   lazy val root = Project(
     id = "root",
@@ -42,12 +42,10 @@ object CachePlannerBuild extends Build {
 
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core" % SPARK_VERSION,
-//      "com.typesafe.akka" %% "akka-actor" % "2.2.3",
-//      "org.apache.hadoop" % "hadoop-client" % HADOOP_VERSION,
-      "org.apache.commons" % "commons-math3" % "3.2",
-      "org.apache.spark" %% "spark-hive" % SPARK_VERSION,
-      "com.google.code.gson" % "gson" %"2.2.4",
-      "mysql" % "mysql-connector-java" % "5.1.26"
+//      "org.apache.commons" % "commons-math3" % "3.2",
+      "org.apache.spark" %% "spark-sql" % SPARK_VERSION,
+      "com.google.code.gson" % "gson" %"2.2.4"
+//      "mysql" % "mysql-connector-java" % "5.1.26"
   ),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-compiler" % _)
   ) ++ assemblySettings ++ extraAssemblySettings

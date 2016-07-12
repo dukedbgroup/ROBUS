@@ -69,8 +69,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             throw new Exception("No more queries remained to process.")
           }
           val datasetsToCache = runAlgorithm(batch, cachedDatasets, cacheSize)
-          scheduleBatch(batch, cachedDatasets, datasetsToCache)
-          cachedDatasets = datasetsToCache
+          cachedDatasets = scheduleBatch(batch, cachedDatasets, datasetsToCache)
         }
 
       }
@@ -134,8 +133,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
           val datasetsToCache = if(filteredBatch.size > 0) {
             runAlgorithm(filteredBatch.toList, cachedDatasets, cacheSize)
           } else { cachedDatasets }
-          scheduleBatch(batch, cachedDatasets, datasetsToCache)
-          cachedDatasets = datasetsToCache
+          cachedDatasets = scheduleBatch(batch, cachedDatasets, datasetsToCache)
         }
       }
 
@@ -174,9 +172,8 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
           batchPerQueue.foreach(q => {
             val datasetsToCache = runAlgorithm(q._2.toList, 
                 cachedDatasetsPerQueue(q._1), cachePerQueue(q._1))
-            scheduleBatch(q._2.toList, cachedDatasetsPerQueue(q._1), 
+            cachedDatasetsPerQueue(q._1) = scheduleBatch(q._2.toList, cachedDatasetsPerQueue(q._1), 
                 datasetsToCache)
-            cachedDatasetsPerQueue(q._1) = datasetsToCache            
           })
         }
         
@@ -271,12 +268,17 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 // TODO: marking query as finished even when it has failed due to concurrent thread being rejected
                 println("Caught rejected execution exception")
                 val thread = r.asInstanceOf[ExecutorThread]
-                manager.postEvent(new QueryFinished(thread.getQuery));
+                manager.postEvent(new QueryFinished(thread.getQuery))
                 s.release
+                s_batch.release
             }
         })
       var numExecutors: Int = 0
+      var numExecPerBatch: Int = 0
       val s = new java.util.concurrent.Semaphore(0)
+      var s_batch = new java.util.concurrent.Semaphore(0)
+      var cacheQCounter: Int = 0 //number of cache queries
+      var QCounter: Int = 0 //total number of queries including cache
 
       def buildAlgo(): AbstractSingleDSBatchAnalyzer = {
         if(config.getAlgorithmName().equals("MMF")) {
@@ -344,21 +346,23 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
        * Schedules a batch of queries. A list of datasets already in cache and 
        * a list of datasets that should be in cache is given. 
        * It first changes the state of cache and then runs the queries. 
+       * Returns list of datasets cached in the batch
        */
       def scheduleBatch(batch: List[AbstractQuery], 
-          cachedDatasets: List[Dataset], datasetsToCache: List[Dataset]) = {
+          cachedDatasets: List[Dataset], datasetsToCache: List[Dataset]): List[Dataset] = {
             println("cached from previous")
             cachedDatasets.foreach(c => println(c.getName()))
                 
             println("datasets to cache from algorithm:")
             datasetsToCache.foreach(c=> println(c.getName()))
             
-            //initialize drop & cache candidates to fire the query
-            var dropCandidate : ListBuffer[Dataset] = new ListBuffer[Dataset]()
+            // initialize drop & cache candidates to fire the query
+            val dropCandidate : ListBuffer[Dataset] = new ListBuffer[Dataset]()
             cachedDatasets.foreach(c => dropCandidate += c)
-            var cacheCandidate : ListBuffer[Dataset] = new ListBuffer[Dataset]()
-            datasetsToCache.foreach(c => cacheCandidate += c)
-            
+            val cacheCandidate : ListBuffer[Dataset] = new ListBuffer[Dataset]()
+            val finalCacheConfig: ListBuffer[Dataset] = new ListBuffer[Dataset]()     
+            datasetsToCache.foreach(c => {cacheCandidate += c; finalCacheConfig += c})
+       
             for (cache: Dataset <- cacheCandidate) {
               var matching = false
               var droppingCol: Dataset = null
@@ -376,18 +380,32 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 
               }
             }
+
+            // if there is nothing to cache, no need to drop anything
+            if(cacheCandidate.length == 0) {
+              for (drop: Dataset <- dropCandidate) {
+                dropCandidate -= drop
+                finalCacheConfig += drop
+                manager.postEvent(new DatasetRetainedInCache(drop))
+              }
+            }
             
             println("cache candidate:")
             cacheCandidate.foreach(c => println(c.getName()))
             println("drop candidate:")
             dropCandidate.foreach(c=> println(c.getName()))
             
-            // fire queries to drop the cache
-//            if(dropCandidate.length > 0) {
-//              uncacheData(dropCandidate)
+            // We never drop a dataset except when a cache candidate seen as an uncached dataset is actually in cache from previous batch. These candidates will be brought in cache afresh immediately 
+//            if(cacheCandidate.length > 0) {
+//              try {
+//                pool.execute(new CacheThread(cacheCandidate, true))
+//              } catch {
+//                case e: Exception => e.printStackTrace
+//              }
 //            }
+
             for(ds <- dropCandidate) {
-              CacheQ.getUncacheDataframe(ds) // probably won't have any effect
+              CacheQ.uncacheDataframe(ds.getName) // This has an immediate impact while the past batches might still be queued which are dependent on the cached data
               manager.postEvent(new DatasetUnloadedFromCache(ds))
             }
 
@@ -395,9 +413,6 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 //            if(cacheCandidate.length > 0) {
 //              cacheData(cacheCandidate)
 //            }
-            for(ds <- cacheCandidate) {
-                manager.postEvent(new DatasetLoadedToCache(ds))
-            }
 
             // reorder queries in the batch
             val newBatch = new java.util.ArrayList[AbstractQuery]
@@ -410,6 +425,36 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 o1.getQueryID.compareTo(o2.getQueryID)
               }
             })
+
+            // submit cache statements along side queries not using this cache first
+            if(cacheCandidate.length > 0) {
+              java.util.Collections.sort(newBatch, new java.util.Comparator[AbstractQuery]() {
+                @Override
+                def compare(o1: AbstractQuery, o2: AbstractQuery): Int = {
+                  if((o1.isInstanceOf[TPCHQuery] && !cacheCandidate.contains(tpchData.get(0))) || 
+                  	(o1.isInstanceOf[SingleDatasetQuery] && !cacheCandidate.contains(o1.asInstanceOf[SingleDatasetQuery].getDataset))) {
+                    -1
+                  } 
+                  if((o2.isInstanceOf[TPCHQuery] && !cacheCandidate.contains(tpchData.get(0))) ||
+                        (o2.isInstanceOf[SingleDatasetQuery] && !cacheCandidate.contains(o2.asInstanceOf[SingleDatasetQuery].getDataset))) {
+                    1
+                  }
+                  0
+                }
+              })
+
+              for(ds <- cacheCandidate) {
+                try {
+                  pool.execute(new CacheThread(sparkContext, ds, (QCounter % queues.length) + 1, false))
+                  cacheQCounter = cacheQCounter + 1
+                  QCounter = QCounter + 1
+                } catch {
+                  case e: Exception => e.printStackTrace
+                }
+                //CacheQ.cacheDataframe(ds.getName) // This has an immediate impact while the past batches might still be queued which are dependent on the cached data
+                manager.postEvent(new DatasetLoadedToCache(ds))
+              }
+            }
 
             // fire sql queries
             for(query <- newBatch) {
@@ -436,6 +481,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
               }
               println("query fired: " + query.getQueueID + ": " + query.toHiveQL(false))
               numExecutors = numExecutors + 1
+              numExecPerBatch = numExecPerBatch + 1
 
               // submit query to spark through a thread
               val appName = "Queue:" + query.getQueueID + ",Query:" + query.getQueryID + "," + query.getName
@@ -443,23 +489,28 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
               val submitQuery = c.newInstance(appName, query, sparkContext, toCacheForQuery).asInstanceOf[{ def submit }]
 
               try {
-                pool.execute(new ExecutorThread(query, submitQuery.asInstanceOf[SubmitQuery], sparkContext, toCacheForQuery, cacheUsed))
+                pool.execute(new ExecutorThread(query, submitQuery.asInstanceOf[SubmitQuery], sparkContext, (QCounter % queues.length) + 1, cacheUsed))
+                QCounter = QCounter + 1
               } catch {
                 case e: Exception => e.printStackTrace;
                 // TODO: marking query as finished even when it has failed due to concurrent thread being rejected
                 manager.postEvent(new QueryFinished(query));
                 s.release
+                s_batch.release
               }
 
             }
-
+ 
+            finalCacheConfig.toList
+ 
       }
       
       override def run() {
         while (true) {
-          println("single ds cacheplanner invoked")
           try { 
-        	  Thread.sleep(batchTime * 1000)
+            Thread.sleep(batchTime * 1000)
+            s_batch.acquire(numExecPerBatch) // waiting for the current batch to finish
+            println("--Batch finished with num queries = " + numExecPerBatch)
           } catch {
             case e:InterruptedException => e.printStackTrace
           }
@@ -467,7 +518,9 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
           if (!started) {
             // before returning schedule remaining queries
             try {
-            	setup.run()
+              numExecPerBatch = 0
+              s_batch = new java.util.concurrent.Semaphore(0)
+              setup.run()
             } catch { case e: Exception => {
                 // now there are no more queries
             	e.printStackTrace();
@@ -477,11 +530,14 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 try { s.acquire(numExecutors) } catch { case e:Exception => e.printStackTrace() }
                 pool.shutdownNow
                 pool.awaitTermination(5, java.util.concurrent.TimeUnit.MINUTES)
+                println("--Finished execution. Number of cache statements used: " + cacheQCounter)
             	return
             }}
           } else {
             try {
-        	  setup.run()
+              numExecPerBatch = 0
+              s_batch = new java.util.concurrent.Semaphore(0)
+              setup.run()
             } catch { case e: Exception => {
               e.printStackTrace()
           }}}
@@ -493,6 +549,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
       }
 
       def cacheData(toCache: java.util.List[Dataset], uncache: Boolean = false)       {
+
              try {
                val name = { if(uncache) Constants.UNCACHE_QUERY else Constants.CACHE_QUERY }
                val separator = System.getProperty("file.separator")
@@ -512,26 +569,44 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 // hopefully, this is called after query is finished
                 // manager.postEvent(new QueryFinished(query))
              }
+
+      }
+
+      class CacheThread(sc: SparkContext, ds: Dataset, jobPool: Int, uncache: Boolean) extends java.lang.Runnable {
+
+        override def run() {
+
+          sc.setJobGroup(jobPool.toString, "C-" + cacheQCounter + ":" + jobPool + ":" + ds.getName)
+          sc.setLocalProperty("spark.scheduler.pool", jobPool.toString)
+ 
+          if(uncache) {
+            CacheQ.uncacheDataframe(ds.getName)
+          } else {
+            CacheQ.cacheDataframe(ds.getName)
+          }
+
+        }
+
       }
 
       class ExecutorThread(query: AbstractQuery, submitQuery: SubmitQuery, sc: SparkContext, 
-           toCache: java.util.List[Dataset], cacheUsed: Double) extends java.lang.Runnable {
+           jobPoolID: Int, cacheUsed: Double) extends java.lang.Runnable {
 
         def getQuery(): AbstractQuery = query
         
         override def run() {
 
-              val jobPool = query.getQueueID.toString
-              sc.setJobGroup(jobPool, query.getName)
-              sc.setLocalProperty("spark.scheduler.pool", jobPool)
-
               val qID = query.getQueryID.toString
+              val jobPool = jobPoolID.toString
+              sc.setJobGroup(jobPool, qID + ":" + query.getQueueID + ":" + query.getName)
+              sc.setLocalProperty("spark.scheduler.pool", jobPool)
               sc.setLocalProperty("query.id", qID)
 
               val listener = new SparkListener() {
-                override def onJobStart(jobObject: SparkListenerJobStart) {
-                  var started = false
 
+                var started = false
+
+                override def onJobStart(jobObject: SparkListenerJobStart) {
                   try {
                     if(!started && qID == jobObject.properties.getProperty("query.id") && jobPool == jobObject.properties.getProperty("spark.scheduler.pool")) {
                       started = true
@@ -569,35 +644,10 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                 manager.postEvent(new QueryFinished(query))
                 sc.removeSparkListener(listener)
                 s.release
+                s_batch.release
               } 
         }
-
-        def lockFile(name: String) {
-                try {
-                    val file = new java.io.File("/tmp/" + name);
-                    while(!file.exists) {
-                      Thread.sleep(1000);
-                    }
-
-                    // Creates a random access file stream to read from, and optionally to write to
-                    // val channel = new java.io.RandomAccessFile(file, "rw").getChannel();
-
-                    // Acquire an exclusive lock on this channel's file (blocks until lock can be retrieved)
-                    // val lock = channel.lock();
-
-		    manager.postEvent(new QueryPushedToSparkScheduler(query, cacheUsed))
-
-		    // lock.release()
-		    // channel.close()
-		    file.delete()
-                } catch { case e: Exception =>
-                        println("I/O Error: "); e.printStackTrace();
-                }
-
-        }
-
       }
-
     }
   }
 }

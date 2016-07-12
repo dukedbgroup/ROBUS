@@ -11,15 +11,31 @@ object CacheQ {
 
   val cachedDataframes = scala.collection.mutable.Map[String, DataFrame]()
 
+  val cacheState = new collection.mutable.HashSet[String] with collection.mutable.SynchronizedSet[String]
+
   def getCachedDataframe(ds: Dataset): DataFrame = {
     try {
-      cachedDataframes.getOrElse(ds.getName, null).persist()
+      cachedDataframes.getOrElse(ds.getName, null)
     } catch { case e: Exception => null }
   }
 
-  def getUncacheDataframe(ds: Dataset): DataFrame = {
+  // Materializes a dataframe, should be done at the beginning of batch
+  def cacheDataframe(dsName: String) = {
     try {
-      cachedDataframes.getOrElse(ds.getName, null).unpersist()
+      cacheState += dsName
+      cachedDataframes.getOrElse(dsName, null).persist(org.apache.spark.storage.StorageLevel.MEMORY_ONLY).count
+    } catch { case e: Exception => null }
+  }
+
+  // evicts a dataframe, should be done at the beginning of batch
+  def uncacheDataframe(dsName: String) = {
+    try {
+      if(cacheState contains dsName) {
+        cacheState -= dsName
+        cachedDataframes.getOrElse(dsName, null).unpersist()
+      } else {
+        null
+      }
     } catch { case e: Exception => null }
   }
 
@@ -43,7 +59,7 @@ object CacheQ {
 
         case _ => { // assuming the rest are sales
           val scan = sc.textFile(path).map(_.split('|')).map(s => Sales( try {s(0).trim.toInt} catch { case e: Exception => 0 }, try {s(1).trim.toInt} catch { case e: Exception => 0 }, try {s(2).trim.toInt} catch { case e: Exception => 0 }, try {s(3).trim.toInt} catch { case e: Exception => 0 }, try {s(4).trim.toInt} catch { case e: Exception => 0 }, try {s(5).trim.toInt} catch { case e: Exception => 0 }, try {s(6).trim.toInt} catch { case e: Exception => 0 }, try {s(7).trim.toInt} catch { case e: Exception => 0 }, try {s(8).trim.toInt} catch { case e: Exception => 0 }, try {s(9).trim.toInt} catch { case e: Exception => 0 }, try {s(10).trim.toInt} catch { case e: Exception => 0 }, try {s(11).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(12).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(13).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(14).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(15).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(16).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(17).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(18).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(19).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(20).trim.toDouble} catch { case e: Exception => 0.0 }, try {s(21).trim.toDouble} catch { case e: Exception => 0.0 })).toDF()
-          scan.select("ss_sold_date_sk", "ss_sold_time_sk")
+          scan.select("ss_sold_date_sk", "ss_sold_time_sk", "ss_wholesale_cost", "ss_list_price", "ss_sales_price")
         }
       }
  
