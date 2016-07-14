@@ -247,6 +247,29 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
       }
 
       /**
+       * We cache for every query relying on LRU for evictions
+       * Represents the case where we honour every cache directive
+       */
+      class GreedyCacheSetup extends CacheOnceGreedySetup {
+
+        override def init() = {
+          for(ds <- data) {
+            if(ds.getEstimatedSize < cacheSize)
+            {
+              datasetsToCache.add(ds)
+            }
+          }
+          for(ds <- tpchData) {
+            if(ds.getEstimatedSize < cacheSize)
+            {
+              datasetsToCache.add(ds)
+            }
+          }
+        }
+
+      }
+
+      /**
        * Algorithm specifications follow.
        */
       val algo = buildAlgo
@@ -299,6 +322,8 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
             new ProbabilisticPartitionSetup()
           } else if(confValue.equals("partitionPhysically")) {
             new PhysicalPartitionSetup()
+          } else if(confValue.equals("greedy")) {
+            new GreedyCacheSetup()
           } else {
             new FairShareSetup()
           }

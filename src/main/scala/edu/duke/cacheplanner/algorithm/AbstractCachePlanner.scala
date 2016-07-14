@@ -80,7 +80,11 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
     conf.set("spark.cores.max", totalMaxCores)    
     // this fraction makes cache space about 10GB, but we are going to use only 5GB for algorithms
     conf.set("spark.memory.useLegacyMode", "true")
-    conf.set("spark.storage.memoryFraction", "0.1")
+    if(config.getCachePartitioningStrategy.equals("greedy")) {
+      conf.set("spark.storage.memoryFraction", "0.05") // except for this case where we allow each query to cache and rely on LRU
+    } else {
+      conf.set("spark.storage.memoryFraction", "0.1")
+    }
 
     conf.set("spark.eventLog.enabled", "true")
     conf.set("spark.eventLog.dir", "hdfs://xeno-62:9000/sparkEventLog")
