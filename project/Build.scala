@@ -7,7 +7,7 @@ object CachePlannerBuild extends Build {
 
   val SPARK_VERSION = "1.6.1"
 
-  val SCALA_VERSION = "2.10.3"
+  val SCALA_VERSION = "2.10.5"
 
   val HADOOP_VERSION = "2.7.2"
 
@@ -44,7 +44,11 @@ object CachePlannerBuild extends Build {
       "org.apache.spark" %% "spark-core" % SPARK_VERSION,
 //      "org.apache.commons" % "commons-math3" % "3.2",
       "org.apache.spark" %% "spark-sql" % SPARK_VERSION,
-      "com.google.code.gson" % "gson" %"2.2.4"
+      "org.scalaz" %% "scalaz-core" % "7.0.0", 
+      "org.scalaz" %% "scalaz-effect" % "7.0.0",
+      "org.scalaz" %% "scalaz-typelevel" % "7.0.0",
+      "org.scalaz" %% "scalaz-scalacheck-binding" % "7.0.0" % "test"
+//      "com.google.code.gson" % "gson" %"2.2.4"
 //      "mysql" % "mysql-connector-java" % "5.1.26"
   ),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-compiler" % _)

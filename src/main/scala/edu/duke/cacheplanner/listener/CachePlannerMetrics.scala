@@ -4,7 +4,9 @@
 package edu.duke.cacheplanner.listener
 
 import scala.collection.JavaConversions._
+import scalaz._, Scalaz._
 
+import edu.duke.cacheplanner.conf.Factory
 import edu.duke.cacheplanner.data.Dataset
 import edu.duke.cacheplanner.query.AbstractQuery
 import edu.duke.cacheplanner.query.SingleDatasetQuery
@@ -18,8 +20,10 @@ import edu.duke.cacheplanner.queue.ExternalQueue
 class CachePlannerMetrics(queues: java.util.List[ExternalQueue])
 extends Listener {
 
-  // map of query to its wait time in queue
+  // map of query to its wait time in external queue
   var queryWaitTimes = scala.collection.mutable.Map[AbstractQuery, Long]()
+  // map of query to its scheduling delay
+  var querySchedulingDelays = scala.collection.mutable.Map[AbstractQuery, Long]()
   // exec time per query
   var queryExecTimes = scala.collection.mutable.Map[AbstractQuery, Long]()
   // map of query to amount of cache it used
@@ -65,12 +69,17 @@ extends Listener {
    * Assuming that every query that is generated is fetched by cache planner
    */
   override def onQueryFetchedByCachePlanner(event: QueryFetchedByCachePlanner) { 
+  	val batchSize = 1000L * Factory.getConfigManager.getPlannerBatchTime
 	val startTime = queryWaitTimes(event.query)
-	queryWaitTimes(event.query) = (System.currentTimeMillis() - startTime)
-	numQueriesFetched = numQueriesFetched + 1
+	val waitTime = batchSize - (startTime - timeFirstQueryGenerated + 2000L) % batchSize // HACK: assuming the workload started 3 seconds before first query
+	queryWaitTimes(event.query) = waitTime
+        querySchedulingDelays(event.query) = math.min(startTime + waitTime, System.currentTimeMillis()) // HACK: the first case simulates when queries are scheduled without any synchronization barriers
+ 	numQueriesFetched = numQueriesFetched + 1
   }
   
   override def onQueryPushedToSparkScheduler(event: QueryPushedToSparkScheduler) {
+    querySchedulingDelays(event.query) = System.currentTimeMillis() - querySchedulingDelays(event.query)
+
     queryExecTimes(event.query) = System.currentTimeMillis()
 
 	numQueriesSubmitted = numQueriesSubmitted + 1
@@ -131,10 +140,15 @@ extends Listener {
     return totalTime
   }
 
-  // return (queueID, queryID, queryString, execTime)
-  def getFormattedQueryExecTimes: List[(Int, Int, String, Long)] = {
-    queryExecTimes.toList.map {t => (t._1.getQueueID, t._1.getQueryID, 
-        t._1.toHiveQL(false), t._2)} sortBy {t => (t._1, t._2)}
+  // return (queueID, queryID, queryString, waitTime, schedulingDelay, execTime, cacheSize)
+  def getFormattedQueryExecTimes: List[(Int, Int, String, Long, Long, Long, Long)] = {
+    val allTimes = queryWaitTimes.toMap.mapValues{List(_)} |+| 
+      querySchedulingDelays.toMap.mapValues{List(_)} |+|  
+      queryExecTimes.toMap.mapValues{List(_)} |+| 
+      queryCacheSize.toMap.mapValues{_.asInstanceOf[Number].longValue}.mapValues{List(_)}
+println("---map: \n" + allTimes)
+    allTimes.toList.map {t => (t._1.getQueueID, t._1.getQueryID, 
+        t._1.toHiveQL(false), t._2(0), t._2(1), t._2(2), t._2(3))} sortBy {t => (t._1, t._2)}
   }
 
   def getMeanExecTimePerQueue: List[(Int, Long)] = {
