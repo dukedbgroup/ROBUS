@@ -5,12 +5,12 @@ import org.apache.spark.sql.SQLContext
 import scala.collection.JavaConversions._
 import java.util
 import edu.duke.cacheplanner.conf.ConfigManager
+import edu.duke.cacheplanner.conf.YarnSparkConf
 import edu.duke.cacheplanner.listener.ListenerManager
 import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.data.Dataset
 import edu.duke.cacheplanner.query.CacheQ
 import edu.duke.cacheplanner.query.QueryUtil
-import org.apache.spark.sql.SchemaRDD
 
 /**
  * Abstract class for CachePlanner
@@ -32,10 +32,11 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
 
   // Following statements could be committed if hive warehouse has already loaded all the tables to save time
   // use this context to initialize tables 
-  val sparkContext = initSparkContext("SingleContext")
+  var sparkContext = initSparkContext("SingleContext")
   // create cache dataframe expressions for all datasets
-  CacheQ.createDataframes(sparkContext, datasets)
-  CacheQ.createDataframes(sparkContext, tpchDatasets)
+//  CacheQ.createDataframes(sparkContext, datasets)
+//  CacheQ.createDataframes(sparkContext, tpchDatasets)
+sparkContext.stop  //HACK: for yarn
 
 /*
   def initSparkContexts: java.util.Map[Integer, SparkContext] = {
@@ -67,38 +68,7 @@ abstract class AbstractCachePlanner(setup: Boolean, manager: ListenerManager,
    * TODO: read all the hardcoded parameters from a config file
    */
   def initSparkContext(name: String): SparkContext = {
-    val conf = new SparkConf().setAppName(name).setMaster(System.getenv("MASTER"))
-    conf.setSparkHome(System.getenv("SPARK_HOME"))
-    conf.setJars(Seq("target/scala-2.10/CachePlanner-assembly-0.1.jar"))
-    conf.set("spark.scheduler.mode", "FAIR")
-    // HACK: assuming that internal file has same pool names as corresponding queue id
-    // Also assuming weights and min shares match. 
-    // Ideally there should be a single config file
-    conf.set("spark.scheduler.allocation.file", "conf/internal.xml")
-
-    conf.set("spark.executor.memory", memoryWorker)
-    conf.set("spark.cores.max", totalMaxCores)    
-    // this fraction makes cache space about 10GB, but we are going to use only 5GB for algorithms
-    conf.set("spark.memory.useLegacyMode", "true")
-    if(config.getCachePartitioningStrategy.equals("greedy")) {
-      conf.set("spark.storage.memoryFraction", "0.05") // except for this case where we allow each query to cache and rely on LRU
-    } else {
-      conf.set("spark.storage.memoryFraction", "0.1")
-    }
-
-    conf.set("spark.eventLog.enabled", "true")
-    conf.set("spark.eventLog.dir", "hdfs://xeno-62:9000/sparkEventLog")
-
-//    conf.set("spark.externalBlockStore.url", "tachyon//xeno-62:19998")
-
-    // speculative
-    conf.set("spark.speculation", "true")
-    conf.set("spark.speculation.multiplier", "2")
-    conf.set("spark.speculation.interval", "1s")
-
-    val sc = new SparkContext(conf)
-    // tachyon configuration
-//    sc.hadoopConfiguration.set("fs.tachyon.impl", "tachyon.hadoop.TFS")
+    val sc = new SparkContext(new YarnSparkConf(name).getConf)
 
     sc
   }

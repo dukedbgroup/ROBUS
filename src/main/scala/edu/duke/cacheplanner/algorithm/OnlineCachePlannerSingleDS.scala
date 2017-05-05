@@ -508,13 +508,19 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
               numExecutors = numExecutors + 1
               numExecPerBatch = numExecPerBatch + 1
 
-              // submit query to spark through a thread
+             // submit query to spark through a thread
               val appName = "Queue:" + query.getQueueID + ",Query:" + query.getQueryID + "," + query.getName
-              val c = Class.forName(f"edu.duke.cacheplanner.query.${query.getName}").getConstructor(classOf[String], classOf[AbstractQuery], classOf[SparkContext], classOf[java.util.List[Dataset]])
-              val submitQuery = c.newInstance(appName, query, sparkContext, toCacheForQuery).asInstanceOf[{ def submit }]
+
+              var submitQuery: Option[SubmitQuery] = None
+              try { 
+                val c = Class.forName(f"edu.duke.cacheplanner.query.${query.getName}").getConstructor(classOf[String], classOf[AbstractQuery], classOf[SparkContext], classOf[java.util.List[Dataset]])
+                sparkContext = initSparkContext(appName)
+                CacheQ.createDataframes(sparkContext, tpchData)
+                submitQuery = Some(c.newInstance(appName, query, sparkContext, toCacheForQuery).asInstanceOf[{ def submit }].asInstanceOf[SubmitQuery])
+              } catch { case e: Exception => System.out.println("-- possibly Yarn app"); e.printStackTrace }
 
               try {
-                pool.execute(new ExecutorThread(query, submitQuery.asInstanceOf[SubmitQuery], sparkContext, (QCounter % queues.length) + 1, cacheUsed))
+                pool.execute(new ExecutorThread(query, submitQuery, sparkContext, (QCounter % queues.length) + 1, cacheUsed))
                 QCounter = QCounter + 1
               } catch {
                 case e: Exception => e.printStackTrace;
@@ -614,7 +620,7 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
       }
 
-      class ExecutorThread(query: AbstractQuery, submitQuery: SubmitQuery, sc: SparkContext, 
+      class ExecutorThread(query: AbstractQuery, submitQuery: Option[SubmitQuery], sc: SparkContext, 
            jobPoolID: Int, cacheUsed: Double) extends java.lang.Runnable {
 
         def getQuery(): AbstractQuery = query
@@ -623,9 +629,11 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
 
               val qID = query.getQueryID.toString
               val jobPool = jobPoolID.toString
-              sc.setJobGroup(jobPool, qID + ":" + query.getQueueID + ":" + query.getName)
-              sc.setLocalProperty("spark.scheduler.pool", jobPool)
-              sc.setLocalProperty("query.id", qID)
+              if(!submitQuery.isEmpty) {
+                sc.setJobGroup(jobPool, qID + ":" + query.getQueueID + ":" + query.getName)
+                sc.setLocalProperty("spark.scheduler.pool", jobPool)
+                sc.setLocalProperty("query.id", qID)
+              }
 
               val listener = new SparkListener() {
 
@@ -642,7 +650,11 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                   }
                 }
               }
-              sc.addSparkListener(listener)
+              if(!submitQuery.isEmpty) {
+                sc.addSparkListener(listener)
+              } else { // We'll be running yarn app from sh script, no way of tracking any events
+                manager.postEvent(new QueryPushedToSparkScheduler(query, cacheUsed))
+              }
 
               try {
 
@@ -660,14 +672,24 @@ class OnlineCachePlannerSingleDS(setup: Boolean, manager: ListenerManager,
                process.waitFor()
 */
 
-               submitQuery.submit
+               submitQuery match {
+                 case Some(q) => q.submit
+                 case None => {
+                   // run Yarn app from a sh script
+                   val file = query.asInstanceOf[TPCHQuery].getPath
+                   import sys.process._
+                   file !!
+                 }
+               }
 
               } catch {
                 case e: Exception => e.printStackTrace
               } finally {
                 // query has finished 
                 manager.postEvent(new QueryFinished(query))
-                sc.removeSparkListener(listener)
+// HACK: Making ROBUS work in non-jobserver mode for yarn memory project
+// new spark context for non-yarn apps
+sc.stop
                 s.release
                 s_batch.release
               } 

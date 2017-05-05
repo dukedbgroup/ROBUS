@@ -10,6 +10,7 @@ import edu.duke.cacheplanner.queue.ExternalQueue
 import edu.duke.cacheplanner.Context
 import edu.duke.cacheplanner.generator.SingleTableQueryGenerator
 import edu.duke.cacheplanner.generator.TPCHQueryGenerator
+import edu.duke.cacheplanner.generator.YarnAppsGenerator
 import edu.duke.cacheplanner.algorithm._
 import scala.reflect.internal.util
 import edu.duke.cacheplanner.query.AbstractQuery
@@ -58,11 +59,14 @@ object Factory {
   def initDistribution: QueryDistribution = {
     val queryDistribution = new java.util.HashMap[Integer, QueueDistribution]()
     val tpchQueryDistribution = new java.util.HashMap[Integer, TPCHQueueDistribution]()
-    val tpchQueueDistribution = Parser.parseTPCHDistribution("conf/tpchqueries.xml")
     for(queue <- externalQueues) {
       val rankFileName = queue.getRankFile
       if(rankFileName == "tpch") {
-        tpchQueryDistribution.put(queue.getId(), tpchQueueDistribution);
+         val tpchQueueDistribution = Parser.parseTPCHDistribution("conf/tpchqueries.xml")
+         tpchQueryDistribution.put(queue.getId(), tpchQueueDistribution);
+      } else if(rankFileName == "yarn") {
+         val yarnQueueDistribution = Parser.parseTPCHDistribution("conf/yarnapps.xml")
+         tpchQueryDistribution.put(queue.getId(), yarnQueueDistribution);
       } else {
       val ranks = Parser.parseZipfRank("conf/" + rankFileName + ".xml")
       val queueDistribution = new java.util.HashMap[String, DatasetDistribution]()
@@ -108,36 +112,42 @@ object Factory {
       val meanColNum = (n \ Constants.MEAN_COLUMN).text.toDouble
       val stdColNum = (n \ Constants.STD_COLUMN).text.toDouble
       val grouping = (n \ Constants.GROUPING_PROBABILITY).text.toDouble
-      val generator = createGenerator(queueId, name, lambda, 
+      var queue: ExternalQueue = null
+      for(q <- externalQueues.toArray()) {
+	val cand = q.asInstanceOf[ExternalQueue]
+        if(queueId == cand.getId()) {
+          queue = cand
+        }
+      }
+      val generator = createGenerator(queue, name, lambda, 
           meanColNum, stdColNum, grouping)
       generators.add(generator)
       generator.setDatasets(datasets)
       generator.setListenerManager(listenerManager)
       generator.setQueryDistribution(distribution)
-      for(q <- externalQueues.toArray()) {
-        val queue = q.asInstanceOf[ExternalQueue]
-        if(generator.getQueueId == queue.getId()) {
-          generator.setExternalQueue(queue)
-        }
-      }
+      generator.setExternalQueue(queue)
     }
     return generators
   }
   
-  def createGenerator(queueId: Int, name: String, lambda: Double, 
+  def createGenerator(queue: ExternalQueue, name: String, lambda: Double, 
       meanColNum: Double, stdColNum: Double, grouping: Double): 
       AbstractQueryGenerator = {
     val mode = configManager.getGeneratorMode()
     mode match {
         case "singleTable" =>
-		if(distribution.getQueueDistribution(queueId) != null){
-			return new SingleTableQueryGenerator(lambda, queueId, name, meanColNum, stdColNum, grouping)
-		} else { 
-			return new TPCHQueryGenerator(lambda, queueId, name)
+		if(distribution.getQueueDistribution(queue.getId) != null){
+			return new SingleTableQueryGenerator(lambda, queue.getId, name, meanColNum, stdColNum, grouping)
+		} else {
+		  if(queue.getRankFile.equals("yarn")) {
+			return new YarnAppsGenerator(lambda, queue.getId, name)
+		  } else {
+			return new TPCHQueryGenerator(lambda, queue.getId, name)
+		  }
 		}
 	
-        case "replay" => return new ReplayQueryGenerator(lambda, queueId, name, 
-            queries(queueId))
+        case "replay" => return new ReplayQueryGenerator(lambda, queue.getId, name, 
+            queries(queue.getId))
     }
   }
   

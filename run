@@ -1,6 +1,7 @@
 #!/bin/bash
 
-export SCALA_VERSION=2.10
+export SPARK_VERSION=2.0.1
+export SCALA_VERSION=2.11
 #export 
 # Figure out where the framework is installed
 PROJECTDIR="$(cd `dirname $0`; pwd)"
@@ -40,20 +41,20 @@ if [ -n "$MASTER" ] ; then
 #  CLASSPATH+=:$HADOOP_HOME/conf
 fi
 
-for jar in `find $SCALA_HOME/lib -name 'scala-library.jar'`; do
- CLASSPATH+=:$jar
-done
+#for jar in `find $SCALA_HOME/lib -name 'scala-library.jar'`; do
+# CLASSPATH+=:$jar
+#done
 
-for jar in `find $SCALA_HOME/lib -name 'scala-compiler.jar'`; do
-  CLASSPATH+=:$jar
-done
+#for jar in `find $SCALA_HOME/lib -name 'scala-compiler.jar'`; do
+#  CLASSPATH+=:$jar
+#done
 
-for jar in `find $PROJECTDIR/lib_managed/jars -name '*jar'`; do
-  CLASSPATH+=:$jar
-done
-for jar in `find $PROJECTDIR/lib_managed/bundles -name '*jar'`; do
-  CLASSPATH+=:$jar
-done
+#for jar in `find $PROJECTDIR/lib_managed/jars -name '*jar'`; do
+#  CLASSPATH+=:$jar
+#done
+#for jar in `find $PROJECTDIR/lib_managed/bundles -name '*jar'`; do
+#  CLASSPATH+=:$jar
+#done
 
 PROJECT_CLASSES="$PROJECTDIR/target/scala-$SCALA_VERSION/classes"
 if [ -d "$PROJECT_CLASSES" ] ; then
@@ -72,7 +73,7 @@ done
 #CLASSPATH+=:$HIVE_HOME/conf
 
 #export CLASSPATH
-export SPARK_CLASSPATH="$CLASSPATH"
+#export SPARK_CLASSPATH="$CLASSPATH"
 
 
 # Set JAVA_OPTS to be able to load native libraries and to set heap size
@@ -84,4 +85,9 @@ export JAVA_OPTS
 SCALA=${SCALA_HOME}/bin/scala
 
 #echo $CLASSPATH
-java -d64 -cp "$CLASSPATH" $JAVA_OPTS edu.duke.cacheplanner.Main
+#java -d64 -cp "$CLASSPATH" $JAVA_OPTS edu.duke.cacheplanner.Main
+
+/home/mayuresh/spark-$SPARK_VERSION/bin/spark-submit \
+--class edu.duke.cacheplanner.Main \
+--driver-class-path $CLASSPATH \
+target/scala-$SCALA_VERSION/CachePlanner-assembly-0.1.jar
